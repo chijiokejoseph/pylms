@@ -1,0 +1,29 @@
+[project]
+name = "pylms"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-api-python-client>=2.156.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.1",
+    "jupyter>=1.1.1",
+    "kivy>=2.3.1",
+    "kivymd>=1.2.0",
+    "matplotlib>=3.10.0",
+    "mypy>=1.14.0",
+    "notebook>=7.3.2",
+    "numpy>=2.2.1",
+    "pandas-stubs>=2.2.3.241126",
+    "pandas>=2.2.3",
+    "pip>=24.3.1",
+    "pydantic>=2.10.4",
+    "ruff>=0.8.4",
+    "openpyxl>=3.1.5",
+    "oauth2client>=4.1.3",
+    "tomlkit>=0.13.3",
+]
+
+[tool.mypy]
+follow_untyped_imports = true
