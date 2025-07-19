@@ -11,6 +11,7 @@ class ClassFormInfo(BaseModel):
     excused_title: str
     excused_url: str
     excused_id: str
+    timestamp: str
 
 
 class UpdateFormInfo(BaseModel):
@@ -21,6 +22,7 @@ class UpdateFormInfo(BaseModel):
     url: str
     uuid: str
     dates: list[str]
+    timestamp: str
 
 
 class CDSFormInfo(BaseModel):
@@ -28,3 +30,4 @@ class CDSFormInfo(BaseModel):
     title: str
     url: str
     uuid: str
+    timestamp: str

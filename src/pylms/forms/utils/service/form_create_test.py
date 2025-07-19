@@ -1,6 +1,6 @@
 import unittest
 
-from pylms.forms.utils.service._form import Form
+from pylms.models import Form
 from pylms.forms.utils.service.form_create import create_form
 
 

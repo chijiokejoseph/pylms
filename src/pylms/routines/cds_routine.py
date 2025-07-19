@@ -1,5 +1,3 @@
-import pandas as pd
-
 from pylms.state import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import load, save
@@ -7,14 +5,13 @@ from pylms.forms.request_form_api import (
     request_cds_form,
 )
 from pylms.forms.retrieve_form_api import (
-    RetrieveType,
     retrieve_cds_form,
     save_retrieve,
 )
 from pylms.rollcall import (
-    cds,
+    record_cds,
 )
-from pylms.utils import DataStream
+from pylms.state import History
 
 
 def handle_cds() -> None:
@@ -33,18 +30,21 @@ def handle_cds() -> None:
         match int(selection):
             case 1:
                 app_ds = load()
-                request_cds_form(app_ds)
+                history = History.load()
+                request_cds_form(app_ds, history)
                 print("Generated CDS Form Successfully\n")
             case 2:
                 app_ds = load()
-                cds_form_stream: DataStream[pd.DataFrame] | None = retrieve_cds_form()
+                history = History.load()
+                cds_form_stream, info = retrieve_cds_form(history)
                 if cds_form_stream is not None:
-                    app_ds = cds(app_ds, cds_form_stream)
-                    save_retrieve(RetrieveType.CDS)
+                    app_ds = record_cds(app_ds, cds_form_stream)
+                    save_retrieve(info)
                     print("Marked CDS Records")
             case _:
                 break
 
         save(app_ds)
+        history.save()
 
     return None

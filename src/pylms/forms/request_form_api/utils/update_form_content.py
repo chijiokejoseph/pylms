@@ -10,8 +10,8 @@ from pylms.constants import (
     NAME,
     PHONE,
 )
-from pylms.forms.request_form_api.utils._update_form_dates import new_content_from_date
-from pylms.forms.utils.service import (
+from pylms.forms.request_form_api.utils.update_form_dates import new_content_from_date
+from pylms.models import (
     ChoiceQuestion,
     Content,
     ContentBody,

@@ -3,7 +3,7 @@ from abc import abstractmethod
 
 from googleapiclient.http import HttpRequest
 
-from pylms.forms.utils.service._form import FormData, PermissionsData
+from pylms.models import FormData, PermissionsData
 
 
 class ResponseResource(Protocol):

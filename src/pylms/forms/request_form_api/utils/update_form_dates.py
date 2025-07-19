@@ -1,4 +1,4 @@
-from pylms.forms.utils.service import (
+from pylms.models import (
     ChoiceQuestion,
     Content,
     CreateItem,

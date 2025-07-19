@@ -1,6 +1,7 @@
 import json
 from io import TextIOWrapper
 from pathlib import Path
+from datetime import datetime
 from typing import cast
 
 from pylms.cli import input_email, select_class_date
@@ -12,14 +13,16 @@ from pylms.forms.request_form_api.utils import (
     scrape_update_form,
 )
 from pylms.forms.utils.service import (
-    ContentBody,
-    Form,
     create_form,
     setup_form,
     share_form,
 )
+from pylms.models import (
+    ContentBody,
+    Form,
+)
 from pylms.utils import DataStore, date, paths
-
+from pylms.constants import TIMESTAMP_FMT
 
 def init_update_form(ds: DataStore) -> None:
     msg: str = """
@@ -69,7 +72,8 @@ Please select all the dates for which attendance can be filled using the instruc
         dates=dates_list,
         url=data_form.url,
         uuid=data_form.uuid,
+        timestamp=datetime.now().strftime(TIMESTAMP_FMT)
     )
-    update_form_path: Path = paths.get_update_path("form")
+    update_form_path: Path = paths.get_update_path("form", info.uuid)
     with open(update_form_path, "w") as json_file:
         json.dump(info.model_dump(), cast(TextIOWrapper, json_file), indent=2)

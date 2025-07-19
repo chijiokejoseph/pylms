@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from pylms.forms.utils.service import ChoiceQuestion, TextQuestion
+from pylms.models.setup_form_data import ChoiceQuestion, TextQuestion
 
 
 class QuestionDetails(BaseModel):

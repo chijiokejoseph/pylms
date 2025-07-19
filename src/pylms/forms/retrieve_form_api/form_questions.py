@@ -2,10 +2,11 @@ import json
 from pathlib import Path
 from typing import Type
 
-from pylms.forms.request_form_api import CDSFormInfo, ClassFormInfo, UpdateFormInfo
-from pylms.forms.retrieve_form_api._data_form_structure import FormModel
+from pylms.models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
+from pylms.models import FormModel
 from pylms.forms.retrieve_form_api.enums import ClassType
 from pylms.forms.utils.service import FormResource, init_service
+from pylms.forms.retrieve_form_api.errors import InvalidRetrieveArgsError
 
 
 @init_service("forms", "v1")
@@ -33,6 +34,8 @@ def retrieve_form_questions(
                 form_response = resource.get(formId=form_info.excused_id).execute()
             case _ if not isinstance(form_info, ClassFormInfo):
                 form_response = resource.get(formId=form_info.uuid).execute()
+            case _:
+                raise InvalidRetrieveArgsError("")
 
         form_model: FormModel = FormModel(**form_response)
 

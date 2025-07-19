@@ -2,7 +2,12 @@ from datetime import datetime
 
 from pylms.constants import COHORT, DATE_FMT, FORM_DATE_FMT, NAME
 from pylms.forms.request_form_api.errors import FormServiceError
-from pylms.forms.utils.service import (
+from pylms.forms.utils import (
+    create_form,
+    setup_form,
+    share_form,
+)
+from pylms.models import (
     ChoiceQuestion,
     Content,
     ContentBody,
@@ -14,9 +19,6 @@ from pylms.forms.utils.service import (
     Question,
     QuestionItem,
     TextQuestion,
-    create_form,
-    setup_form,
-    share_form,
 )
 from pylms.utils import DataStore
 

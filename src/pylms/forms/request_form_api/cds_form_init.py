@@ -2,14 +2,20 @@ import json
 from io import TextIOWrapper
 from pathlib import Path
 from typing import cast
+from datetime import datetime
 
 import pandas as pd
 
 from pylms.cli import input_email
-from pylms.constants import CDS, COHORT, DAYS_IN_WEEK, INTERNSHIP, NAME
+from pylms.constants import CDS, COHORT, DAYS_IN_WEEK, INTERNSHIP, NAME, TIMESTAMP_FMT
 from pylms.forms.request_form_api.errors import FormServiceError
 from pylms.forms.request_form_api.utils import CDSFormInfo
 from pylms.forms.utils.service import (
+    create_form,
+    setup_form,
+    share_form,
+)
+from pylms.models import (
     ChoiceQuestion,
     Content,
     ContentBody,
@@ -20,14 +26,12 @@ from pylms.forms.utils.service import (
     OptionDict,
     Question,
     QuestionItem,
-    create_form,
-    setup_form,
-    share_form,
 )
 from pylms.utils import DataStore, paths
+from pylms.state import History
 
 
-def init_cds_form(ds: DataStore) -> None:
+def init_cds_form(ds: DataStore, history: History) -> None:
     data: pd.DataFrame = ds.pretty()
     nysc_selector: pd.Series = data[INTERNSHIP] == "NYSC"
     corpers: pd.Series = data[NAME].loc[nysc_selector]
@@ -110,7 +114,9 @@ def init_cds_form(ds: DataStore) -> None:
         title=cds_form.title,
         url=cds_form.url,
         uuid=cds_form.uuid,
+        timestamp=datetime.now().strftime(TIMESTAMP_FMT),
     )
-    cds_form_path: Path = paths.get_cds_path("form")
+    history.add_cds_form(info)
+    cds_form_path: Path = paths.get_cds_path("form", uuid=info.uuid)
     with open(cds_form_path, "w") as json_file:
         json.dump(info.model_dump(), cast(TextIOWrapper, json_file), indent=2)

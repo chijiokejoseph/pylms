@@ -2,8 +2,12 @@ import re
 
 import pandas as pd
 
+from typing import cast
+
 from pylms.forms.request_form_api import UpdateFormInfo
 from pylms.forms.retrieve_form_api.form import retrieve_form
+from pylms.forms.utils import select_form
+from pylms.state import History
 from pylms.utils import DataStream, paths
 
 
@@ -27,12 +31,13 @@ def rename_date_col(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
     return DataStream(data)
 
 
-def retrieve_update_form() -> DataStream[pd.DataFrame] | None:
-    update_form_path, update_record_path = paths.ret_update_path()
+def retrieve_update_form(history: History) -> tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]:
+    info: UpdateFormInfo = cast(UpdateFormInfo, select_form(history, "update"))
+    update_form_path, update_record_path = paths.ret_update_path(info.uuid)
     result: DataStream[pd.DataFrame] | None = retrieve_form(
         update_form_path, update_record_path, UpdateFormInfo
     )
     if result is None:
-        return None
+        return None, info
     result = rename_date_col(result)
-    return result
+    return result, info

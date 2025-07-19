@@ -5,11 +5,11 @@ from typing import Type
 import pandas as pd
 
 from pylms.constants import TIME, TIME_FMT
-from pylms.forms.request_form_api import CDSFormInfo, ClassFormInfo, UpdateFormInfo
-from pylms.forms.retrieve_form_api._data_form_response import ResponseModel
+from pylms.models import CDSFormInfo, ClassFormInfo, UpdateFormInfo, ResponseModel
 from pylms.forms.retrieve_form_api.enums import ClassType
 from pylms.forms.utils.service import FormResource, ResponseResource, init_service
 from pylms.utils import DataStream, date
+from pylms.forms.retrieve_form_api.errors import InvalidRetrieveArgsError
 
 
 @init_service("forms", "v1")
@@ -27,16 +27,18 @@ def retrieve_form_responses(
         resource: FormResource = service.forms()
         response_resource: ResponseResource = resource.responses()
         match form_info:
-            case _ if isinstance(
-                form_info, ClassFormInfo
-            ) and class_type == ClassType.PRESENT:
+            case _ if (
+                isinstance(form_info, ClassFormInfo) and class_type == ClassType.PRESENT
+            ):
                 request = response_resource.list(formId=form_info.present_id)
-            case _ if isinstance(
-                form_info, ClassFormInfo
-            ) and class_type == ClassType.EXCUSED:
+            case _ if (
+                isinstance(form_info, ClassFormInfo) and class_type == ClassType.EXCUSED
+            ):
                 request = response_resource.list(formId=form_info.excused_id)
             case _ if not isinstance(form_info, ClassFormInfo):
                 request = response_resource.list(formId=form_info.uuid)
+            case _:
+                raise InvalidRetrieveArgsError("")
 
         response_dict: dict = request.execute()
         response_model: ResponseModel = ResponseModel(**response_dict)
@@ -58,9 +60,9 @@ def retrieve_form_responses(
             answer_model = form_response.answers[question_id]
             text_answer = answer_model.textAnswers
             answers = text_answer.answers
-            assert (
-                len(answers) == 1
-            ), f"length of answers expected is 1, actual: {len(answers)}"
+            assert len(answers) == 1, (
+                f"length of answers expected is 1, actual: {len(answers)}"
+            )
             answer: str = answers[0].value
             response_data_dict[column].append(answer)
 

@@ -1,14 +1,11 @@
-import json
-from pathlib import Path
-
 from pylms.constants import COHORT
 from pylms.forms.request_form_api.cds_form_init import init_cds_form
-from pylms.forms.request_form_api.utils import CDSFormInfo
-from pylms.utils import DataStore, date, paths
+from pylms.utils import DataStore, date
+from pylms.state import History
 
 
-def request_cds_form(ds: DataStore) -> None:
-    cds_form_path: Path = paths.get_paths_json()["CDSForm"]
+def request_cds_form(ds: DataStore, history: History) -> None:
+    # cds_form_path: Path = paths.get_cds_path()
     dates_list: list[str] = date.retrieve_dates()
     unique_week_nums: tuple[int, ...] = date.to_unique_week_nums(dates_list)
     week_num: int = date.det_week_num()
@@ -24,17 +21,17 @@ def request_cds_form(ds: DataStore) -> None:
         )
         return None
 
-    if cds_form_path.exists():
-        with open(cds_form_path, "r", encoding="utf-8") as file:
-            data_dict = json.load(file)
-            cds_form: CDSFormInfo = CDSFormInfo(**data_dict)
-            print(
-                f"CDS Form already generated for this cohort, Week {cds_week} of Year {date.det_year()}. \nOnly one CDS Entry Form can be generated for each cohort."
-            )
-            print(
-                f"CDS Form Url for Week {cds_week} of Year {date.det_year()}: {cds_form.url}"
-            )
-            return None
-    else:
-        init_cds_form(ds)
-        return None
+    # if cds_form_path.exists():
+    #     with open(cds_form_path, "r", encoding="utf-8") as file:
+    #         data_dict = json.load(file)
+    #         cds_form: CDSFormInfo = CDSFormInfo(**data_dict)
+    #         print(
+    #             f"CDS Form already generated for this cohort, Week {cds_week} of Year {date.det_year()}. \nOnly one CDS Entry Form can be generated for each cohort."
+    #         )
+    #         print(
+    #             f"CDS Form Url for Week {cds_week} of Year {date.det_year()}: {cds_form.url}"
+    #         )
+    #         return None
+
+    init_cds_form(ds, history)
+    return None

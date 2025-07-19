@@ -1,6 +1,6 @@
 from googleapiclient.http import HttpError, HttpRequest
 
-from pylms.forms.utils.service._form import Form, PermissionsData
+from pylms.models import Form, PermissionsData
 from pylms.forms.utils.service._resource import DriveResource
 from pylms.forms.utils.service.service_init import init_service
 

@@ -2,6 +2,7 @@ import re
 from pylms.constants import COMMA_DELIM, COMMA, HYPHEN
 from pylms.cli.errors import InvalidSelectionInputError
 
+
 # TODO: test this function
 def _parse_int_str(entry: str) -> list[int]:
     """Parses a string containing integers and returns a list of integers.
@@ -35,10 +36,13 @@ def _parse_int_str(entry: str) -> list[int]:
             # perform match_date_by_index on each string of choices_str after converting to int
             return [int(num_char) for num_char in choices_str]
 
-        case _ if re.fullmatch(
-            r"^\s*((\d+\s*-\s*\d+\s*)|(\d+\s*))((,\s*\d+\s*-\s*\d+\s*)|(,\s*\d+\s*))*(?:,|\b)$",
-            entry,
-        ) is not None:
+        case _ if (
+            re.fullmatch(
+                r"^\s*((\d+\s*-\s*\d+\s*)|(\d+\s*))((,\s*\d+\s*-\s*\d+\s*)|(,\s*\d+\s*))*(?:,|\b)$",
+                entry,
+            )
+            is not None
+        ):
             entry = entry.strip()
             entries = entry.split(COMMA)
             entries = [entry.strip() for entry in entries]
@@ -70,7 +74,7 @@ def _parse_int_str(entry: str) -> list[int]:
                         raise InvalidSelectionInputError(
                             f"input {entry} does not match any of the required formats"
                         )
-                        
+
             # remove duplicates and sort the values
             set_of_values: set[int] = set(values)
             values = list(set_of_values)

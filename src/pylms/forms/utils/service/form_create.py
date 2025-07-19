@@ -2,7 +2,7 @@ from google.auth.exceptions import TransportError
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 
-from pylms.forms.utils.service._form import Form, FormData
+from pylms.models import Form, FormData
 from pylms.forms.utils.service._resource import FormResource
 from pylms.forms.utils.service.service_init import init_service
 

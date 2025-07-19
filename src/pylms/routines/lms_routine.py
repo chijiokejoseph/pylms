@@ -11,6 +11,7 @@ from pylms.lms import (
     view_result,
 )
 from pylms.data_ops import load, save
+from pylms.state import History
 from pylms.utils import DataStore
 
 
@@ -27,6 +28,7 @@ def run_lms() -> None:
         "Return to Main Menu",
     ]
 
+    history: History = History.load()
     while True:
         selection: int = interact(menu)
         cmd: str = menu[selection - 1]
@@ -73,5 +75,6 @@ def run_lms() -> None:
             case _:
                 app_ds = load()
         save(app_ds)
+        history.save()
 
     return None

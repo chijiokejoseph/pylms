@@ -7,7 +7,8 @@ import pandas as pd
 PARENT_PATH: Path = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_PATH: Path = PARENT_PATH / "data"
 STATE_PATH: Path = PARENT_PATH / "state.toml"
-CREDENTIALS_PATH: Path = PARENT_PATH / "secrets.json"
+SECRETS_PATH: Path = PARENT_PATH / "secrets.json"
+HISTORY_PATH: Path = PARENT_PATH / "history.json"
 DISCOVERY_DOC = "https://forms.googleapis.com/$discovery/rest?version=v1"
 SCOPES = "https://www.googleapis.com/auth/forms.body"
 
@@ -79,6 +80,7 @@ AWARDEES_EMTPY: str = " "
 
 
 FORM_DATE_FMT: str = "%m/%d/%Y"
+TIMESTAMP_FMT: str = "%Y-%m-%d %H:%M:%S"
 
 
 # Column Names of Data

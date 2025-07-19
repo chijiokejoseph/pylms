@@ -8,7 +8,6 @@ from pylms.forms.request_form_api import (
 )
 from pylms.forms.retrieve_form_api import (
     ClassType,
-    RetrieveType,
     retrieve_class_form,
     save_retrieve,
 )
@@ -21,8 +20,10 @@ from pylms.rollcall import (
     record_mid_cohort,
     edit_record,
     record_present,
+    new_edit_info,
 )
-from pylms.utils import DataStream
+from pylms.state import History
+from pylms.utils import DataStream, DataStore
 
 
 def handle_rollcall() -> None:
@@ -34,6 +35,7 @@ def handle_rollcall() -> None:
         "Return to Main Menu",
     ]
 
+    history: History = History.load()
     while True:
         selection: int = interact(menu)
         cmd: str = menu[selection - 1]
@@ -42,8 +44,8 @@ def handle_rollcall() -> None:
 
         match int(selection):
             case 1:
-                app_ds = load()
-                request_class_form(app_ds)
+                app_ds: DataStore = load()
+                request_class_form(app_ds, history)
                 print("Generated Attendance Form successfully\n")
             case 2:
                 app_ds = load()
@@ -75,17 +77,18 @@ def handle_rollcall() -> None:
                         )
 
                     app_ds = record_absent(app_ds, present_turnout)
-                    save_retrieve(RetrieveType.CLASS, each_date)
+                    info = history.match_info_by_date(each_date)
+                    save_retrieve(info)
                     print(f"Recorded all those absent for date '{each_date}'")
                     print()
             case 3:
                 app_ds = load()
                 input_dates: list[str] = input_date_for_edit()
-                app_ds, batch_type = edit_record(app_ds, input_dates)
+                app_ds, edit_type = edit_record(app_ds, input_dates)
                 # only save retrieval if the record attendance manually was done for the whole batch of Students
-                if batch_type == EditType.ALL:
+                if edit_type == EditType.ALL:
                     for each_date in input_dates:
-                        save_retrieve(RetrieveType.CLASS, each_date)
+                        save_retrieve(new_edit_info(each_date))
             case 4:
                 app_ds = load()
                 record_path = record_mid_cohort(app_ds)
@@ -99,4 +102,5 @@ def handle_rollcall() -> None:
                 break
 
         save(app_ds)
+        history.save()
     return None

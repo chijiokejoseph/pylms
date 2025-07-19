@@ -2,6 +2,7 @@ import re
 
 from pylms.constants import COMMA_DELIM
 
+
 def _parse_date_str(entry: str) -> list[str]:
     match str(entry):
         # matches "12/11/2030", "09/03/2004"
@@ -23,6 +24,6 @@ def _parse_date_str(entry: str) -> list[str]:
 
             # perform match_date_by_value on each string of choices_str
             return [choice_str for choice_str in choices_str]
-        
+
         case _:
             return []
