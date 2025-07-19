@@ -4,7 +4,7 @@ import pandas as pd
 
 from pylms.cli import input_record
 from pylms.record import RecordStatus
-from pylms.rollcall import GlobalRecord
+from pylms.rollcall.global_record import GlobalRecord
 from pylms.utils import DataStore
 
 

@@ -1,4 +1,4 @@
-from pylms.cache import cache_for_cmd
+from pylms.state import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import load, view
 from pylms.lms.collate import view_result

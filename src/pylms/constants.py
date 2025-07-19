@@ -13,7 +13,7 @@ SCOPES = "https://www.googleapis.com/auth/forms.body"
 
 
 class Spreadsheets(TypedDict):
-    Datastore: Path
+    DataStore: Path
     Result: Path
     Registration: Path
     List: Path

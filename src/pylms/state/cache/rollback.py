@@ -5,7 +5,7 @@ from uuid import UUID
 
 import pandas as pd
 
-from pylms.cache.cache import copy_data
+from pylms.state.cache.cache import copy_data
 from pylms.cli import input_num
 from pylms.constants import CACHE_CMD, CACHE_ID, CACHE_TIME
 from pylms.utils import DataStream, paths

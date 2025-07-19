@@ -1,12 +1,12 @@
 from pylms.constants import COHORT, DATE, DATE_FMT
 from pylms.utils.data import DataStream
-from pylms.cli import input_num, input_str
 from datetime import datetime
 import re
 import pandas as pd
 
 
 def clean_cohort(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+    from pylms.cli import input_num
     msg: str = "\nCleaning Cohort in preprocessing stage... \nPlease enter the cohort number for this current cohort: "
 
     def validator(num: float | int) -> bool:
@@ -19,6 +19,7 @@ def clean_cohort(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFra
 
 
 def clean_date(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+    from pylms.cli import input_str
     msg: str = "Cleaning Cohort in preprocessing stage... \nPlease enter the orientation date for this current cohort. \nIt should be of the form dd/mm/yyyy: "
 
     test_date: str = f"01/01/{datetime.now().year}"

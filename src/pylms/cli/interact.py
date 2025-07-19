@@ -1,6 +1,4 @@
-import sys
-
-from pylms.cli import input_option
+from pylms.cli.option_input import input_option
 from pylms.cli.utils import parse_response
 
 
@@ -23,10 +21,10 @@ def interact(menu: list[str], trials: int = 5) -> int:
     :rtype: int
     """
 
-    for trial in range(trials):
-        choice: str = input_option(menu)
+    for _ in range(trials):
+        _, choice = input_option(menu)
         parsed_choice: int | None = parse_response(menu, choice)
         if parsed_choice is not None:
             return parsed_choice
 
-    sys.exit(1)
+    exit(1)

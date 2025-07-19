@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from pylms.state.io import read_state, new_state
+from pylms.state.toml.io import read_state, new_state
 from pylms.constants import STATE_PATH
 
 

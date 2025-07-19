@@ -1,7 +1,7 @@
 import pandas as pd
 
 from pylms.constants import INTERNSHIP
-from pylms.utils import DataStream
+from pylms.utils.data import DataStream
 
 
 def clean_internship(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:

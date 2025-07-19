@@ -1,4 +1,4 @@
-from pylms.state.app_toml import AppToml
+from pylms.state.toml.app_toml import AppToml
 from pylms.constants import STATE_PATH, GLOBAL_RECORD_PATH
 import os
 import tomlkit

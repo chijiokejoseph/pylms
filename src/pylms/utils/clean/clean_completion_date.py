@@ -2,7 +2,6 @@ from datetime import datetime
 
 import pandas as pd
 
-from pylms.cli import input_option
 from pylms.constants import COMPLETION, COMPLETION_FMT
 from pylms.utils.data import DataStream
 from pylms.utils.date import format_date
@@ -15,9 +14,10 @@ def _clean_date(entry: str | datetime, day_first: bool) -> str:
 def clean_completion_date(
     data_stream: DataStream[pd.DataFrame],
 ) -> DataStream[pd.DataFrame]:
+    from pylms.cli import input_option
     data: pd.DataFrame = data_stream()
     format_options: list[str] = ["day first", "month first"]
-    fmt: str = input_option(
+    _, fmt = input_option(
         format_options,
         title="\nSelect the date format for the NYSC SIWES Completion Month\n",
     )

@@ -5,7 +5,7 @@ from pylms.utils import DataStream, DataStore, data, clean
 read_data = data.read_data
 
 
-def _clean_new(data_stream: DataStream[pd.DataFrame]) -> DataStore[pd.DataFrame]:
+def _clean_new(data_stream: DataStream[pd.DataFrame]) -> DataStore:
     def validate_na_removal(test_data: pd.DataFrame) -> bool:
         return not test_data.isna().any().any()
 

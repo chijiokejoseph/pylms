@@ -11,7 +11,7 @@ class TomlProtocol(ABC):
 
     @classmethod
     @abstractmethod
-    def from_value(cls, value: Any) -> Self:
+    def from_value(cls, value_in: Any) -> Self:
         pass
 
     @abstractmethod
