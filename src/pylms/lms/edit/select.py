@@ -18,9 +18,9 @@ def input_select_type() -> Select:
     idx, choice = input_option(options, prompt="Select a batch result edit operation")
     print(f"You have selected: {choice}\n")
     match idx:
-        case 0:
-            return Select.ALL
         case 1:
+            return Select.ALL
+        case 2:
             return Select.MULTIPLE
         case _:
             return Select.BATCH

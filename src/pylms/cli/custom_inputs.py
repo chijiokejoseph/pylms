@@ -13,45 +13,31 @@ def input_num(
     diagnosis: str | None = None,
     trials: int = 3,
 ) -> T:
+    
     """
-    a custom input function for receiving numbers from the user. The function works using a for loop that exits abnormally when the user enters a valid input using an early return else the function continues to repeat its process until the loop is exhausted, after which it forcefully exits. The number of loops is controlled by the argument to the `trials` parameter.
+    Prompts the user to enter a number and validates the input.
+    This function repeatedly prompts the user for input, attempting to parse the input as either a float or an integer
+    based on the specified return type (`rtype`). It validates the parsed input using a custom test function (`test_fn`).
+    If the input is valid, it returns the parsed number. If the input is invalid or cannot be parsed, it informs the user
+    and retries for a specified number of trials (`trials`). If all attempts are exhausted without a valid input, it raises
+    an `InvalidInputError`.
+    
+        `T` = float | int
 
-    type T = int | float i.e., T is just an alias for a Union of int and float.
+    :param msg: (str) - The message to display to the user when prompting for input.
+    :param rtype: (Literal["float", "int"]) - The desired return type of the input, either "float" or "int".
+    :param test_fn: (Callable[[T], bool]) - A function to test the validity of the parsed input. Defaults to a function that returns True for any input.
+    :param diagnosis: (str | None) - An optional message to display if the parsed input fails the test function.
+    :param trials: (int) - The number of attempts to allow the user to input a valid number before raising an error. Defaults to 3.
 
-    The function operates in the following stages:
+    :return: (T) - The validated and parsed number input by the user.
 
-        - The function outputs a prompt to the user based on the argument passed to the `msg` parameter of the function.
-
-        - The function then attempts to convert the response to an int or float based on the value passed to `rtype`. If the conversion is not successful due to an invalid string literal entered by the user, it prints a warning and then skips the rest of the loop
-
-        - If the conversion is successful, the function attempts to validate the converted int or float using the argument to `test_fn`.
-
-            - If the validation fails, a message is printed out. An additional diagnostic message can be printed out if `diagnosis` is not None. After which the rest of the loop is skipped.
-
-            - Else, the function returns the converted int or float.
-
-    :param msg: (str): the message to be used as a prompt to the user
-    :type msg: str
-
-    :param rtype: (Literal["int", "float"]): the type of the number to be returned i.e., either int or float.
-    :type rtype: Literal["int", "float"]
-
-    :param test_fn: (Callable[[T], bool], optional): the function to be used to test the validity of the converted int or float. It defaults to `lambda x: True`.
-    :type test_fn: Callable[[T], bool]
-
-    :param diagnosis: (str | None, optional): A special diagnostic message to be printed to the user if the validation of `test_fn` should fail. It defaults to None.
-    :type diagnosis: str | None
-
-    :param trials: (int, optional): The maximum number of times to prompt the user and validate his response before raising an `InvalidInputError` Error if no valid input is entered before the loop is exhausted. It defaults to 3
-    :type trials: int
-
-    :return: the number which this function is defined to get from the user.
-    :rtype: T
-    :raises: InvalidInputError
+    :raises InvalidInputError: If the user fails to input a valid number within the allowed number of trials.
     """
+
     converter = float if rtype == "float" else int
     # repeat loop until the user enters a valid input and triggers an early return
-    for trial in range(trials):
+    for _ in range(trials):
         # get user input
         response: str = input_fn(msg).lower().strip()
 
@@ -85,35 +71,31 @@ def input_str(
     trials: int = 3,
     lower_case: bool = True,
 ) -> str:
-    """
-    A custom input function for receiving strings from the user. The function works using a for loop that exits abnormally when the user enters a valid input using an early return, else the function continues to repeat its process until the loop is exhausted after which it forcefully exits. The number of loops is controlled by the argument to the `trials` parameter.
-
-    The function operates in the following stages:
-
-        - The function outputs a prompt to the user based on the argument passed to the `msg` parameter of the function.
-
-        - The function attempts to validate the response entered by the user using the argument to `test_fn`.
-
-            - If the validation fails, a message is printed out. An additional diagnostic message can be printed out if `diagnosis` is not None. After which the rest of the loop is skipped.
-
-            - Else, the function returns the user's response.
-
-    :param msg: ( str ): the message to be used as a prompt to the user
-    :type msg: str
-    :param test_fn: ( Callable[[str], bool], optional ): the function to be used to test the validity of the user's input. It defaults to `lambda x: True`.
-    :type test_fn: Callable[[str], bool]
-    :param diagnosis: ( str | None, optional ): A special diagnostic message to be printed to the user if the validation of `test_fn` should fail. It defaults to None.
-    :type diagnosis: str | None
-    :param trials: ( int, optional ): The maximum number of times to prompt the user and validate his response before raising an `InvalidInputError` if no valid input is entered before the loop is exhausted. It defaults to 3
-    :type trials: int
-    :param lower_case: ( bool, optional ): A boolean that indicates if the input should be lowercased or not. It defaults to True.
-    :type lower_case: bool
-
-    :return: the string input which this function is defined to get from the user.
-    :rtype: str
-    :raises: InvalidInputError
-    """
+    
     # repeat execution until the user enters a valid str response or loops is exhausted
+    """
+    Prompts the user to enter a str and validates the input.
+    This function repeatedly prompts the user for input, attempting to validate the input using a custom test function (`test_fn`).
+    If the input is valid, it returns the validated str. If the input is invalid or cannot be parsed, it informs the user
+    and retries for a specified number of trials (`trials`). If all attempts are exhausted without a valid input, it raises
+    an `InvalidInputError`.
+    
+    :param msg: (str) - The message to display to the user when prompting for input.
+    :type msg: str
+    :param test_fn: (Callable[[str], bool]) - A function to test the validity of the parsed input. Defaults to a function that returns True for any input.
+    :type test_fn: Callable[[str], bool]
+    :param diagnosis: (str | None) - An optional message to display if the parsed input fails the test function.
+    :type diagnosis: str | None
+    :param trials: (int) - The number of attempts to allow the user to input a valid str before raising an error. Defaults to 3.
+    :type trials: int
+    :param lower_case: (bool) - Whether to convert the input to lower case before validating and returning. Defaults to True.
+    :type lower_case: bool
+    
+    :return: (str) - The validated and parsed str input by the user.
+    :rtype: str
+    
+    :raises InvalidInputError: If the user fails to input a valid str within the allowed number of trials.
+    """
     for trial in range(trials):
         # get input from the user
         response: str = input_fn(msg).strip()

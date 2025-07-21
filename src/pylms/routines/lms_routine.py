@@ -1,34 +1,26 @@
 from pylms.state import cache_for_cmd
 from pylms.cli import interact
 from pylms.lms import (
-    collate_fast_track,
-    collate_merge,
-    collate_result,
-    edit_result,
     group,
-    collate_merit,
-    overwrite_result,
-    view_result,
 )
+from pylms.routines.lms_awardees_routine import run_awardees_lms
+from pylms.routines.lms_result_routine import run_result_lms
+from pylms.routines.lms_collate_routine import run_collate_lms
 from pylms.data_ops import load, save
 from pylms.state import History
 from pylms.utils import DataStore
 
 
-def run_lms() -> None:
+
+def run_lms(history: History) -> None:
     menu: list[str] = [
         "Group Students",
-        "Collate Results",
-        "View Results",
-        "Edit Results",
-        "Overwrite Results",
-        "Collate Fast Track Awardees",
-        "Collate Merit Awardees",
-        "Merge Fast Track and Merit Awardees",
+        "Collate Student Metrics",
+        "Manage Results",
+        "Manage Awardees",
         "Return to Main Menu",
     ]
 
-    history: History = History.load()
     while True:
         selection: int = interact(menu)
         cmd: str = menu[selection - 1]
@@ -42,35 +34,14 @@ def run_lms() -> None:
                 print("Students have been grouped successfully\n")
             case 2:
                 app_ds = load()
-                collate_result(app_ds)
-                print("\nResult collated successfully\n")
+                run_collate_lms(history)
             case 3:
                 app_ds = load()
-                view_result(app_ds)
-                print()
+                run_result_lms(history)
             case 4:
                 app_ds = load()
-                edit_result(app_ds)
-                collate_merit(app_ds)
-                print("\nResult edited successfully\n")
+                run_awardees_lms(history)
             case 5:
-                app_ds = load()
-                overwrite_result(app_ds)
-                collate_merit(app_ds)
-                print("\nResult overwritten successfully\n")
-            case 6:
-                app_ds = load()
-                app_ds = collate_fast_track(app_ds)
-                print("Recorded Fast Track Awardees.\n")
-            case 7:
-                app_ds = load()
-                collate_merit(app_ds)
-                print("Recorded Merit Awardees.\n")
-            case 8:
-                app_ds = load()
-                collate_merge(app_ds)
-                print("\nMerit and Fast Track Awardees merged successfully\n")
-            case 9:
                 break
             case _:
                 app_ds = load()

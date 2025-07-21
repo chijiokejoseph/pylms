@@ -3,9 +3,9 @@ from datetime import datetime
 from pylms.constants import COHORT, DATE_FMT, FORM_DATE_FMT, NAME
 from pylms.forms.request_form_api.errors import FormServiceError
 from pylms.forms.utils.service import (
-    create_form,
-    setup_form,
-    share_form,
+    run_create_form,
+    run_setup_form,
+    run_share_form,
 )
 from pylms.models import (
     ChoiceQuestion,
@@ -28,7 +28,7 @@ def init_present_form(ds: DataStore, input_date: str, email: str) -> Form:
     title_date: str = datetime.strptime(input_date, DATE_FMT).strftime(FORM_DATE_FMT)
     form_title: str = f"Python Beginners Cohort {cohort_no} Attendance for {input_date}"
     form_name: str = f"Attendance {title_date}"
-    present_form: Form | None = create_form(form_title, form_name)
+    present_form: Form | None = run_create_form(form_title, form_name)
     if present_form is None:
         raise FormServiceError(
             "create",
@@ -75,7 +75,7 @@ def init_present_form(ds: DataStore, input_date: str, email: str) -> Form:
             ),
         ]
     )
-    present_form = setup_form(
+    present_form = run_setup_form(
         present_form,
         form_content,
     )
@@ -84,7 +84,7 @@ def init_present_form(ds: DataStore, input_date: str, email: str) -> Form:
             "setup",
             f"Form setup failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again.",
         )
-    present_form = share_form(present_form, email)
+    present_form = run_share_form(present_form, email)
     if present_form is None:
         raise FormServiceError(
             "share",

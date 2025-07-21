@@ -14,7 +14,7 @@ from pylms.rollcall import (
 from pylms.state import History
 
 
-def handle_cds() -> None:
+def handle_cds(history: History) -> None:
     menu: list[str] = [
         "Request CDS form",
         "Mark CDS form",
@@ -30,15 +30,14 @@ def handle_cds() -> None:
         match int(selection):
             case 1:
                 app_ds = load()
-                history = History.load()
                 request_cds_form(app_ds, history)
                 print("Generated CDS Form Successfully\n")
             case 2:
                 app_ds = load()
-                history = History.load()
                 cds_form_stream, info = retrieve_cds_form(history)
                 if cds_form_stream is not None:
                     app_ds = record_cds(app_ds, cds_form_stream)
+                    history.add_recorded_cds_form(info)
                     save_retrieve(info)
                     print("Marked CDS Records")
             case _:

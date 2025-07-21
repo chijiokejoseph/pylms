@@ -11,8 +11,10 @@ from pylms.lms.utils import (
     det_attendance_score_col,
     det_attendance_total_col,
     list_print,
+    input_marks_req,
 )
 from pylms.record import RecordStatus
+from pylms.state import History
 from pylms.utils import DataStore, DataStream, date, paths
 
 
@@ -90,12 +92,39 @@ def _extract_class_held_dates(ds: DataStore) -> list[str]:
     ]
 
 
-def collate_attendance(ds: DataStore, req: float) -> DataStream[pd.DataFrame]:
+def collate_attendance(ds: DataStore, history: History) -> None:
+    """
+    Collate the attendance spreadsheet for the students.
+
+    The attendance spreadsheet should have all the Classes held marked.
+
+    The collated data will be saved in the Attendance.xlsx file in the Data folder.
+
+    :param ds: (DataStore) - The data to be collated
+    :type ds: DataStore
+    :param history: (History) - The state of the application
+    :type history: History
+    
+    :return: (None) - returns nothing 
+    :rtype: None
+    
+    :raises CollateIncompleteErr: If not all classes have been recorded
+    """
+    
+    # Validate that all classes have been recorded
     _val_all_classes_recorded()
+    
+    # Extract the dates of classes that were held
     class_held_dates = _extract_class_held_dates(ds)
+    
+    # Retrieve and filter the relevant data for the held classes
     data: pd.DataFrame = ds.pretty()
     dates_data: pd.DataFrame = data.loc[:, class_held_dates]
+    
+    # Prompt the user to enter attendance requirement
+    req: int = input_marks_req("Enter the Attendance Requirement [1 - 100]: ")
 
+    # Define a function to map attendance status to integer values
     def map_to_int(value: str) -> int:
         match True:
             case _ if value == RecordStatus.ABSENT:
@@ -103,20 +132,28 @@ def collate_attendance(ds: DataStore, req: float) -> DataStream[pd.DataFrame]:
             case _:
                 return 1
 
+    # Map attendance data to integers and calculate the total count per student
     count_data: pd.DataFrame = dates_data.map(map_to_int)
     count_arr: np.ndarray = count_data.to_numpy()
     count_arr = count_arr.sum(axis=1)
     count_arr = count_arr.flatten()
+    
+    # Check if all attendance records are complete
     max_len: int = max(count_arr.shape)
     if max_len != count_data.shape[0]:
-        raise CollateIncompleteErr("Just did it for doing sake")
+        raise CollateIncompleteErr("Incomplete class records detected.")
+    
+    # Calculate attendance scores based on the number of classes held
     num_classes_held: int = len(class_held_dates)
     score_arr: np.ndarray = count_arr * 100 / num_classes_held
     score_arr = score_arr.round(2)
 
+    # Determine column names for total, score, and requirement
     total_col: str = det_attendance_total_col(num_classes_held)
     score_col: str = det_attendance_score_col()
     req_col: str = det_attendance_req_col()
+    
+    # Create a DataFrame with collated attendance data
     collated_data: pd.DataFrame = pd.DataFrame(
         data={
             SERIAL: data[SERIAL].copy(),
@@ -126,5 +163,13 @@ def collate_attendance(ds: DataStore, req: float) -> DataStream[pd.DataFrame]:
             req_col: req,
         }
     )
+    
+    # Notify user that attendance has been recorded successfully
     print("\nAttendance recorded successfully\n")
-    return DataStream(collated_data)
+    
+    # Save the collated data to an Excel file
+    path: Path = paths.get_paths_excel()["Attendance"]
+    DataStream(collated_data).to_excel(path)
+    
+    # Record attendance in the history
+    history.record_attendance()

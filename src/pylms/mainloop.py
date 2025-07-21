@@ -1,5 +1,8 @@
+import traceback
+from typing import Callable
 from pylms.state import cache_for_cmd
-from pylms.cli import interact
+from pylms.cli import interact, input_option
+from pylms.errors import LMSError
 from pylms.data_ops import load, view
 from pylms.lms.collate import view_result
 from pylms.routines import (
@@ -10,6 +13,21 @@ from pylms.routines import (
     register,
     run_lms,
 )
+from pylms.history import History
+
+
+def handle_err[K](func: Callable[[], K]) -> K | None:
+    try:
+        return func()
+    except LMSError as e:
+        idx, choice = input_option(["Yes", "No"], prompt="Do you wish to view error trace")
+        choice = choice.lower()
+        if idx == 0:
+            traceback.print_exc()
+        print(e.message)
+    print("\n")
+    return None
+    
 
 
 def mainloop() -> bool:
@@ -22,23 +40,24 @@ def mainloop() -> bool:
         "Register",
         "Quit",
     ]
+    history: History = History.load()
     selection: int = interact(menu)
     cmd: str = menu[selection - 1]
     if selection < len(menu):
         cache_for_cmd(cmd)
     match int(selection):
         case 1:
-            handle_rollcall()
+            handle_rollcall(history)
         case 2:
-            handle_cds()
+            handle_cds(history)
         case 3:
             handle_cohort()
         case 4:
             handle_data()
         case 5:
-            run_lms()
+            run_lms(history)
         case 6:
-            register()
+            register(history)
         case _:
             print(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"

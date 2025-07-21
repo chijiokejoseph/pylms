@@ -23,7 +23,7 @@ def parse_response(menu: list[str], response: str) -> int | None:
         print("Invalid option received from the user, please enter a valid number.\n")
         return None
 
-    if selection > len(menu) or selection < 1:
+    if selection > len(menu) or selection <= 1:
         print(f"Invalid choice selected only inputs from 1 - {len(menu)} are valid.")
         return None
 

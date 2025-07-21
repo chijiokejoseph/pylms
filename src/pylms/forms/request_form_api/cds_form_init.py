@@ -7,13 +7,13 @@ from datetime import datetime
 import pandas as pd
 
 from pylms.cli import input_email
-from pylms.constants import CDS, COHORT, DAYS_IN_WEEK, INTERNSHIP, NAME, TIMESTAMP_FMT
+from pylms.constants import CDS, COHORT, DAYS_IN_WEEK, INTERNSHIP, NAME
 from pylms.forms.request_form_api.errors import FormServiceError
 from pylms.forms.request_form_api.utils import CDSFormInfo
 from pylms.forms.utils.service import (
-    create_form,
-    setup_form,
-    share_form,
+    run_create_form,
+    run_setup_form,
+    run_share_form,
 )
 from pylms.models import (
     ChoiceQuestion,
@@ -28,6 +28,7 @@ from pylms.models import (
     QuestionItem,
 )
 from pylms.utils import DataStore, paths
+from pylms.constants import TIMESTAMP_FMT
 from pylms.state import History
 
 
@@ -39,7 +40,7 @@ def init_cds_form(ds: DataStore, history: History) -> None:
     cohort_no: int = data[COHORT].iloc[0]
     form_title: str = f"Python Beginners Cohort {cohort_no} CDS Entry Form"
     form_name: str = f"CDS Cohort {cohort_no}"
-    cds_form: Form | None = create_form(form_title, form_name)
+    cds_form: Form | None = run_create_form(form_title, form_name)
 
     if cds_form is None:
         raise FormServiceError(
@@ -94,7 +95,7 @@ def init_cds_form(ds: DataStore, history: History) -> None:
         ]
     )
 
-    cds_form = setup_form(cds_form, cds_content)
+    cds_form = run_setup_form(cds_form, cds_content)
     if cds_form is None:
         raise FormServiceError(
             "setup",
@@ -102,7 +103,7 @@ def init_cds_form(ds: DataStore, history: History) -> None:
         )
 
     recipient_email: str = input_email("Enter email to share the form with: ")
-    cds_form = share_form(cds_form, recipient_email)
+    cds_form = run_share_form(cds_form, recipient_email)
     if cds_form is None:
         raise FormServiceError(
             "share",
@@ -117,6 +118,6 @@ def init_cds_form(ds: DataStore, history: History) -> None:
         timestamp=datetime.now().strftime(TIMESTAMP_FMT),
     )
     history.add_cds_form(info)
-    cds_form_path: Path = paths.get_cds_path("form", uuid=info.uuid)
+    cds_form_path: Path = paths.get_cds_path("form", info.timestamp)
     with open(cds_form_path, "w") as json_file:
         json.dump(info.model_dump(), cast(TextIOWrapper, json_file), indent=2)

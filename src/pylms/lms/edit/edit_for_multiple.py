@@ -10,7 +10,7 @@ from pylms.utils import DataStore
 def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> list[float]:
     result_col: str = det_result_col()
     student_serials: list[int] = select_student(ds)
-    num_rows: int = result_data.shape[1]
+    num_rows: int = result_data.shape[0]
     updates_list: list[float] = [0.0] * num_rows
 
     for each_serial in student_serials:
@@ -33,7 +33,7 @@ def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> list[float]:
         )
         marks: float = cast(float, marks_temp)
         match idx:
-            case 0:
+            case 1:
                 result_data.loc[index, result_col] = student_score + marks
                 updates_list[index] = marks
             case _:

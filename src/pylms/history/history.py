@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Self
 from pylms.errors import LMSError
-from pylms.constants import HISTORY_PATH, DATE_FMT
+from pylms.constants import DATE_FMT, HISTORY_PATH
 from pylms.models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
+from pylms.utils import paths
 import json
 
 
@@ -34,11 +35,23 @@ class History:
         marked_classes (list[datetime]): A list of datetime objects representing the for which attendance has been
             generated and have also being correspondingly recorded.
 
+        class_forms (list[ClassFormInfo]): A list of ClassFormInfo objects that store the details of all forms used to
+            generate attendance records
+
+        recorded_class_forms (list[ClassFormInfo]): A list of ClassFormInfo objects that stored the details fo all forms used for
+            generating attendance records that have been recorded
+
         cds_forms (list[CDSFormInfo]): A list of CDSFormInfo objects that store the details of all forms used to
             update cds day records
 
+        recorded_cds_forms (list[CDSFormInfo]): A list of CDSFormInfo objects that stored the details fo all forms used for
+            onboarding students into the students record that have been recorded
+
         update_forms (list[UpdateFormInfo]): A list of UpdateFormInfo objects that stored the details fo all forms used for
-            onboarding students into the students record.
+            onboarding students into the students record
+
+        recorded_update_forms (list[UpdateFormInfo]): A list of UpdateFormInfo objects that stored the details fo all forms
+            used for onboarding students into the students record that have been recorded
 
         attendance (tuple[bool, Path]): A tuple containing a boolean indicating whether attendance is recorded
             and the path to the attendance file.
@@ -95,7 +108,7 @@ class History:
             raise HistoryError("Start date must be set before updating dates.")
 
         all_dates: list[datetime] = [
-            self.orientation_date + timedelta(days=i) for i in range(0, 7 * self.weeks)
+            self.orientation_date + timedelta(days=i) for i in range(1, 7 * self.weeks)
         ]
         last_date: datetime = all_dates[-1]
         diff = 6 - last_date.weekday()
@@ -138,12 +151,13 @@ class History:
         :raises HistoryError: If the history data is not in the expected format or if required fields are missing.
         """
         history = cls()
+        history_path: Path = paths.get_history_path()
 
-        if not HISTORY_PATH.exists():
+        if not history_path.exists():
             return history
 
         # Read the history data from the JSON file
-        with HISTORY_PATH.open("r", encoding="utf-8") as file:
+        with history_path.open("r", encoding="utf-8") as file:
             data = json.load(file)
 
         # Validate the data format
@@ -168,7 +182,7 @@ class History:
             history.dates = [cls.to_datetime(date_str) for date_str in data["dates"]]
 
         # Check and set attribute `orientation_date`
-        if "orientation_date" in data:
+        if "orientation_date" in data and data["orientation_date"] is not None:
             history.orientation_date = cls.to_datetime(data["orientation_date"])
 
         # Check and set attribute `weeks`
@@ -286,7 +300,6 @@ class History:
 
         # Update the dates based on the loaded data
         history._update_dates()
-
         return history
 
     def save(self) -> None:
@@ -298,36 +311,83 @@ class History:
         :raises HistoryError: If the history data is not in the expected format or if required fields are missing.
         """
         data = {
+            # List of 3 integers representing weekdays on which classes are held
             "class_dates": list(self.class_dates),
+            # List of 3 integers representing weekdays on which classes are marked
             "dates": [date.strftime(DATE_FMT) for date in self.dates],
+            # orientation date in the format specified by DATE_FMT or None
             "orientation_date": self.orientation_date.strftime(DATE_FMT)
             if self.orientation_date
             else None,
+            # Number of weeks the course lasts
             "weeks": self.weeks,
+            # List of classes for which attendance has been generated
             "held_classes": [date.strftime(DATE_FMT) for date in self.held_classes],
+            # List of classes for which attendance has been marked
             "marked_classes": [date.strftime(DATE_FMT) for date in self.marked_classes],
+            # List of dictionaries representing ClassFormInfo objects
             "class_forms": [data.model_dump(mode="json") for data in self.class_forms],
+            # List of dictionaries representing ClassFormInfo objects for
+            # recorded classes
             "recorded_class_forms": [
                 data.model_dump(mode="json") for data in self.recorded_class_forms
             ],
+            # List of dictionaries representing CDSFormInfo objects
             "cds_forms": [data.model_dump(mode="json") for data in self.cds_forms],
+            # List of dictionaries representing CDSFormInfo objects
+            # for recorded CDS forms
             "recorded_cds_forms": [
                 data.model_dump(mode="json") for data in self.recorded_cds_forms
             ],
+            # List of dictionaries representing UpdateFormInfo objects
             "update_forms": [
                 data.model_dump(mode="json") for data in self.update_forms
             ],
+            # List of dictionaries representing UpdateFormInfo objects
+            # for recorded update forms
             "recorded_update_forms": [
                 data.model_dump(mode="json") for data in self.recorded_update_forms
             ],
-            "attendance": [self.attendance[0], str(self.attendance[1])],
-            "assessment": [self.assessment[0], str(self.assessment[1])],
-            "project": [self.project[0], str(self.project[1])],
-            "result": [self.result[0], str(self.result[1])],
+            "attendance": [
+                self.attendance[0],
+                str(self.attendance[1]),
+            ],  # List of boolean and file path
+            "assessment": [
+                self.assessment[0],
+                str(self.assessment[1]),
+            ],  # List of boolean and file path
+            "project": [
+                self.project[0],
+                str(self.project[1]),
+            ],  # List of boolean and file path
+            "result": [
+                self.result[0],
+                str(self.result[1]),
+            ],  # List of boolean and file path
         }
 
-        with HISTORY_PATH.open("w", encoding="utf-8") as file:
-            json.dump(data, file, indent=4)
+        # Save the history data to the JSON file
+        with paths.get_history_path().open("w", encoding="utf-8") as file:
+            json.dump(data, file, indent=2)
+
+        # Save the history data to the JSON file
+        with HISTORY_PATH.open("w") as file:
+            json.dump(data, file, indent=2)
+
+        # Save the dates to the JSON file (`Json/dates.json`)
+        # if the dates have changed
+
+        dates_json_list: list[str] = []
+
+        # Load the dates from the JSON file `Json/dates.json`
+        dates_json_path: Path = paths.get_paths_json()["Date"]
+        with dates_json_path.open("r") as file:
+            dates_json_list.extend(json.load(file))
+
+        # Update the dates in the JSON file if they have changed
+        if dates_json_list != self.str_dates():
+            with dates_json_path.open("w") as file:
+                json.dump(self.str_dates(), file, indent=2)
 
     def extend_weeks(self, additional_weeks: int) -> None:
         """Extends the number of weeks in the history.
@@ -345,19 +405,44 @@ class History:
         self.weeks += additional_weeks
         self._update_dates()
 
-    def add_held_class(
-        self, *, class_num: int | None = None, class_date: str | None = None
-    ) -> None:
-        """Adds a held class based on the class number.
+    def replan_weeks(self, new_weeks: int) -> None:
+        """Replans the number of weeks in the history.
 
-        :param class_num: (int) - The
-            class number to add as a held class.
-        :type class_num: int
+        This method sets a new number of weeks for the course and updates the relevant dates
+        based on the new duration.
+
+        :param new_weeks: (int) - The new number of weeks for the course.
+        :type new_weeks: int
 
         :return: (None) - This method does not return anything.
         :rtype: None
 
-        :raises HistoryError: If the dates have not been updated or if the class number is out of range.
+        :raises HistoryError: If the new number of weeks is less than or equal to 1.
+        """
+
+        if new_weeks <= 1:
+            raise HistoryError("Number of weeks must be greater than 1.")
+
+        self.weeks = new_weeks
+        self._update_dates()
+
+    def add_held_class(
+        self, *, class_num: int | None = None, class_date: str | None = None
+    ) -> None:
+        """Adds a held class based on the class number. Either class_num or class_date must be specified, else an error will be raised.
+
+        :param class_num: (int | None) - The
+            class number to add as a held class. Defaults to None.
+        :type class_num: int | None
+
+        :param class_date: (str | None) - The
+            class date to add as a held class. Defaults to None.
+        :type class_date: str | None
+
+        :return: (None) - This method does not return anything.
+        :rtype: None
+
+        :raises HistoryError: If class_num and class_date are both None or if the class_num is out of range.
         """
         # Ensure that dates have been updated before adding held classes
         if not self._updated:
@@ -389,65 +474,283 @@ class History:
             raise HistoryError("")
         self.held_classes.append(held_date)
 
-    def add_marked_class(self, class_num: int) -> None:
-        """Adds a marked class based on the class number.
+    def add_marked_class(
+        self, class_num: int | None = None, class_date: str | None = None
+    ) -> None:
+        """Adds a marked class based on the class number. Either class_num or class_date must be specified, else an error will be raised.
 
-        :param class_num: (int) - The
-            class number to add as a marked class.
-        :type class_num: int
+        :param class_num: (int | None) - The
+            class number to add as a held class. Defaults to None.
+        :type class_num: int | None
+
+        :param class_date: (str | None) - The
+            class date to add as a held class. Defaults to None.
+        :type class_date: str | None
 
         :return: (None) - This method does not return anything.
         :rtype: None
 
-        :raises HistoryError: If the dates have not been updated or if the class number is out of range.
+        :raises HistoryError: If class_num and class_date are both None or if the class_num is out of range.
         """
         # Ensure that dates have been updated before adding marked classes
         if not self._updated:
             raise HistoryError("Dates must be updated before adding marked classes.")
 
+        if class_num is None and class_date is None:
+            raise HistoryError(
+                "one of the arguments `class_num` and `class_date` must be specified"
+            )
+
         # Check if the class number is within the valid range
-        if class_num < 1 or class_num > len(self.dates):
+        if class_num is not None and (class_num < 1 or class_num > len(self.dates)):
             raise HistoryError(f"Class number {class_num} is out of range.")
 
-        # Get the date corresponding to the class number and add it to marked classes
-        class_date = list(self.dates)[class_num - 1]
+        if class_date is not None and class_date not in self.str_dates():
+            raise HistoryError(
+                f"Class Date: {class_date} is not part of the valid dates list for this program."
+            )
+
+        # Get the date corresponding to the class number and add it to held classes
+        marked_date: datetime | None = (
+            list(self.dates)[class_num - 1]
+            if class_num is not None
+            else History.to_datetime(class_date)
+            if class_date is not None
+            else None
+        )
 
         # Check if the class has been held before marking it
-        if class_date not in self.held_classes:
-            raise HistoryError(f"Class {class_num} has not been held yet.")
-        self.marked_classes.append(class_date)
+        if marked_date is None:
+            raise HistoryError("")
+        self.marked_classes.append(marked_date)
 
     def add_cds_form(self, form: CDSFormInfo) -> None:
+        """
+        Adds a CDS Form to the list of CDS forms.
+
+        :param form: (CDSFormInfo) - The CDS Form to add.
+        :type form: CDSFormInfo
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
         self.cds_forms.append(form)
 
     def add_recorded_cds_form(self, form: CDSFormInfo) -> None:
+        """
+        Adds a recorded CDS Form to the list of recorded CDS forms.
+
+        :param form: (CDSFormInfo) - The recorded CDS Form to add.
+        :type form: CDSFormInfo
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
         self.recorded_cds_forms.append(form)
 
     def add_update_form(self, form: UpdateFormInfo) -> None:
+        """
+        Adds an Update Form to the list of Update forms.
+
+        :param form: (UpdateFormInfo) - The Update Form to add.
+        :type form: UpdateFormInfo
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
         self.update_forms.append(form)
 
     def add_recorded_update_form(self, form: UpdateFormInfo) -> None:
+        """
+        Adds a recorded Update Form to the list of recorded Update forms.
+
+        :param form: (UpdateFormInfo) - The recorded Update Form to add.
+        :type form: UpdateFormInfo
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
         self.recorded_update_forms.append(form)
 
     def add_class_form(self, form: ClassFormInfo) -> None:
+        """
+        Adds a Class Form to the list of Class forms.
+
+        :param form: (ClassFormInfo) - The Class Form to add.
+        :type form: ClassFormInfo
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
         self.class_forms.append(form)
 
     def add_recorded_class_form(self, form: ClassFormInfo) -> None:
+        """
+        Adds a recorded Class Form to the list of recorded Class forms.
+
+        :param form: (ClassFormInfo) - The recorded Class Form to add.
+        :type form: ClassFormInfo
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
         self.recorded_class_forms.append(form)
 
     def get_available_class_forms(self) -> list[ClassFormInfo]:
+        """
+        Returns a list of Class Forms that have not been previously retrieved or recorded
+
+        :return: (list[ClassFormInfo]) - A list of Class Forms that are available to retrieve.
+        :rtype: list[ClassFormInfo]
+        """
         return [
             form for form in self.class_forms if form not in self.recorded_class_forms
         ]
 
     def get_available_cds_forms(self) -> list[CDSFormInfo]:
+        """
+        Returns a list of CDS Forms that have not been previously retrieved or recorded
+
+        :return: (list[CDSFormInfo]) - A list of CDS Forms that are available to retrieve.
+        :rtype: list[CDSFormInfo]
+        """
         return [form for form in self.cds_forms if form not in self.recorded_cds_forms]
 
     def get_available_update_forms(self) -> list[UpdateFormInfo]:
+        """
+        Returns a list of Update Forms that have not been previously retrieved
+        or recorded
+
+        :return: (list[UpdateFormInfo]) - A list of Update Forms that are available to retrieve.
+        :rtype: list[UpdateFormInfo]
+        """
         return [
             form for form in self.update_forms if form not in self.recorded_update_forms
         ]
-        
+
     def match_info_by_date(self, class_date: str) -> ClassFormInfo:
+        """
+        Returns a Class Form that matches the given date.
+
+        :param class_date: (str) - The date to match the Class Form to.
+        :type class_date: str
+        :return: (ClassFormInfo) - The Class Form that matches the given date.
+        :rtype: ClassFormInfo
+        """
         return [form for form in self.class_forms if form.date == class_date][0]
-        
+
+    def record_assessment(self) -> None:
+        """
+        Records the assessment by checking the existence of the Assessment.xlsx file
+        and updates the `assessment` attribute with a tuple containing the existence
+        status and the file path.
+
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
+        path: Path = paths.get_paths_excel()["Assessment"]
+        self.assessment = (path.exists(), path)
+
+    def record_attendance(self) -> None:
+        """
+        Records the attendance by checking the existence of the Attendance.xlsx file
+        and updates the `attendance` attribute with a tuple containing the existence
+        status and the file path.
+
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
+        path = paths.get_paths_excel()["Attendance"]
+        self.attendance = (path.exists(), path)
+
+    def record_project(self) -> None:
+        """
+        Records the project by checking the existence of the Project.xlsx file
+        and updates the `project` attribute with a tuple containing the existence
+        status and the file path.
+
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
+        path = paths.get_paths_excel()["Project"]
+        self.project = (path.exists(), path)
+
+    def record_result(self) -> None:
+        """
+        Records the result by checking the existence of the Result.xlsx file
+        and updates the `result` attribute with a tuple containing the existence
+        status and the file path.
+
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
+        path = paths.get_paths_excel()["Result"]
+        self.result = (path.exists(), path)
+
+    @property
+    def has_collated_attendance(self) -> bool:
+        """
+        Property indicating whether the attendance records have been collated.
+
+        :return: (bool) - A boolean indicating whether the attendance records have been collated.
+        :rtype: bool
+        """
+        return self.attendance[0]
+
+    @property
+    def has_collated_assessment(self) -> bool:
+        """
+        Property indicating whether the assessment scores have been collated.
+
+        :return: (bool) - A boolean indicating whether the assessment scores have been collated.
+        :rtype: bool
+        """
+        return self.assessment[0]
+
+    @property
+    def has_collated_project(self) -> bool:
+        """
+        Property indicating whether the project scores have been collated.
+
+        :return: (bool) - A boolean indicating whether the project scores have been collated.
+        :rtype: bool
+        """
+        return self.project[0]
+
+    @property
+    def has_collated_all(self) -> bool:
+        """
+        Property indicating whether all necessary records (attendance, assessment, and project)
+        have been collated.
+
+        :return: (bool) - A boolean indicating whether all necessary records have been collated.
+        :rtype: bool
+        """
+        return (
+            self.has_collated_attendance
+            and self.has_collated_assessment
+            and self.has_collated_project
+        )
+
+    @property
+    def has_collated_result(self) -> bool:
+        """
+        Property indicating whether the result has been collated.
+
+        :return: (bool) - A boolean indicating whether the result has been collated.
+        :rtype: bool
+        """
+        return self.result[0]
+
+    def get_unheld_classes(self) -> list[datetime]:
+        """
+        Returns a list of unheld classes i.e., classes that are not part of the held_classes list.
+
+        :return: (list[datetime]) - A list of datetime objects representing the unheld classes.
+        :rtype: list[datetime]
+        """
+        return [date for date in self.dates if date not in self.held_classes]
+
+    def get_unmarked_classes(self) -> list[datetime]:
+        """
+        Returns a list of unmarked classes i.e., classes that are held and have attendance generated
+        for them but have not had their attendances marked.
+
+        :return: (list[datetime]) - A list of datetime objects representing the unmarked classes.
+        :rtype: list[datetime]
+        """
+        return [date for date in self.held_classes if date not in self.marked_classes]

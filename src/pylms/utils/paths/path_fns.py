@@ -34,7 +34,7 @@ def get_paths_excel() -> Spreadsheets:
         "Attendance": excel / "Attendance.xlsx",
         "Assessment": excel / "Assessment.xlsx",
         "Group": excel / "Group.xlsx",
-        "Score": excel / "Score.xlsx",
+        "Project": excel / "Project.xlsx",
     }
 
 

@@ -3,10 +3,16 @@ from pylms.lms.collate.awardees_merged import collate_merge
 from pylms.lms.collate.awardees_merit import collate_merit
 from pylms.lms.collate.result import collate_result
 from pylms.lms.edit import edit_result, overwrite_result
+from pylms.lms.collate.assessment import collate_assessment
+from pylms.lms.collate.attendance import collate_attendance
+from pylms.lms.collate.project import collate_project
 from pylms.lms.group import group
 from pylms.lms.view import view_result
 
 __all__: list[str] = [
+    "collate_attendance",
+    "collate_assessment",
+    "collate_project",
     "collate_fast_track",
     "collate_merit",
     "collate_merge",

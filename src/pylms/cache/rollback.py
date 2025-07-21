@@ -5,7 +5,7 @@ from uuid import UUID
 
 import pandas as pd
 
-from pylms.state.cache.cache import copy_data
+from pylms.cache.cache import copy_data
 from pylms.cli import input_num
 from pylms.constants import CACHE_CMD, CACHE_ID, CACHE_TIME
 from pylms.utils import DataStream, paths
@@ -62,4 +62,3 @@ def rollback_to_cmd(test_path: Path | None = None) -> None:
     if test_path is None:
         test_path = paths.get_data_path()
     copy_data(snapshot_id, snapshot_path, test_path)
-    

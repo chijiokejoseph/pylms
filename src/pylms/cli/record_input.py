@@ -7,6 +7,7 @@ from pylms.utils.date import retrieve_dates
 
 def input_record(target_date: str, options: list[RecordStatus]) -> RecordStatus:
     class_dates: list[str] = retrieve_dates()
+    print("\nSelect from the following: ")
     for i, option in enumerate(options, start=1):
         print(f"{i}. {option}")
     class_num: int = class_dates.index(target_date) + 1

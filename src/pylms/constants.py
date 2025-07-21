@@ -9,6 +9,10 @@ DEFAULT_DATA_PATH: Path = PARENT_PATH / "data"
 STATE_PATH: Path = PARENT_PATH / "state.toml"
 SECRETS_PATH: Path = PARENT_PATH / "secrets.json"
 HISTORY_PATH: Path = PARENT_PATH / "history.json"
+HISTORY_JSON: str = "history.json"
+# RollCall Global Data
+GLOBAL_RECORD_PATH: Path = PARENT_PATH / "global_record.json"
+GLOBAL_RECORD_JSON: str = "global_record.json"
 DISCOVERY_DOC = "https://forms.googleapis.com/$discovery/rest?version=v1"
 SCOPES = "https://www.googleapis.com/auth/forms.body"
 
@@ -21,8 +25,7 @@ class Spreadsheets(TypedDict):
     Attendance: Path
     Assessment: Path
     Group: Path
-    Score: Path
-
+    Project: Path
 
 class Json(TypedDict):
     Classes: Path
@@ -80,7 +83,7 @@ AWARDEES_EMTPY: str = " "
 
 
 FORM_DATE_FMT: str = "%m/%d/%Y"
-TIMESTAMP_FMT: str = "%Y-%m-%d %H:%M:%S"
+TIMESTAMP_FMT: str = "%b%d_%H%M%S"
 
 
 # Column Names of Data
@@ -142,10 +145,6 @@ FRONT_SLASH: str = "/"
 BACK_SLASH: str = "\\"
 HYPHEN: str = "-"
 
-
-# RollCall Global Data
-GLOBAL_RECORD_PATH: Path = PARENT_PATH / "global_record.json"
-
 # Column Names for Cache CSV
 CACHE_TIME: str = "Timestamp"
 CACHE_CMD: str = "Command"
@@ -185,6 +184,8 @@ DROPPED_COLUMNS: list[str] = ["Training Days And Hours", "Select Your Batch"]
 NAMES_COLUMNS: list[str] = ["First Name", "Last Name", "Middle Name"]
 PASSED: str = "Passed"
 STATE: str = "State"
+PASS: str = "PASS"
+FAIL: str = "FAIL"
 
 PLACEHOLDER: str = " "
 RESPONSES_NAME: str = "Name"

@@ -25,7 +25,9 @@ class UpdateFormInfo(BaseModel):
     timestamp: str
 
 
-class CDSFormInfo(BaseModel):
+class CDSFormInfo(
+    BaseModel,
+):
     name: str
     title: str
     url: str

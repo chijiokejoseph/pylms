@@ -18,6 +18,7 @@ from pylms.lms.utils.val import (
     val_attendance_data,
     val_result_data,
 )
+from pylms.lms.utils.inputs import input_marks_req, input_ratio_req
 
 __all__: list[str] = [
     "det_attendance_req_col",
@@ -35,6 +36,8 @@ __all__: list[str] = [
     "fmt_date",
     "fmt_phone",
     "list_print",
+    "input_marks_req",
+    "input_ratio_req",
     "val_assessment_data",
     "val_attendance_data",
     "val_result_data",

@@ -31,9 +31,11 @@ def rename_date_col(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
     return DataStream(data)
 
 
-def retrieve_update_form(history: History) -> tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]:
+def retrieve_update_form(
+    history: History,
+) -> tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]:
     info: UpdateFormInfo = cast(UpdateFormInfo, select_form(history, "update"))
-    update_form_path, update_record_path = paths.ret_update_path(info.uuid)
+    update_form_path, update_record_path = paths.ret_update_path(info.timestamp)
     result: DataStream[pd.DataFrame] | None = retrieve_form(
         update_form_path, update_record_path, UpdateFormInfo
     )

@@ -8,6 +8,7 @@ import pandas as pd
 
 from pylms.constants import CACHE_CMD, CACHE_ID, CACHE_TIME
 from pylms.utils import paths, read_csv, rm_path
+from pylms.cache.errors import FilePermissionError, ShutilOpsError
 
 
 def new_cache_record(command: str) -> tuple[pd.DataFrame, UUID]:
@@ -35,7 +36,7 @@ def copy_dir(src_dir: Path, dst_dir: Path) -> None:
     return None
 
 
-def copy_data(
+def _copy_data(
     snapshot_id: UUID,
     src_path: Path | None = None,
     dst_path: Path | None = None,
@@ -61,6 +62,18 @@ def copy_data(
             shutil.copytree(item, new_item, dirs_exist_ok=True)
         else:
             shutil.copy2(item, new_item)
+            
+def copy_data(
+    snapshot_id: UUID,
+    src_path: Path | None = None,
+    dst_path: Path | None = None,
+) -> None:
+    try:
+        _copy_data(snapshot_id, src_path, dst_path)
+    except PermissionError as e:
+        raise FilePermissionError(str(e))
+    except shutil.Error as e:
+        raise ShutilOpsError(str(e))
 
 
 def cache_for_cmd(cmd: str) -> None:

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Literal, cast
+from typing import Literal, cast
 
 import pandas as pd
 
@@ -13,6 +13,7 @@ from pylms.constants import (
     EMAIL,
     NAME,
     PHONE,
+    ValidateDataFn,
 )
 from pylms.lms.utils import (
     fmt_date,
@@ -31,8 +32,7 @@ def collate_awardees(
         req_cols: list[str] = [EMAIL, NAME, PHONE, COHORT]
         return all([req_col in columns for req_col in req_cols])
 
-    type ValidateFn = Callable[[pd.DataFrame | pd.Series], bool]
-    stream = DataStream(stream(), cast(ValidateFn, validate_fn))
+    stream = DataStream(stream(), cast(ValidateDataFn, validate_fn))
     data: pd.DataFrame = stream()
     dates_list: list[str] = date.retrieve_dates()
     end_date: str = dates_list[-1]
@@ -59,7 +59,3 @@ def collate_awardees(
     )
     awardees_stream: DataStream[pd.DataFrame] = DataStream(awardees_data)
     awardees_stream.to_excel(awardees_path)
-
-
-
-

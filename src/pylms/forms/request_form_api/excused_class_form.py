@@ -3,9 +3,9 @@ from datetime import datetime
 from pylms.constants import COHORT, DATE_FMT, FORM_DATE_FMT, NAME
 from pylms.forms.request_form_api.errors import FormServiceError
 from pylms.forms.utils import (
-    create_form,
-    setup_form,
-    share_form,
+    run_create_form,
+    run_setup_form,
+    run_share_form,
 )
 from pylms.models import (
     ChoiceQuestion,
@@ -31,7 +31,7 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Form:
         f"Python Beginners Cohort {cohort_no} Excused List for {input_date}"
     )
     form_name: str = f"Excused {title_date}"
-    excused_form: Form | None = create_form(form_title, form_name)
+    excused_form: Form | None = run_create_form(form_title, form_name)
     if excused_form is None:
         raise FormServiceError(
             "create",
@@ -91,7 +91,7 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Form:
             ),
         ]
     )
-    excused_form = setup_form(
+    excused_form = run_setup_form(
         excused_form,
         form_content,
     )
@@ -101,7 +101,7 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Form:
             f"Form creation failed when creating excused list for students for date {input_date}. \nPlease restart the program and try again.",
         )
 
-    excused_form = share_form(excused_form, email)
+    excused_form = run_share_form(excused_form, email)
     if excused_form is None:
         raise FormServiceError(
             "share",

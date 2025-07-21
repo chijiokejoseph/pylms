@@ -2,7 +2,7 @@ import unittest
 from unittest import TestCase
 
 from pylms.data_ops import load
-from pylms.state.cache.rollback import rollback_to_cmd
+from pylms.cache.rollback import rollback_to_cmd
 from pylms.utils import paths
 
 

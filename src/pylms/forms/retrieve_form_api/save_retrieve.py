@@ -21,8 +21,8 @@ def _save(form_path: Path, record_path: Path, cls: Type) -> None:
             data_form_info.model_dump(), cast(TextIOWrapper, json_record), indent=2
         )
 
-def save_retrieve(info: CDSFormInfo | ClassFormInfo | UpdateFormInfo) -> None:
 
+def save_retrieve(info: CDSFormInfo | ClassFormInfo | UpdateFormInfo) -> None:
     match info:
         case _ if isinstance(info, ClassFormInfo):
             form_path: Path = paths.get_class_path(info.date, "class")
@@ -43,23 +43,21 @@ def save_retrieve(info: CDSFormInfo | ClassFormInfo | UpdateFormInfo) -> None:
                 excused_id=f"{datetime.now()}",
                 excused_title="",
                 excused_url="",
-                timestamp=datetime.now().strftime(TIMESTAMP_FMT)
+                timestamp=datetime.now().strftime(TIMESTAMP_FMT),
             )
             with form_path.open("w", encoding="utf-8") as json_form:
                 json.dump(
                     class_info.model_dump(), cast(TextIOWrapper, json_form), indent=2
                 )
-                
+
         case _ if isinstance(info, CDSFormInfo):
-            form_path = paths.get_cds_path("form", info.uuid)
-            record_path = paths.get_cds_path("record", info.uuid)
+            form_path = paths.get_cds_path("form", info.timestamp)
+            record_path = paths.get_cds_path("record", info.timestamp)
             cls = CDSFormInfo
         case _ if isinstance(info, UpdateFormInfo):
-            form_path, record_path = paths.ret_update_path(info.uuid)
+            form_path, record_path = paths.ret_update_path(info.timestamp)
             cls = UpdateFormInfo
         case _:
-            raise InvalidRetrieveArgsError("") 
-            
+            raise InvalidRetrieveArgsError("")
+
     _save(form_path, record_path, cls)
-    
-    

@@ -1,17 +1,17 @@
 import unittest
 
 from pylms.models import Form
-from pylms.forms.utils.service.form_create import create_form
+from pylms.forms.utils.service.form_create import run_create_form
 
 
-class CreateFormTest(unittest.TestCase):
+class TestCreateForm(unittest.TestCase):
     def setUp(self) -> None:
         self.form_title = "Test Form Title"
         self.form_name = "Test Form Name"
         self.form_resource: Form | None = None
 
     def test_create_form(self) -> None:
-        self.form_resource = create_form(
+        self.form_resource = run_create_form(
             form_title=self.form_title,
             form_name=self.form_name,
         )

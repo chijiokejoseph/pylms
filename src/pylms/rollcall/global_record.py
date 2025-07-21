@@ -2,6 +2,7 @@ from typing import NamedTuple
 from pylms.errors import LMSError
 from pylms.record import RecordStatus, retrieve_record
 from pylms.constants import GLOBAL_RECORD_PATH
+from pathlib import Path
 import json
 
 from pylms.rollcall.errors import PathNotFoundError
@@ -27,8 +28,9 @@ class _DateRecord(NamedTuple):
 
 class GlobalRecord:
     def __init__(self) -> None:
-        if GLOBAL_RECORD_PATH.exists():
-            with GLOBAL_RECORD_PATH.open("r") as file_record:
+        global_record_path: Path = paths.get_global_record_path()
+        if global_record_path.exists():
+            with global_record_path.open("r") as file_record:
                 data = json.load(file_record)
                 record: dict[str, RecordStatus] = {
                     key: retrieve_record(value) for key, value in data.items()
@@ -55,6 +57,11 @@ class GlobalRecord:
         save_data: dict[str, str] = {
             key: str(value) for key, value in self.dates.items()
         }
+        
+        global_record_path: Path = paths.get_global_record_path()
+        
+        with global_record_path.open("w") as file:
+            json.dump(save_data, file)
 
         with GLOBAL_RECORD_PATH.open("w") as file:
             json.dump(save_data, file)

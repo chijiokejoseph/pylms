@@ -14,10 +14,9 @@ from pylms.forms.retrieve_form_api import (
 from pylms.rollcall import (
     EditType,
     input_class_date,
-    input_date_for_edit,
     record_absent,
     record_excused,
-    record_mid_cohort,
+    record_cohort,
     edit_record,
     record_present,
     new_edit_info,
@@ -26,16 +25,15 @@ from pylms.state import History
 from pylms.utils import DataStream, DataStore
 
 
-def handle_rollcall() -> None:
+def handle_rollcall(history: History) -> None:
     menu: list[str] = [
         "Request Attendance for a class",
         "Mark Attendance for a class",
         "Edit Student Attendance Manually",
-        "Record Half Cohort Attendance",
+        "Record Current Cohort Attendance",
         "Return to Main Menu",
     ]
 
-    history: History = History.load()
     while True:
         selection: int = interact(menu)
         cmd: str = menu[selection - 1]
@@ -49,7 +47,7 @@ def handle_rollcall() -> None:
                 print("Generated Attendance Form successfully\n")
             case 2:
                 app_ds = load()
-                class_dates: list[str] = input_class_date()
+                class_dates: list[str] = input_class_date(history)
                 for each_date in class_dates:
                     present_turnout: DataStream[pd.DataFrame] | None = (
                         retrieve_class_form(each_date, ClassType.PRESENT)
@@ -79,19 +77,21 @@ def handle_rollcall() -> None:
                     app_ds = record_absent(app_ds, present_turnout)
                     info = history.match_info_by_date(each_date)
                     save_retrieve(info)
+                    history.add_recorded_class_form(info)
+                    history.add_marked_class(class_date=each_date)
                     print(f"Recorded all those absent for date '{each_date}'")
                     print()
             case 3:
                 app_ds = load()
-                input_dates: list[str] = input_date_for_edit()
-                app_ds, edit_type = edit_record(app_ds, input_dates)
+                app_ds, edit_type, edited_dates = edit_record(app_ds, history)
                 # only save retrieval if the record attendance manually was done for the whole batch of Students
                 if edit_type == EditType.ALL:
-                    for each_date in input_dates:
+                    for each_date in edited_dates:
+                        history.add_marked_class(class_date=each_date)
                         save_retrieve(new_edit_info(each_date))
             case 4:
                 app_ds = load()
-                record_path = record_mid_cohort(app_ds)
+                record_path = record_cohort(app_ds, history)
                 if record_path is not None:
                     print(
                         f"Generated half cohort data successfully at path '{record_path.resolve()}'\n"

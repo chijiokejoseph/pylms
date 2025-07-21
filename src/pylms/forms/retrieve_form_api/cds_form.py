@@ -10,8 +10,10 @@ from pylms.state import History
 from pylms.utils import DataStream, paths
 
 
-def retrieve_cds_form(history: History) -> tuple[DataStream[pd.DataFrame] | None, CDSFormInfo]:
+def retrieve_cds_form(
+    history: History,
+) -> tuple[DataStream[pd.DataFrame] | None, CDSFormInfo]:
     info: CDSFormInfo = cast(CDSFormInfo, select_form(history, "cds"))
-    cds_form_path: Path = paths.get_cds_path("form", info.uuid)
-    cds_record_path: Path = paths.get_cds_path("record", info.uuid)
+    cds_form_path: Path = paths.get_cds_path("form", info.timestamp)
+    cds_record_path: Path = paths.get_cds_path("record", info.timestamp)
     return retrieve_form(cds_form_path, cds_record_path, CDSFormInfo), info

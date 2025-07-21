@@ -3,70 +3,59 @@ from pylms.cli.utils import parse_to_dates, val_date_str
 from pylms.utils.date.retrieve_dates import retrieve_dates
 
 
-def select_class_date(msg: str) -> list[str]:
+def select_class_date(msg: str, src_dates_list: list[str] | None = None) -> list[str]:
     """
-    prompts the user with the argument to `msg` to select a class date from the list of class dates stored in the program and gives the user options for selecting these dates. There are several possible means of selecting a class date:
+    Prompts the user to select a class date from the list of class dates.
 
-    If the following is printed to the user:
-        1. 13/01/2025
-        2. 14/01/2025
-        3. 15/01/2025
-        4. 16/01/2025
-        5. 17/01/2025
-        6. all
+    The user can enter dates in the following formats:
 
-    then the instructions are:
-        - Entering a single option number for a single target class date e.g., **1** -> `13/01/2025`
-        - Entering a comma separated entry of integers to target multiple class dates e.g., **1, 2, 3, 5** -> `13/10/2025, 14/01/2025, 15/01/2025, 17/01/2025`
-        - Entering a single class date e.g., **13/01/2025** -> `13/01/2025`
-        - Entering a comma separated entry of class dates to target multiple class dates e.g., **13/01/2025, 16/01/2025** -> `13/01/2025, 16/01/2025`
-        - Entering the option number that matches "all" e.g., **6** -> `13/01/2025, 14/01/2025, 15/01/2025, 16/01/2025, 17/01/2025`
-        - Entering a string that matches "all" e.g., **all** -> `13/01/2025, 14/01/2025, 15/01/2025, 16/01/2025, 17/01/2025`
+    - Single class number (e.g. "1")
+    - Exact date (e.g. "13/01/2025")
+    - Comma-separated class numbers (e.g. "1, 2, 3")
+    - Comma-separated exact dates (e.g. "13/01/2025, 14/01/2025")
+    - Date ranges (e.g. "1 - 3", "1 -3, 5, 7 - 10")
+    - "all" to select all available dates
 
-    Based on the user's input, the user's response is parsed and the targeted dates are returned as a `list[str]`. If the user specifies an invalid input, the program forcefully exits.
+    The function prints out the instructions on how to select class dates and the class dates with their class numbers,
+    and then uses `input_str` to receive user input before validating it.
+    Finally, it parses the user input and returns the selected class date(s) as a list of str.
 
-    :param msg: (str): The prompt message to be displayed to the user before printing out the instructions on how to select the class dates. This message usually states the kind of data for which those class dates are needed.
+    :param msg: (str) - The message to display before prompting the user for input.
     :type msg: str
+    
+    :param src_dates_list: (list[str] | None) - An optional list of class dates to choose from. If not provided, it defaults to retrieving dates from the system.
+    :type src_dates_list: list[str] | None
 
-    :returns: a list of selected class dates
+
+    :return: A list of class dates selected by the user.
     :rtype: list[str]
     """
+
     # get class dates
-    dates_list: list[str] = retrieve_dates()
-    dates_list.append(
-        "all"
-    )  # add all to add an option for selecting all the class_dates at once
+    all_dates: list[str] = retrieve_dates()
+    dates_list: list[str] = src_dates_list if src_dates_list is not None else all_dates
+    if src_dates_list is None:
+        dates_list.append(
+            "all"
+        )  # add all to add an option for selecting all the class_dates at once
     print(msg)
     guide: str = f"""
-You can enter the dates using one of the following formats:
-    i. Enter the corresponding class number without the `Class` term just the number
-    to pick a single date e.g., "Enter date: 1"
-    
-    ii. Enter the exact class date (which has been printed out in the form dd/mm/yyyy)
-    to pick that single date
-    
-    iii. Enter comma separated values of the class numbers without the `Class` term.
-    e.g., "Enter date: 1, 2, 3"
-    
-    iv. Enter comma separated values of the exact dates for which forms should be generated
-    e.g., "Enter date: 13/01/2025, 14/01/2025"
-    PS: This should match the dates on the menu displayed above
-    else the program will fail.
-    
-    v. {len(dates_list)} if all the available dates are being targeted.
-    It must be entered as a single number i.e., "1, 2, {len(dates_list)}" is invalid.
-    e.g., "Enter date: 16"
-    
-    v. "all" if all the available dates are being targeted.
-    It must be entered solely by itself i.e., "13/01/2025, all" is invalid.
-    e.g., "Enter date: all"
+You can enter dates in the following formats:
+    - Single class number (e.g. "1")
+    - Exact date (e.g. "13/01/2025")
+    - Comma-separated class numbers (e.g. "1, 2, 3")
+    - Comma-separated exact dates (e.g. "13/01/2025, 14/01/2025")
+    - Date ranges (e.g. "1 - 3", "1 -3, 5, 7 - 10")
+    - "{len(dates_list)}" or "all" to select all available dates
+Note: Dates must match the menu displayed above.
     """
     # prints out the instructions on how to select class dates
     print(guide)
 
     print("The class dates with their class numbers are printed below")
     # print out each class date and an option number for each class date
-    for i, each_date in enumerate(dates_list, start=1):
+    for each_date in dates_list:
+        i: int = all_dates.index(each_date) + 1 if each_date != "all" else len(all_dates) + 1
         print(f"Class {i}. {each_date}")
 
     # uses `input_str` and the validation function `_date_val_input` to validate user input

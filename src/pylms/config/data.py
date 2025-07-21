@@ -1,6 +1,6 @@
 from pathlib import Path
 from pylms.errors import LMSError
-from pylms.state.toml.app_toml import AppToml
+from pylms.config.app_toml import AppToml
 from pylms.constants import DEFAULT_DATA_PATH
 
 

@@ -6,8 +6,8 @@ from pylms.errors import LMSError
 
 class PathNotFoundError(LMSError):
     def __init__(self, path: Path) -> None:
-        self.message = f"Path '{path}' does not exist"
-        super().__init__(self.message)
+        message: str = f"Path '{path}' does not exist"
+        super().__init__(message)
 
 
 def rm_path(path: Path, must_exist: bool = True) -> None:

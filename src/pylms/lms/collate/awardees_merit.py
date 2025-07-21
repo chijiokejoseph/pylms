@@ -7,6 +7,7 @@ from pylms.constants import (
 )
 from pylms.lms.collate.awardees import collate_awardees
 from pylms.lms.collate.errors import SpreadSheetFmtErr
+from pylms.constants import PASS, FAIL
 from pylms.lms.utils import (
     det_assessment_req_col,
     det_attendance_req_col,
@@ -20,6 +21,40 @@ from pylms.lms.utils import (
 from pylms.utils import DataStore, DataStream, paths, read_data
 
 type CollateType = Literal["merit", "fast track"]
+
+
+def remark(
+    assessment_pass: list[bool],
+    special_score_pass: list[bool],
+    special_attendance_pass: list[bool],
+    standard_attendance_pass: list[bool],
+    standard_score_pass: list[bool],
+) -> tuple[list[str], list[str]]:
+    remarks: list[str] = []
+    reasons: list[str] = []
+    for assessment, special_score, special_attendance, attendance, score in zip(
+        assessment_pass, special_score_pass, special_attendance_pass, standard_attendance_pass, standard_score_pass
+    ):
+        score_pass: bool = special_score or special_attendance or (attendance and score)
+        passed: bool = assessment and score_pass
+        remark: str = PASS if passed else FAIL
+        reason: str = ""
+        if not assessment:
+            reason += "You failed the assessment; "
+        else:
+            reason += "You passed the assessment; "
+        if not score_pass:
+            if not score:
+                reason += "You did not meet the passmark; "
+            if not attendance:
+                reason += "You did not meet the attendance requirement; "
+        else:
+            reason += (
+                "You met the passmark and your attendance was deemed satisfactory; "
+            )
+        remarks.append(remark)
+        reasons.append(reason)
+    return remarks, reasons
 
 
 def collate_merit(ds: DataStore) -> None:
@@ -79,6 +114,16 @@ def collate_merit(ds: DataStore) -> None:
         | (poor_attendance_pass & brilliant_score_pass)
         | (attendance_pass & score_pass)
     )
+    remarks, reasons = remark(
+        assessment_pass.tolist(),
+        (poor_attendance_pass & brilliant_score_pass).tolist(),
+        (brilliant_attendance_pass & near_score_pass).tolist(),
+        attendance_pass.tolist(),
+        score_pass.tolist(),
+    )
+    result_data["Remark"] = remarks
+    result_data["Reason"] = reasons
+    DataStream(result_data).to_excel(paths.get_paths_excel()["Result"])
     pass_logic_idx: pd.Series = attendance_score_pass & assessment_pass
     pretty_data: pd.DataFrame = ds.pretty()
     passed_data: pd.DataFrame = pretty_data.loc[pass_logic_idx, :]

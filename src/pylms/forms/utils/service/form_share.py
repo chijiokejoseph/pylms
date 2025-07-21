@@ -2,22 +2,19 @@ from googleapiclient.http import HttpError, HttpRequest
 
 from pylms.models import Form, PermissionsData
 from pylms.forms.utils.service._resource import DriveResource
-from pylms.forms.utils.service.service_init import init_service
+from typing import cast
+from pylms.forms.utils.service.service_init import run_service
 
 
-@init_service(api="drive", version="v3")
-def share_form(form: Form, email: str, *, service: DriveResource) -> Form | None:
+def _share_form(form: Form, email: str, *, service: DriveResource) -> Form | None:
     """
-    share_form grants the email specified in the recipient_email argument access to the form whose id is specified in the record argument.
+    Grants write access to a specified email for the given form using the Google Drive API.
 
-    :param service: ( ResourceAPI ): This parameter is automatically filled in due to the application of the `service_init` decorator
-    :type service: DriveResource
-    :param form: ( Form ) A Form object that stores the id of the form that is to be shared alongside its url.
-    :type form: Form
-    :param email: ( str ): An email address that needs to be granted write access.
-    :type email: str
+    :param form: (Form) - A Form object that stores the id of the form that is to be shared alongside its url.
+    :param email: (str) - An email address that needs to be granted write access.
+    :param service: (DriveResource) - DriveResource object that provides the permissions() method to create a permission for the form file specified by form.uuid
 
-    :return: None.
+    :return: The `Form` object if the sharing operation is successful, else None.
     :rtype: Form | None
     """
 
@@ -40,3 +37,21 @@ def share_form(form: Form, email: str, *, service: DriveResource) -> Form | None
             "ERROR\n",
         )
         return None
+
+
+def run_share_form(form: Form, email: str) -> Form | None:
+    """
+    Grants write access to a specified email for the given form using the Google Drive API.
+
+    :param form: (Form) - A `Form` object that stores the id and url of the form to be shared.
+    :param email: (str) - The email address to grant write access to the form.
+
+    :return: (Form | None) - The `Form` object if the sharing operation is successful, else None.
+    """
+    return run_service(
+        api="drive",
+        version="v3",
+        func=lambda service: _share_form(
+            form, email, service=cast(DriveResource, service)
+        ),
+    )

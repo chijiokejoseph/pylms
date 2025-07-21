@@ -6,9 +6,10 @@ import pandas as pd
 from pylms.constants import COHORT, DATA_COLUMNS, DATE_FMT
 from pylms.record import RecordStatus
 from pylms.utils import DataStore, DataStream, date, paths
+from pylms.history import History
+from pylms.models import CDSFormInfo
 
-
-def record_mid_cohort(ds: DataStore) -> Path | None:
+def record_cohort(ds: DataStore, history: History) -> Path | None:
     # get DataStore data in its pretty form
     pretty_data: pd.DataFrame = ds.pretty()
 
@@ -26,9 +27,12 @@ def record_mid_cohort(ds: DataStore) -> Path | None:
     ]
     last_class_date: str = past_class_dates[-1]
 
-    cds_record: Path = paths.get_cds_path("record")
-    # check that the CDS days of the NYSC students in the cohort have been recorded before taking half-cohort attendance
-    if not cds_record.exists():
+    # check that the CDS days of the NYSC students in the cohort 
+    # have been recorded before taking cohort attendance
+    # this is done by checking that at least one cds form has been generated and retrieved
+    # and that there are no cds forms unretrieved.
+    available_cds_forms: list[CDSFormInfo] = history.get_available_cds_forms()
+    if len(available_cds_forms) != 0 and len(history.recorded_cds_forms) > 0:
         print(
             "Cannot record half cohort attendance since the CDS days of the NYSC students has not yet been recorded. Please record the CDS days then try again."
         )
@@ -52,10 +56,10 @@ def record_mid_cohort(ds: DataStore) -> Path | None:
         return None
 
     # if the half-cohort attendance has already been generated, return early
-    half_cohort_path: Path = paths.get_cohort_path(cohort_no)
-    if half_cohort_path.exists():
+    cohort_path: Path = paths.get_cohort_path(cohort_no)
+    if cohort_path.exists():
         print(
-            f"Half Cohort Attendance for the Cohort {cohort_no} already recorded. This record can be found at the path:  \n{half_cohort_path.resolve()}"
+            f"Half Cohort Attendance for the Cohort {cohort_no} already recorded. This record can be found at the path:  \n{cohort_path.resolve()}"
         )
         return None
 
@@ -69,7 +73,7 @@ def record_mid_cohort(ds: DataStore) -> Path | None:
     required_cols: list[str] = data_cols[: last_date_idx + 1]
 
     # extract the entries for the half-cohort attendance
-    half_cohort_data: pd.DataFrame = pretty_data.loc[:, required_cols]
+    cohort_data: pd.DataFrame = pretty_data.loc[:, required_cols]
 
     # return a more appropriate output for use by the NCAIR team that
     # scrutinize the half-cohort attendance
@@ -97,17 +101,17 @@ def record_mid_cohort(ds: DataStore) -> Path | None:
                 return RecordStatus.ABSENT
 
     _ = fill_norm_records("Excused")
-    for column in half_cohort_data.columns.tolist():
+    for column in cohort_data.columns.tolist():
         # if `column` is in `DATA_COLUMNS` i.e., it is not a date column skip
         if column in DATA_COLUMNS:
             continue
         # format column by using fill_record on all its entries
-        class_record: list[str] = half_cohort_data[column].tolist()
+        class_record: list[str] = cohort_data[column].tolist()
         new_class_record = [fill_records(record) for record in class_record]
         # update the column data with the `new_class_record`
-        half_cohort_data[column] = new_class_record
+        cohort_data[column] = new_class_record
 
     # output the data to local file storage
-    half_cohort_stream: DataStream[pd.DataFrame] = DataStream(half_cohort_data)
-    half_cohort_stream.to_excel(half_cohort_path)
-    return half_cohort_path
+    cohort_stream: DataStream[pd.DataFrame] = DataStream(cohort_data)
+    cohort_stream.to_excel(cohort_path)
+    return cohort_path

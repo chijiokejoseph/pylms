@@ -20,6 +20,21 @@ from pylms.utils import DataStream, clean_special
 def retrieve_form(
     form_path: Path, record_path: Path, cls: Type, class_type: ClassType | None = None
 ) -> DataStream[pd.DataFrame] | None:
+    """
+    Retrieves a form and its responses from Google Forms.
+
+    :param form_path: (Path) - The path to a JSON file that holds the form's details.
+    :type form_path: Path
+    :param record_path: (Path) - The path to a JSON file that holds the form's responses.
+    :type record_path: Path
+    :param cls: (Type) - The class type used to instantiate the form data.
+    :type cls: Type
+    :param class_type: (ClassType | None) - The class type indicating the form type.
+    :type class_type: ClassType | None
+
+    :return: (DataStream[pd.DataFrame] | None) - A DataStream that yields a DataFrame with the form responses.
+    :rtype: DataStream[pd.DataFrame] | None
+    """
     if not form_path.exists():
         print(
             f"No record of an existing form found. \nBecause expected data form metadata file '{form_path.name}' which is supposed to be located at \n{form_path} is not found."

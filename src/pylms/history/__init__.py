@@ -1,4 +1,4 @@
-from pylms.state.history.history import History
+from pylms.history.history import History
 
 
 __all__: list[str] = ["History"]

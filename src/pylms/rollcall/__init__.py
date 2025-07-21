@@ -7,7 +7,7 @@ from pylms.rollcall.edit import input_date_for_edit
 from pylms.rollcall.record import record_absent
 from pylms.rollcall.record import record_cds
 from pylms.rollcall.record import record_excused
-from pylms.rollcall.record import record_mid_cohort
+from pylms.rollcall.record import record_cohort
 from pylms.rollcall.edit import edit_record
 from pylms.rollcall.edit import new_edit_info
 from pylms.rollcall.record import record_present
@@ -20,7 +20,7 @@ __all__: list[str] = [
     "record_absent",
     "record_cds",
     "record_excused",
-    "record_mid_cohort",
+    "record_cohort",
     "edit_record",
     "new_edit_info",
     "record_present",

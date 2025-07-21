@@ -22,7 +22,7 @@ def _edit_all(result_data: pd.DataFrame) -> list[float]:
     marks: float = cast(float, marks_temp)
     result_data[result_col] = result_data[result_col].astype(np.float64)
     match idx:
-        case 0:
+        case 1:
             result_data[result_col] += marks
             updates_list = [marks] * num_rows
         case _:

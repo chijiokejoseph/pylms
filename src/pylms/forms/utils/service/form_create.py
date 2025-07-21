@@ -4,11 +4,11 @@ from googleapiclient.http import HttpRequest
 
 from pylms.models import Form, FormData
 from pylms.forms.utils.service._resource import FormResource
-from pylms.forms.utils.service.service_init import init_service
+from pylms.forms.utils.service.service_init import run_service
+from typing import cast
 
 
-@init_service(api="forms", version="v1")
-def create_form(
+def _create_form(
     form_title: str,
     form_name: str,
     *,
@@ -51,3 +51,26 @@ def create_form(
             f"\nFatal Error occurred. Please check your Network Connection. Error details: {e}\n"
         )
         return None
+
+
+def run_create_form(
+    form_title: str,
+    form_name: str,
+) -> Form | None:
+    """creates a partially initialized form resource. This form resource is fully initialized by calling the function `run_setup_form` on the `Form` object returned by this function. The function, however, only returns this `Form` object to success. If the initialization fails, the returned value is None.
+
+    :param form_title: (str): The title of the form as shown on the Google Forms webpage.
+    :type form_title: str
+    :param form_name: (str): The title of the form as seen on the form by the end user when filling the form out.
+    :type form_name: str
+
+    :return: A `Form` object which contains important metadata on the form resource generated if the function completes successfully. Should it fail, None will be returned
+    :rtype: Form | None
+    """
+    return run_service(
+        api="forms",
+        version="v1",
+        func=lambda service: _create_form(
+            form_title, form_name, service=cast(FormResource, service)
+        ),
+    )

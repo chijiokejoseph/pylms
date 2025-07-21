@@ -17,7 +17,7 @@ from pylms.state import History
 from pylms.utils import DataStore
 
 
-def register() -> None:
+def register(history: History) -> None:
     menu: list[str] = [
         "Register New Cohort Data",
         "Request Update Form",
@@ -25,7 +25,6 @@ def register() -> None:
         "Return to Main Menu",
     ]
 
-    history: History = History.load()
     while True:
         selection: int = interact(menu)
         cmd: str = menu[selection - 1]
@@ -49,6 +48,7 @@ def register() -> None:
                     app_ds = record_cds(app_ds, cds_data_stream)
                     app_ds = global_record.crosscheck(app_ds)
                     save_retrieve(info)
+                    history.add_recorded_update_form(info)
                     print("CDS data marked successfully\n")
                 else:
                     print(

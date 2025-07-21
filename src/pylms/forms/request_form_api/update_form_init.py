@@ -13,16 +13,17 @@ from pylms.forms.request_form_api.utils import (
     scrape_update_form,
 )
 from pylms.forms.utils.service import (
-    create_form,
-    setup_form,
-    share_form,
+    run_create_form,
+    run_setup_form,
+    run_share_form,
 )
 from pylms.models import (
     ContentBody,
     Form,
 )
-from pylms.utils import DataStore, date, paths
 from pylms.constants import TIMESTAMP_FMT
+from pylms.utils import DataStore, date, paths
+
 
 def init_update_form(ds: DataStore) -> None:
     msg: str = """
@@ -41,7 +42,7 @@ Please select all the dates for which attendance can be filled using the instruc
     print(
         f"The current week number of the year {result.year_num} is {result.week_num} \nHence, only dates: {dates_list} which belong to weeks equal to or below {result.week_num} are allowed"
     )
-    data_form: Form | None = create_form(form_title, form_name)
+    data_form: Form | None = run_create_form(form_title, form_name)
     if data_form is None:
         raise FormServiceError(
             "create",
@@ -49,7 +50,7 @@ Please select all the dates for which attendance can be filled using the instruc
         )
 
     data_form_content: ContentBody = new_content_body(dates_list)
-    data_form = setup_form(data_form, data_form_content)
+    data_form = run_setup_form(data_form, data_form_content)
     if data_form is None:
         raise FormServiceError(
             "setup",
@@ -57,7 +58,7 @@ Please select all the dates for which attendance can be filled using the instruc
         )
 
     recipient_email: str = input_email("Enter email to share the form with: ")
-    data_form = share_form(data_form, recipient_email)
+    data_form = run_share_form(data_form, recipient_email)
     if data_form is None:
         raise FormServiceError(
             "share",
@@ -72,8 +73,8 @@ Please select all the dates for which attendance can be filled using the instruc
         dates=dates_list,
         url=data_form.url,
         uuid=data_form.uuid,
-        timestamp=datetime.now().strftime(TIMESTAMP_FMT)
+        timestamp=datetime.now().strftime(TIMESTAMP_FMT),
     )
-    update_form_path: Path = paths.get_update_path("form", info.uuid)
+    update_form_path: Path = paths.get_update_path("form", info.timestamp)
     with open(update_form_path, "w") as json_file:
         json.dump(info.model_dump(), cast(TextIOWrapper, json_file), indent=2)

@@ -1,4 +1,4 @@
-from pylms.forms.utils.service import create_form, setup_form, share_form
+from pylms.forms.utils.service import run_create_form, run_setup_form, run_share_form
 from pylms.models.form_info import CDSFormInfo, UpdateFormInfo
 from pylms.state import History
 from pylms.cli import input_option
@@ -12,7 +12,7 @@ def str_form(form: CDSFormInfo | UpdateFormInfo) -> str:
 def select_form(
     history: History, kind: Literal["cds", "update"]
 ) -> CDSFormInfo | UpdateFormInfo:
-    available_forms = (
+    available_forms: list[CDSFormInfo] | list[UpdateFormInfo] = (
         history.get_available_cds_forms()
         if kind == "cds"
         else history.get_available_update_forms()
@@ -21,13 +21,13 @@ def select_form(
     num, _ = input_option(
         cds_forms_list, prompt="Select the CDS Form to retrieve data from"
     )
-    idx = num - 1
+    idx: int = num - 1
     return available_forms[idx]
 
 
 __all__: list[str] = [
-    "create_form",
-    "setup_form",
-    "share_form",
+    "run_create_form",
+    "run_setup_form",
+    "run_share_form",
     "select_form",
 ]
