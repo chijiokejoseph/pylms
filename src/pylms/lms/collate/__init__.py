@@ -9,7 +9,7 @@ from pylms.lms.collate.project import collate_project
 from pylms.lms.group import group
 from pylms.lms.view import view_result
 
-__all__: list[str] = [
+__all__ = [
     "collate_attendance",
     "collate_assessment",
     "collate_project",

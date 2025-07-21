@@ -6,7 +6,7 @@ from pylms.rollcall.record.cohort import record_cohort
 from pylms.rollcall.record.cds import record_cds
 
 
-__all__: list[str] = [
+__all__ = [
     "input_class_date",
     "record_absent",
     "record_excused",

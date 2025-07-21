@@ -6,13 +6,12 @@ from pylms.lms import (
 from pylms.routines.lms_awardees_routine import run_awardees_lms
 from pylms.routines.lms_result_routine import run_result_lms
 from pylms.routines.lms_collate_routine import run_collate_lms
-from pylms.data_ops import load, save
+from pylms.data_ops import save
 from pylms.state import History
 from pylms.utils import DataStore
 
 
-
-def run_lms(history: History) -> None:
+def run_lms(ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Group Students",
         "Collate Student Metrics",
@@ -29,23 +28,30 @@ def run_lms(history: History) -> None:
 
         match int(selection):
             case 1:
-                app_ds: DataStore = load()
-                group(app_ds)
+                # app_ds: DataStore = load()
+                # group(app_ds)
+                ds.raise_for_status()
+                group(ds)
                 print("Students have been grouped successfully\n")
             case 2:
-                app_ds = load()
-                run_collate_lms(history)
+                # app_ds = load()
+                ds.raise_for_status()
+                run_collate_lms(ds, history)
             case 3:
-                app_ds = load()
-                run_result_lms(history)
+                # app_ds = load()
+                ds.raise_for_status()
+                run_result_lms(ds, history)
             case 4:
-                app_ds = load()
-                run_awardees_lms(history)
+                # app_ds = load()
+                ds.raise_for_status()
+                run_awardees_lms(ds, history)
             case 5:
                 break
             case _:
-                app_ds = load()
-        save(app_ds)
+                pass
+                # app_ds = load()
+        # save(app_ds)
+        save(ds)
         history.save()
 
     return None

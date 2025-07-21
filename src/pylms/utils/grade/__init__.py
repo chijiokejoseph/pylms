@@ -5,7 +5,7 @@ from pylms.utils.grade.collate_grade import (
 )
 from pylms.utils.grade.collate_project import collate_project
 
-__all__: list[str] = [
+__all__ = [
     "collate_project",
     "collate_attendance",
     "collate_grade",

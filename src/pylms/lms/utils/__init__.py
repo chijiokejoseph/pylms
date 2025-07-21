@@ -20,7 +20,7 @@ from pylms.lms.utils.val import (
 )
 from pylms.lms.utils.inputs import input_marks_req, input_ratio_req
 
-__all__: list[str] = [
+__all__ = [
     "det_attendance_req_col",
     "det_attendance_score_col",
     "det_attendance_total_col",

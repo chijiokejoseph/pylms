@@ -28,7 +28,7 @@ def format_form_timestamp(date_var: str | datetime, str_format: str) -> str:
     return format_date(date_var, str_format, True)
 
 
-__all__: list[str] = [
+__all__ = [
     "prepare_dates",
     "retrieve_dates",
     "det_week_num",

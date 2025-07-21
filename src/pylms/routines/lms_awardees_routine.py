@@ -5,12 +5,12 @@ from pylms.lms import (
     collate_merge,
     collate_merit,
 )
-from pylms.data_ops import load, save
+from pylms.data_ops import save
 from pylms.state import History
 from pylms.utils import DataStore
 
 
-def run_awardees_lms(history: History) -> None:
+def run_awardees_lms(ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Collate Fast Track Awardees",
         "Collate Merit Awardees",
@@ -18,6 +18,7 @@ def run_awardees_lms(history: History) -> None:
         "Return to Previous Menu",
     ]
 
+    ds.raise_for_status()
     while True:
         selection: int = interact(menu)
         cmd: str = menu[selection - 1]
@@ -26,22 +27,27 @@ def run_awardees_lms(history: History) -> None:
 
         match int(selection):
             case 1:
-                app_ds: DataStore = load()
-                app_ds = collate_fast_track(app_ds)
+                # app_ds: DataStore = load()
+                # app_ds = collate_fast_track(app_ds)
+                collate_fast_track(ds)
                 print("Recorded Fast Track Awardees.\n")
             case 2:
-                app_ds = load()
-                collate_merit(app_ds)
+                # app_ds = load()
+                # collate_merit(app_ds)
+                collate_merit(ds)
                 print("Recorded Merit Awardees.\n")
             case 3:
-                app_ds = load()
-                collate_merge(app_ds)
+                # app_ds = load()
+                # collate_merge(app_ds)
+                collate_merge(ds)
                 print("\nMerit and Fast Track Awardees merged successfully\n")
             case 4:
                 break
             case _:
-                app_ds = load()
-        save(app_ds)
+                pass
+                # app_ds = load()
+        # save(app_ds)
+        save(ds)
         history.save()
 
     return None

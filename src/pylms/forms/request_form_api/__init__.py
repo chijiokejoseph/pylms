@@ -7,7 +7,7 @@ from pylms.forms.request_form_api.utils import (
     UpdateFormInfo,
 )
 
-__all__: list[str] = [
+__all__ = [
     "request_class_form",
     "request_update_form",
     "request_cds_form",

@@ -8,7 +8,7 @@ from pylms.forms.utils.service.form_setup import run_setup_form
 from pylms.forms.utils.service.form_share import run_share_form
 from pylms.forms.utils.service.service_init import run_service
 
-__all__: list[str] = [
+__all__ = [
     "run_service",
     "run_create_form",
     "run_setup_form",

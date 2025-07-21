@@ -24,7 +24,7 @@ from pylms.utils.paths.update_form_path import (
 from pylms.utils.paths.global_record_path import get_global_record_path
 from pylms.utils.paths.history_path import get_history_path
 
-__all__: list[str] = [
+__all__ = [
     "get_data_path",
     "get_excel_path",
     "get_json_path",

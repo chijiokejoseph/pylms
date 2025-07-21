@@ -29,8 +29,8 @@ def to_week_nums(date_string_list: list[str]) -> list[int]:
     return [to_week_num(date_str) for date_str in date_string_list]
 
 
-def to_unique_week_nums(date_string_list: list[str]) -> tuple[int, ...]:
-    return tuple(set(to_week_nums(date_string_list)))
+def to_unique_week_nums(date_string_list: list[str]) -> list[int]:
+    return list(set(to_week_nums(date_string_list)))
 
 
 def det_year() -> int:

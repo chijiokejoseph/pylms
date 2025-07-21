@@ -6,7 +6,7 @@ from pylms.lms.edit import edit_result, overwrite_result
 from pylms.lms.group import group
 from pylms.lms.view import view_result
 
-__all__: list[str] = [
+__all__ = [
     "collate_fast_track",
     "collate_merit",
     "collate_merge",

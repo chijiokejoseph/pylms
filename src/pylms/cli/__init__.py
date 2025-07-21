@@ -28,7 +28,7 @@ from pylms.cli.record_input import input_record
 from pylms.cli.select_class_date import select_class_date
 from pylms.cli.select_student import select_student
 
-__all__: list[str] = [
+__all__ = [
     "interact",
     "input_num",
     "input_record",

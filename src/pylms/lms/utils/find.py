@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 from typing import Literal
 
 from pylms.constants import REQ
@@ -8,7 +9,7 @@ from pylms.utils import DataStream
 
 
 def find_col(
-    stream: DataStream,
+    stream: DataStream[pd.DataFrame],
     col_name: Literal["Assessment", "Attendance", "Project", "Result"],
     col_type: Literal["Score", "Count", "Req"],
 ) -> str:

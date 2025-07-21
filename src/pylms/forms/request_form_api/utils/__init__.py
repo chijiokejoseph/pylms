@@ -13,7 +13,7 @@ from pylms.forms.request_form_api.utils.update_form_details import (
 )
 from pylms.forms.request_form_api.utils.class_date_input import input_class_date
 
-__all__: list[str] = [
+__all__ = [
     "CDSFormInfo",
     "UpdateFormInfo",
     "ClassFormInfo",

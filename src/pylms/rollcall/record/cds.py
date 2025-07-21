@@ -17,7 +17,6 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> Data
     cds_names = [name.title() for name in cds_names]
     cds_days: list[str] = cds_data[CDS].tolist()
 
-    new_data: pd.DataFrame = data.copy()
     for row_idx, row in data.iterrows():
         idx: int = cast(int, row_idx)
         new_row: pd.Series = row.copy()
@@ -40,7 +39,7 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> Data
                 and new_row.at[date_col] != RecordStatus.NO_CLASS
             ):
                 new_row.at[date_col] = RecordStatus.CDS
-        new_data.iloc[idx, :] = new_row
+        data.iloc[idx, :] = new_row
 
-    ds.data = new_data
+    ds.data = data
     return ds

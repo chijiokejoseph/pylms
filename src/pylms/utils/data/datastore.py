@@ -65,11 +65,24 @@ class DataStore(DataStream[pd.DataFrame]):
         ds.data = data
         return ds
 
-    def __init__(self, data: pd.DataFrame | DataStream[pd.DataFrame]) -> None:
+    def copy_from(self, ds: Self) -> None:
+        self.data = ds.data
+
+    def raise_for_status(self) -> None:
+        if self.prefilled:
+            raise ValidationError(
+                "The DataStore contains dummy data. You need to register a new cohort before you can use this DataStore."
+            )
+
+    def __init__(
+        self, data: pd.DataFrame | DataStream[pd.DataFrame], prefilled: bool = False
+    ) -> None:
         """
 
         :param data: (pd.DataFrame | DataStream[pd.DataFrame]) - The data source to be converted to a DataStore
         :type data: pd.DataFrame | DataStream[pd.DataFrame]
+        :param prefilled: (bool) - Indicates if the DataStore contains dummy data or not. Defaults to False
+        :type prefilled: bool
 
         :return: returns None
         :rtype: None
@@ -78,13 +91,13 @@ class DataStore(DataStream[pd.DataFrame]):
             data().copy() if isinstance(data, DataStream) else data
         )
         super().__init__(true_data, validate)
+        self.prefilled: bool = False
 
     def pretty(self) -> pd.DataFrame:
         data: pd.DataFrame = self()
         data[NAME] = data[NAME].apply(lambda x: x.replace(COMMA, ""))
         data[PHONE] = data[PHONE].apply(lambda x: x.replace(SEMI, ""))
         return data
-
 
     def to_excel(
         self, path: Path, style: Literal["pretty", "normal"] = "normal"

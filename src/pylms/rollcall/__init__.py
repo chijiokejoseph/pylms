@@ -13,7 +13,7 @@ from pylms.rollcall.edit import new_edit_info
 from pylms.rollcall.record import record_present
 
 
-__all__: list[str] = [
+__all__ = [
     "extract_cds",
     "input_class_date",
     "input_date_for_edit",

@@ -12,7 +12,7 @@ from pylms.forms.retrieve_form_api.enums import ClassType, RetrieveType
 from pylms.forms.retrieve_form_api.save_retrieve import save_retrieve
 from pylms.forms.retrieve_form_api.update_form_retrieve import retrieve_update_form
 
-__all__: list[str] = [
+__all__ = [
     "request_class_form",
     "request_update_form",
     "request_cds_form",

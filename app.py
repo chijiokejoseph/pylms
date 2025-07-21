@@ -1,7 +1,9 @@
 from src.pylms.mainloop import mainloop, closed_loop, handle_err
 from src.pylms.utils import prepare_paths
 from src.pylms.config import load, input_dir, write_state
-
+from src.pylms.constants import ENV_PATH
+from dotenv import load_dotenv
+load_dotenv(ENV_PATH)
 
 def main() -> None:
     run: bool = True

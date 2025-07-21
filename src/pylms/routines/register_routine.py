@@ -1,6 +1,6 @@
 from pylms.state import cache_for_cmd
 from pylms.cli import interact
-from pylms.data_ops import append_update, load, new, save
+from pylms.data_ops import append_update, new, save
 from pylms.forms.request_form_api import (
     request_update_form,
 )
@@ -17,7 +17,7 @@ from pylms.state import History
 from pylms.utils import DataStore
 
 
-def register(history: History) -> None:
+def register(ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Register New Cohort Data",
         "Request Update Form",
@@ -33,20 +33,27 @@ def register(history: History) -> None:
         match int(selection):
             case 1:
                 app_ds: DataStore = new()
+                ds.copy_from(app_ds)
                 print("Onboarding of Registered Students completed successfully.\n")
             case 2:
-                app_ds = load()
-                request_update_form(app_ds)
+                # app_ds = load()
+                # request_update_form(app_ds)
+                ds.raise_for_status()
+                request_update_form(ds)
                 print("Generated Data Form successfully\n")
             case 3:
+                ds.raise_for_status()
                 global_record: GlobalRecord = GlobalRecord()
-                app_ds = load()
+                # app_ds = load()
                 data_form_stream, info = retrieve_update_form(history)
                 if data_form_stream is not None:
                     data_form_stream, cds_data_stream = extract_cds(data_form_stream)
-                    app_ds = append_update(app_ds, data_form_stream)
-                    app_ds = record_cds(app_ds, cds_data_stream)
-                    app_ds = global_record.crosscheck(app_ds)
+                    # app_ds = append_update(app_ds, data_form_stream)
+                    # app_ds = record_cds(app_ds, cds_data_stream)
+                    # app_ds = global_record.crosscheck(app_ds)
+                    append_update(ds, data_form_stream)
+                    record_cds(ds, cds_data_stream)
+                    global_record.crosscheck(ds)
                     save_retrieve(info)
                     history.add_recorded_update_form(info)
                     print("CDS data marked successfully\n")
@@ -57,7 +64,8 @@ def register(history: History) -> None:
             case _:
                 break
 
-        save(app_ds)
+        # save(app_ds)
+        save(ds)
         history.save()
 
     return None

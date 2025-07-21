@@ -6,7 +6,7 @@ from pylms.routines.rollcall_routine import handle_rollcall
 from pylms.routines.cohort_routine import handle_cohort
 
 
-__all__: list[str] = [
+__all__ = [
     "handle_cds",
     "handle_cohort",
     "handle_data",

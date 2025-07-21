@@ -7,11 +7,28 @@ from pylms.lms import (
     overwrite_result,
     view_result,
 )
-from pylms.data_ops import load, save
+from pylms.data_ops import save
 from pylms.state import History
+from pylms.utils import DataStore
 
 
-def run_result_lms(history: History) -> None:
+def run_result_lms(ds: DataStore, history: History) -> None:
+    """
+    Interactive menu for managing LMS results.
+
+    Presents a command-line menu to the user for performing various result-related
+    operations on the provided DataStore. The available actions include collating,
+    viewing, editing, and overwriting results. After each operation, changes are
+    saved to both the DataStore and the History.
+
+    :param ds: (DataStore) - The data store instance containing LMS data.
+    :type ds: DataStore
+    :param history: (History) - The history object for tracking and saving changes.
+    :type history: History
+    
+    :return: (None) - This function does not return a value.
+    :rtype: None
+    """
     menu: list[str] = [
         "Collate Results",
         "View Results",
@@ -28,27 +45,35 @@ def run_result_lms(history: History) -> None:
 
         match int(selection):
             case 1:
-                app_ds = load()
-                collate_result(app_ds, history)
+                # app_ds = load()
+                # collate_result(app_ds, history)
+                collate_result(ds, history)
             case 2:
-                app_ds = load()
-                view_result(app_ds)
+                # app_ds = load()
+                # view_result(app_ds)
+                view_result(ds)
                 print()
             case 3:
-                app_ds = load()
-                edit_result(app_ds)
-                collate_merit(app_ds)
+                # app_ds = load()
+                # edit_result(app_ds)
+                # collate_merit(app_ds)
+                edit_result(ds)
+                collate_merit(ds)
                 print("\nResult edited successfully\n")
             case 4:
-                app_ds = load()
-                overwrite_result(app_ds)
-                collate_merit(app_ds)
+                # app_ds = load()
+                # overwrite_result(app_ds)
+                # collate_merit(app_ds)
+                overwrite_result(ds)
+                collate_merit(ds)
                 print("\nResult overwritten successfully\n")
             case 5:
                 break
             case _:
-                app_ds = load()
-        save(app_ds)
+                pass
+                # app_ds = load()
+        # save(app_ds)
+        save(ds)
         history.save()
 
     return None

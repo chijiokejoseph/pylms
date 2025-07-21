@@ -4,6 +4,8 @@ import pandas as pd
 
 from pylms.constants import (
     ValidateDataFn,
+    REMARK,
+    REASON,
 )
 from pylms.lms.collate.awardees import collate_awardees
 from pylms.lms.collate.errors import SpreadSheetFmtErr
@@ -121,8 +123,8 @@ def collate_merit(ds: DataStore) -> None:
         attendance_pass.tolist(),
         score_pass.tolist(),
     )
-    result_data["Remark"] = remarks
-    result_data["Reason"] = reasons
+    result_data[REMARK] = remarks
+    result_data[REASON] = reasons
     DataStream(result_data).to_excel(paths.get_paths_excel()["Result"])
     pass_logic_idx: pd.Series = attendance_score_pass & assessment_pass
     pretty_data: pd.DataFrame = ds.pretty()

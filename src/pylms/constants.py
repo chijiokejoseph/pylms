@@ -5,6 +5,7 @@ import pandas as pd
 
 
 PARENT_PATH: Path = Path(__file__).resolve().parents[2]
+ENV_PATH: Path = PARENT_PATH / ".env"
 DEFAULT_DATA_PATH: Path = PARENT_PATH / "data"
 STATE_PATH: Path = PARENT_PATH / "state.toml"
 SECRETS_PATH: Path = PARENT_PATH / "secrets.json"
@@ -159,6 +160,8 @@ ATTENDANCE: str = "Attendance"
 REQ: str = "Req"
 PROJECT: str = "Project"
 RESULT: str = "Result"
+REMARK: str = "Remark"
+REASON: str = "Reason"
 COURSE: str = "Course"
 COURSE_NAME: str = "Python Beginners"
 FROM: str = "FROM"

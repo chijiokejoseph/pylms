@@ -8,6 +8,6 @@ def match_and_clean(entry: str) -> str:
     return func(entry)
 
 
-__all__: list[str] = [
+__all__ = [
     "match_and_clean",
 ]

@@ -18,7 +18,7 @@ from pylms.utils.clean.clean_sort import clean_sort
 from pylms.utils.clean.clean_order import clean_order
 
 
-__all__: list[str] = [
+__all__ = [
     "clean_col_names",
     "clean_columns",
     "clean_na",

@@ -25,7 +25,7 @@ def select_form(
     return available_forms[idx]
 
 
-__all__: list[str] = [
+__all__ = [
     "run_create_form",
     "run_setup_form",
     "run_share_form",

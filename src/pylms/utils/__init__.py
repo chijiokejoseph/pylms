@@ -14,7 +14,7 @@ def prepare_paths() -> None:
     paths.get_paths_json()["CDS"].mkdir(parents=True, exist_ok=True)
 
 
-__all__: list[str] = [
+__all__ = [
     "clean",
     "clean_special",
     "data",

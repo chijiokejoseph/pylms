@@ -53,6 +53,7 @@ def collate_result(ds: DataStore, history: History) -> None:
     passmark_col: str = det_passmark_col()
 
     # Scale assessment and project scores by their respective ratios
+    collated_data.loc[:, [assessment_score_col, assessment_req_col, project_score_col]] = collated_data.loc[:, [assessment_score_col, assessment_req_col, project_score_col]].astype(float)
     collated_data.loc[:, assessment_score_col] *= assessment_ratio
     collated_data.loc[:, assessment_req_col] *= assessment_ratio
     collated_data.loc[:, project_score_col] *= project_ratio

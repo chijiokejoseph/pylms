@@ -14,6 +14,7 @@ from pylms.routines import (
     run_lms,
 )
 from pylms.history import History
+from pylms.utils import DataStore
 
 
 def handle_err[K](func: Callable[[], K]) -> K | None:
@@ -41,23 +42,24 @@ def mainloop() -> bool:
         "Quit",
     ]
     history: History = History.load()
+    ds: DataStore = load()
     selection: int = interact(menu)
     cmd: str = menu[selection - 1]
     if selection < len(menu):
         cache_for_cmd(cmd)
     match int(selection):
         case 1:
-            handle_rollcall(history)
+            handle_rollcall(ds, history)
         case 2:
-            handle_cds(history)
+            handle_cds(ds, history)
         case 3:
             handle_cohort()
         case 4:
-            handle_data()
+            handle_data(ds)
         case 5:
-            run_lms(history)
+            run_lms(ds, history)
         case 6:
-            register(history)
+            register(ds, history)
         case _:
             print(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"
