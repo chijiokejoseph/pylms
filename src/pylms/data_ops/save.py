@@ -6,7 +6,7 @@ from pylms.utils import DataStore, date, paths
 def save(ds: DataStore) -> None:
     week_num: int = date.det_week_num()
     # get all week nums for this cohort
-    week_nums: tuple[int, ...] = date.to_unique_week_nums(date.retrieve_dates())
+    week_nums: list[int] = date.to_unique_week_nums(date.retrieve_dates())
     # get all the week nums that are greater than the current week num but still in this cohort
     new_week_nums: list[int] = [num for num in week_nums if num >= week_num]
     if len(new_week_nums) == 0:

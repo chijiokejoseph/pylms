@@ -6,7 +6,7 @@ import pandas as pd
 from pylms.models import CDSFormInfo
 from pylms.forms.utils import select_form
 from pylms.forms.retrieve_form_api.form import retrieve_form
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStream, paths
 
 

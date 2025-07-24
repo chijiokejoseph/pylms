@@ -1,7 +1,8 @@
-from pylms.utils import paths, clean, clean_special, data, date, grade
+from pylms.utils import paths, data, date, grade
 from pylms.utils.data import DataStore, DataStream, read_csv, read_data
 from pylms.utils.print_fns import print_stream
 from pylms.utils.rm import rm_path
+from pylms.utils.env import must_get_env
 
 
 def prepare_paths() -> None:
@@ -15,14 +16,13 @@ def prepare_paths() -> None:
 
 
 __all__ = [
-    "clean",
-    "clean_special",
     "data",
     "date",
     "grade",
     "paths",
     "prepare_paths",
     "print_stream",
+    "must_get_env",
     "read_csv",
     "read_data",
     "rm_path",

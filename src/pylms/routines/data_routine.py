@@ -1,4 +1,4 @@
-from pylms.state import cache_for_cmd, rollback_to_cmd
+from pylms.cache import cache_for_cmd, rollback_to_cmd
 from pylms.cli import interact
 from pylms.data_ops import edit, list_ds, remove_students, save, view
 from pylms.utils import DataStore

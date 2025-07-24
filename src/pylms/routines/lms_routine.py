@@ -1,4 +1,4 @@
-from pylms.state import cache_for_cmd
+from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.lms import (
     group,
@@ -7,7 +7,7 @@ from pylms.routines.lms_awardees_routine import run_awardees_lms
 from pylms.routines.lms_result_routine import run_result_lms
 from pylms.routines.lms_collate_routine import run_collate_lms
 from pylms.data_ops import save
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStore
 
 

@@ -1,7 +1,7 @@
 from pylms.utils import DataStore, paths
-from pylms.data_ops._new_load_utils import _make_weekly_ds
+from pylms.data_ops.load_utils import _make_weekly_ds
 from pylms.data_ops.load import load
-from pylms.clean_pipeline import clean_reg_data
+from pylms.preprocess import clean_reg_data
 
 
 def new() -> DataStore:

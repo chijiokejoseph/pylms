@@ -1,7 +1,7 @@
 from pylms.cli import input_str
 from pylms.utils import DataStore, date, paths
 from pylms.data_ops.data_status import DataStatus
-from pylms.clean_pipeline import clean_reg_data
+from pylms.preprocess import clean_reg_data
 from pathlib import Path
 import sys
 

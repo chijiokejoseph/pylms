@@ -1,7 +1,7 @@
 from pylms.constants import DATA_COLUMNS
 from pylms.utils import DataStore
 import pandas as pd
-from pylms.data_ops._clean_up import _clean_up
+from pylms.data_ops.append_utils import _clean_up
 
 
 def sub(superset: DataStore, serial: list[int]) -> DataStore:

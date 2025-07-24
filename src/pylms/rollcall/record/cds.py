@@ -3,7 +3,7 @@ from typing import cast
 
 import pandas as pd
 
-from pylms.constants import CDS, DAYS_IN_WEEK, NAME
+from pylms.constants import CDS, WORK_DAYS, NAME
 from pylms.record import RecordStatus
 from pylms.utils import DataStore, DataStream, date
 
@@ -25,7 +25,7 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> Data
             continue
         cds_name_idx: int = cds_names.index(each_name)
         cds_day: str = cds_days[cds_name_idx]
-        if cds_day not in DAYS_IN_WEEK:
+        if cds_day not in WORK_DAYS:
             continue
         cds_day_num: int = date.to_day_num(cds_day)
 

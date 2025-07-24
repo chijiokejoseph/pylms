@@ -4,7 +4,8 @@ from pylms.constants import Json, Spreadsheets
 
 
 def get_data_path() -> Path:
-    from pylms.state import read_state
+    from pylms.config import read_state
+
     return Path(read_state().data_dir) / "data"
 
 

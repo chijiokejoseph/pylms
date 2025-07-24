@@ -1,6 +1,7 @@
 import pandas as pd
 from pylms.constants import PHONE, NAME, DATA_COLUMNS
-from pylms.utils import DataStream, DataStore, data, clean
+from pylms.utils import DataStream, DataStore, data
+from pylms.preprocess import clean
 
 read_data = data.read_data
 

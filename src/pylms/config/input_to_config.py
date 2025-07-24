@@ -1,6 +1,6 @@
 from pathlib import Path
 from pylms.errors import LMSError
-from pylms.config.app_toml import AppToml
+from pylms.config.app_config import AppConfig
 from pylms.constants import DEFAULT_DATA_PATH
 
 
@@ -13,12 +13,14 @@ def input_fn(msg: str) -> str:
         return user_input
 
 
-def input_dir(table: AppToml) -> None:
+def input_dir(table: AppConfig) -> None:
+    from pylms.cli import input_str
+
     save_path = Path(table.settings.data_dir)
     if save_path.exists() and save_path != Path(""):
         print(f"Data Path has been successfully initialized to {save_path}")
         return None
-    data_dir = input_fn(
+    data_dir: str = input_str(
         "Enter the location to save files to. Enter the letter 's' to skip. [Ensure that the location has no file called 'data']: "
     )
     if data_dir.lower() == "s":
@@ -41,3 +43,20 @@ def input_dir(table: AppToml) -> None:
     table.settings.data_dir = str(data_path)
     print(f"Data Path has been successfully initialized to {data_path}")
     return None
+
+
+def input_course_name(config: AppConfig) -> None:
+    from pylms.cli import input_option
+
+    options: list[str] = [
+        "Python Beginners",
+        "Python Advanced",
+        "Data Science Beginners",
+        "Data Science Advanced",
+        "Product Design Beginners",
+        "Product Design Advanced",
+        "Product Development",
+        "Embedded Systems",
+    ]
+    _, course_name = input_option(options, prompt="Select the course name")
+    config.settings.course_name = course_name

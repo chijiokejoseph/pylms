@@ -1,6 +1,7 @@
 from pylms.cli import input_option, interact
-from pylms.state import new_state, read_state, write_state
+from pylms.config import new_state, read_state, write_state, AppConfig
 from pylms.utils import paths, rm_path
+from pylms.constants import HISTORY_PATH, GLOBAL_RECORD_PATH
 
 
 def handle_cohort() -> None:
@@ -11,12 +12,12 @@ def handle_cohort() -> None:
         "Return to Main Menu",
     ]
 
+    app_state: AppConfig = read_state()
+
     while True:
         selection: int = interact(menu)
-
         match int(selection):
             case 1:
-                app_state = read_state()
                 if not app_state.is_open():
                     print("\nCohort is already closed.\n")
                     continue
@@ -28,10 +29,8 @@ def handle_cohort() -> None:
                 if choice == "Yes":
                     app_state = read_state()
                     app_state.close()
-                    write_state(app_state)
                 print("\nThe Cohort has been closed.\n")
             case 2:
-                app_state = read_state()
                 if app_state.is_open():
                     print("\nCohort is already open.\n")
                     continue
@@ -43,17 +42,17 @@ def handle_cohort() -> None:
                 if choice == "Yes":
                     app_state = read_state()
                     app_state.open()
-                    write_state(app_state)
                 print("\nThe Cohort which was closed is now open.\n")
             case 3:
-                app_state = read_state()
                 if app_state.is_open():
                     print("\nClose the Cohort First before creating a new cohort.\n")
                     continue
                 rm_path(paths.get_cache_path())
+                rm_path(HISTORY_PATH)
+                rm_path(GLOBAL_RECORD_PATH)
                 app_state = new_state()
-                write_state(app_state)
                 print("\nYou have a new open cohort\n")
             case _:
                 break
+        write_state(app_state)
     return None

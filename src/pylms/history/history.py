@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Self
+from typing import Self, cast
 from pylms.errors import LMSError
-from pylms.constants import DATE_FMT, HISTORY_PATH
+from pylms.constants import DATE_FMT, HISTORY_PATH, DATE, WEEK_DAYS, COHORT
 from pylms.models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
-from pylms.utils import paths
+from pylms.utils import paths, DataStore
 import json
 
 
@@ -20,7 +20,9 @@ class History:
     and adding held or marked classes based on class numbers.
 
     Attributes:
-        class_dates (list[int]): A list of integers representing the weekdays on which classes are held.
+        cohort (int | None): The cohort number.
+
+        class_days (list[int]): A list of integers representing the weekdays on which classes are held.
             This should contain exactly 3 integers corresponding to the weekdays (0-6, where 0 is Monday).
 
         dates (list[datetime]): A list of datetime objects representing the dates of the classes.
@@ -65,11 +67,15 @@ class History:
         result (tuple[bool, Path]): A tuple containing a boolean indicating whether the result is recorded
             and the path to the result file.
 
+        merit (tuple[bool, Path]): A tuple containing a boolean indicating whether the merit awardees has been recorded
+            and the path to the merit awardees file.
+
         _updated (bool): A boolean indicating whether the dates have been updated.
     """
 
     def __init__(self) -> None:
-        self.class_dates: list[int] = []
+        self.cohort: int | None = None
+        self.class_days: list[int] = []
         self.dates: list[datetime] = []
         self.orientation_date: datetime | None = None
         self.weeks: int = 5
@@ -85,13 +91,16 @@ class History:
         self.assessment: tuple[bool, Path] = (False, Path())
         self.project: tuple[bool, Path] = (False, Path())
         self.result: tuple[bool, Path] = (False, Path())
+        self.merit: tuple[bool, Path] = (False, Path())
         self._updated: bool = False
 
     def _update_dates(self) -> None:
-        """Updates the dates based on the class dates and orientation date.
+        """
+        Updates the dates based on the class dates and orientation date.
+
         This method calculates the dates for the classes based on the class dates and the orientation date.
         It generates a list of dates for the entire duration of the course, ensuring that only the
-        weekdays specified in `class_dates` are included.
+        weekdays specified in ``class_dates`` are included.
 
         :param self: (History) - The instance of the History class.
         :type self: History
@@ -99,25 +108,42 @@ class History:
         :raises HistoryError: If class dates are not set or if the orientation date is not set.
         :raises HistoryError: If class dates do not contain exactly 3 integers.
         :raises HistoryError: If the orientation date is not set before updating dates.
-        """
-        if len(self.class_dates) != 3:
-            raise HistoryError(
-                "Class dates must contain exactly 3 integers corresponding to the weekdays on which classes are held."
-            )
-        if self.orientation_date is None:
-            raise HistoryError("Start date must be set before updating dates.")
 
+        :return: None
+        :rtype: None
+        """
+        # Validate that exactly three class weekdays are specified
+        if len(self.class_days) != 3:
+            raise HistoryError(
+                "Class dayss must contain exactly 3 integers corresponding to the weekdays on which classes are held."
+            )
+        # Ensure the orientation date is set before proceeding
+        if self.orientation_date is None:
+            raise HistoryError("Orientation date must be set before updating dates.")
+
+        # Generate all dates for the course duration, starting from the day after orientation
         all_dates: list[datetime] = [
             self.orientation_date + timedelta(days=i) for i in range(1, 7 * self.weeks)
         ]
+
+        # Identify the last date in the generated range
         last_date: datetime = all_dates[-1]
+
+        # Calculate how many days remain in the final week to reach the next Sunday
         diff = 6 - last_date.weekday()
+
+        # Generate the remaining dates to complete the final week
         dates_left: list[datetime] = [
             last_date + timedelta(days=i) for i in range(1, diff + 1)
         ]
-        all_dates.extend(dates_left)
-        self.dates = [date for date in all_dates if date.weekday() in self.class_dates]
 
+        # Extend the list of all dates to include the remaining days in the final week
+        all_dates.extend(dates_left)
+
+        # Filter all dates to include only those that match the specified class weekdays
+        self.dates = [date for date in all_dates if date.weekday() in self.class_days]
+
+        # Mark the dates as updated
         self._updated = True
 
     def str_dates(self) -> list[str]:
@@ -164,16 +190,19 @@ class History:
         if not isinstance(data, dict):
             raise HistoryError("Invalid history data format.")
 
-        # Check and set attribute `class_dates``
-        if "class_dates" in data:
-            if (
-                not isinstance(data["class_dates"], list)
-                or len(data["class_dates"]) != 3
-            ):
+        # Check and set attribute `cohort`
+        if "cohort" in data:
+            if not isinstance(data["cohort"], int):
+                raise HistoryError("Cohort must be an integer.")
+            history.cohort = data["cohort"]
+
+        # Check and set attribute `class_days`
+        if "class_days" in data:
+            if not isinstance(data["class_days"], list) or len(data["class_days"]) != 3:
                 raise HistoryError("Class dates must be a list of exactly 3 integers.")
-            if not all(isinstance(num, int) for num in data["class_dates"]):
+            if not all(isinstance(num, int) for num in data["class_days"]):
                 raise HistoryError("All class dates must be integers.")
-            history.class_dates = [num for num in data["class_dates"]]
+            history.class_days = [num for num in data["class_days"]]
 
         # Check and set attribute `dates`
         if "dates" in data:
@@ -298,6 +327,13 @@ class History:
                 )
             history.result = (data["result"][0], Path(data["result"][1]))
 
+        if "merit" in data:
+            if not isinstance(data["merit"], list) or len(data["merit"]) != 2:
+                raise HistoryError(
+                    "Merit must be a list with two elements: a boolean and a file path."
+                )
+            history.merit = (data["merit"][0], Path(data["merit"][1]))
+
         # Update the dates based on the loaded data
         history._update_dates()
         return history
@@ -311,8 +347,10 @@ class History:
         :raises HistoryError: If the history data is not in the expected format or if required fields are missing.
         """
         data = {
+            # Cohort number
+            "cohort": self.cohort,
             # List of 3 integers representing weekdays on which classes are held
-            "class_dates": list(self.class_dates),
+            "class_days": list(self.class_days),
             # List of 3 integers representing weekdays on which classes are marked
             "dates": [date.strftime(DATE_FMT) for date in self.dates],
             # orientation date in the format specified by DATE_FMT or None
@@ -364,6 +402,10 @@ class History:
                 self.result[0],
                 str(self.result[1]),
             ],  # List of boolean and file path
+            "merit": [
+                self.merit[0],
+                str(self.merit[1]),
+            ],  # List of boolean and file path
         }
 
         # Save the history data to the JSON file
@@ -388,6 +430,90 @@ class History:
         if dates_json_list != self.str_dates():
             with dates_json_path.open("w") as file:
                 json.dump(self.str_dates(), file, indent=2)
+
+    def set_cohort(self, ds: DataStore) -> None:
+        self.orientation_date = datetime.strptime(
+            ds.data[DATE].astype(str).iloc[0], DATE_FMT
+        )
+        self.cohort = ds.data[COHORT].astype(int).iloc[0]
+        self._update_dates()
+
+    def set_class_days(
+        self,
+        days: list[int] | list[str],
+        *,
+        start: int | None,
+    ) -> None:
+        """
+        Sets the class days for the schedule.
+
+        This method validates and sets the days of the week on which classes are held.
+        The days parameter must contain exactly three unique elements, either as integers
+        (weekday indices) or as strings (weekday names). If integers are provided, a start
+        index must also be specified. If strings are provided, they must match entries in
+        the WEEK_DAYS list.
+
+        :param self: (History) - The instance of the History class.
+        :type self: History
+        :param days: (SupportsLenGetitem[int] | SupportsLenGetitem[str]) - A sequence of exactly 3 elements, each representing a weekday.
+            If elements are integers, they represent weekday indices (e.g., 0 for Monday).
+            If elements are strings, they must match entries in WEEK_DAYS (e.g., "Monday").
+        :type days: SupportsLenGetitem[int] | SupportsLenGetitem[str]
+        :param start: (int | None) - The starting weekday index. Required if `days` contains integers.
+        :type start: int | None
+
+        :return: (None) - returns nothing
+        :rtype: None
+
+        :raises HistoryError: If `days` does not contain exactly 3 elements.
+        :raises HistoryError: If any elements in `days` are not unique.
+        :raises HistoryError: If `days` contains integers and `start` is not provided.
+        :raises HistoryError: If `days` contains strings not matching WEEK_DAYS.
+        :raises HistoryError: If `days` is not a list of valid integers or strings.
+        """
+        # Ensure exactly three days are provided
+        if len(days) != 3:
+            raise HistoryError(
+                "Class days must contain exactly 3 integers corresponding to the weekdays on which classes are held."
+            )
+
+        # Ensure all days are unique
+        if days[0] == days[1] or days[0] == days[2] or days[1] == days[2]:
+            raise HistoryError(
+                "Class days must contain unique integers corresponding to the weekdays on which classes are held."
+            )
+
+        # Determine the type of input and process accordingly
+        match True:
+            # If integers are provided and a start index is given, calculate weekday indices
+            case _ if all(isinstance(day, int) for day in days) and start is not None:
+                # Subtract start from each integer to normalize to weekday indices
+                self.class_days = [cast(int, i) - start for i in days]
+
+            # If strings are provided and all are valid weekday names, convert to indices
+            case _ if all(isinstance(day, str) for day in days) and all(
+                cast(str, day).title() in WEEK_DAYS for day in days
+            ):
+                # Map weekday names to their indices
+                self.class_days = [WEEK_DAYS.index(cast(str, day)) for day in days]
+
+            # If integers are provided but no start index, raise an error
+            case _ if all(isinstance(day, int) for day in days) and start is None:
+                raise HistoryError("Start must be provided if first is an integer.")
+
+            # If strings are provided but not all are valid weekday names, raise an error
+            case _ if all(isinstance(day, str) for day in days) and not all(
+                day in WEEK_DAYS for day in days
+            ):
+                raise HistoryError(
+                    "Days must be a list of strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
+                )
+
+            # For any other invalid input, raise an error
+            case _:
+                raise HistoryError(
+                    "Days must be a list of integers or strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
+                )
 
     def extend_weeks(self, additional_weeks: int) -> None:
         """Extends the number of weeks in the history.
@@ -681,6 +807,21 @@ class History:
         path = paths.get_paths_excel()["Result"]
         self.result = (path.exists(), path)
 
+    def record_merit(self) -> None:
+        """
+        Records the merit by checking the existence of the Merit.xlsx file
+        and updates the `merit` attribute with a tuple containing the existence
+        status and the file path.
+
+        :return: (None) - This method does not return anything.
+        :rtype: None
+        """
+        if self.cohort is None:
+            raise HistoryError("Cohort is not set")
+
+        path = paths.get_merit_path(self.cohort)
+        self.merit = (path.exists(), path)
+
     @property
     def has_collated_attendance(self) -> bool:
         """
@@ -710,6 +851,16 @@ class History:
         :rtype: bool
         """
         return self.project[0]
+
+    @property
+    def has_collated_merit(self) -> bool:
+        """
+        Property indicating whether the merit scores have been collated.
+
+        :return: (bool) - A boolean indicating whether the merit scores have been collated.
+        :rtype: bool
+        """
+        return self.merit[0]
 
     @property
     def has_collated_all(self) -> bool:

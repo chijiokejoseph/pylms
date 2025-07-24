@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from pylms.clean_pipeline.errors import HasDuplicatesErr, MissingColsErr
+from pylms.preprocess.clean_pipeline.errors import HasDuplicatesErr, MissingColsErr
 import re
 
 from pylms.constants import REGISTRATION_COLS

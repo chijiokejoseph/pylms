@@ -1,15 +1,15 @@
 import pandas as pd
 
-from pylms.clean_pipeline import clean_new_data
+from pylms.preprocess import clean_new_data
 from pylms.data_ops.add import add
 from pylms.utils import DataStore, DataStream, date, paths
-
+from pylms.models import UpdateFormInfo
 
 def append_update(
-    ds: DataStore, data_form_stream: DataStream[pd.DataFrame]
+    ds: DataStore, update_stream: DataStream[pd.DataFrame], info: UpdateFormInfo
 ) -> DataStore:
     week_num: int = date.det_week_num()
-    update_form_path, update_record_path = paths.ret_update_path()
+    update_form_path, update_record_path = paths.ret_update_path(info.timestamp)
 
     if update_record_path.exists():
         print(
@@ -17,7 +17,7 @@ def append_update(
         )
         return ds
 
-    ds_to_add: DataStore = clean_new_data(data_form_stream)
+    ds_to_add: DataStore = clean_new_data(update_stream)
     ds = add(ds, ds_to_add)
     print(f"Entries retrieved from the Data Form for Week {week_num} have been saved")
     return ds

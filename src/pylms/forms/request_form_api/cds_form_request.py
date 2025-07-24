@@ -1,13 +1,13 @@
 from pylms.constants import COHORT
 from pylms.forms.request_form_api.cds_form_init import init_cds_form
 from pylms.utils import DataStore, date
-from pylms.state import History
+from pylms.history import History
 
 
 def request_cds_form(ds: DataStore, history: History) -> None:
     # cds_form_path: Path = paths.get_cds_path()
     dates_list: list[str] = date.retrieve_dates()
-    unique_week_nums: tuple[int, ...] = date.to_unique_week_nums(dates_list)
+    unique_week_nums: list[int] = date.to_unique_week_nums(dates_list)
     week_num: int = date.det_week_num()
     cohort_no: int = ds()[COHORT].iloc[0]
 

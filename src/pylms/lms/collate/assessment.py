@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 
 from pylms.cli import input_path, test_path_in
-from pylms.state import History
+from pylms.history import History
 from pylms.constants import SERIAL, ValidateDataFn
 from pylms.lms.collate.errors import SpreadSheetFmtErr
 from pylms.lms.utils import (
     det_assessment_req_col,
     det_assessment_score_col,
     val_attendance_data,
-    input_marks_req
+    input_marks_req,
 )
 from pylms.utils import DataStream, read_data, paths
 
@@ -37,33 +37,33 @@ def _val_input_data(test_data: pd.DataFrame) -> bool:
             return False
 
 
-def collate_assessment(
-    history: History
-) -> None:
+def collate_assessment(history: History) -> None:
     """
-        Collate the assessment spreadsheet for the students. Prompts for the user to enter a path 
-        to the assessment spreadsheet.
-        
-        The assessment spreadsheet should have either of the two (2) formats:
-            - 2-column: Serial Number | Score
-            - 3-column: Serial Number | Student Name | Score
-        Note: Student names must match existing data in spelling and casing.
+    Collate the assessment spreadsheet for the students. Prompts for the user to enter a path
+    to the assessment spreadsheet.
 
-        If the assessment spreadsheet does not match the above formats, a SpreadSheetFmtErr will be raised.
+    The assessment spreadsheet should have either of the two (2) formats:
+        - 2-column: Serial Number | Score
+        - 3-column: Serial Number | Student Name | Score
+    Note: Student names must match existing data in spelling and casing.
 
-        :param history: (History) - The state of the application
-        :type history: History
+    If the assessment spreadsheet does not match the above formats, a SpreadSheetFmtErr will be raised.
 
-        :return: (None) - Nothing
-        :rtype: None
+    :param history: (History) - The state of the application
+    :type history: History
 
-        :raises SpreadSheetFmtErr: If the assessment spreadsheet does not match the above formats
+    :return: (None) - Nothing
+    :rtype: None
+
+    :raises SpreadSheetFmtErr: If the assessment spreadsheet does not match the above formats
     """
     # Check if the attendance has been collated
     if not history.has_collated_attendance:
-        print("\nPlease collate the attendance first before collating the assessment.\n")
+        print(
+            "\nPlease collate the attendance first before collating the assessment.\n"
+        )
         return None
-    
+
     # Read the data from the attendance spreadsheet
     attendance_data = read_data(paths.get_paths_excel()["Attendance"])
     validate_fn = cast(ValidateDataFn, val_attendance_data)
@@ -92,34 +92,33 @@ Enter the path:  """
 
     # Get the number of rows in the assessment spreadsheet
     assessment_rows: int = assessment_df.shape[0]
-    
+
     # Get the number of rows in the attendance spreadsheet
     attendance_rows: int = data.shape[0]
 
-    # Check if the number of rows in the assessment spreadsheet 
+    # Check if the number of rows in the assessment spreadsheet
     # matches the number of rows in the attendance spreadsheet
     if assessment_rows != attendance_rows:
         raise SpreadSheetFmtErr(
             f"The number of rows in the assessment spreadsheet ({assessment_rows}) "
-            f"does not match the number of rows in the attendance spreadsheet ({attendance_rows}).")
+            f"does not match the number of rows in the attendance spreadsheet ({attendance_rows})."
+        )
 
     # Prompt the user to enter the assessment requirement
-    req: float = input_marks_req(
-        "Enter the Assessment Requirement [1 - 100]: "
-    )
+    req: float = input_marks_req("Enter the Assessment Requirement [1 - 100]: ")
 
     # Get the columns of the assessment spreadsheet
     assessment_cols: list[str] = assessment_df.columns.tolist()
-    
+
     # Sort the assessment spreadsheet by the first column
     assessment_df = assessment_df.sort_values(by=[assessment_cols[0]])
-    
+
     # Get the last column of the assessment spreadsheet
     score_col: str = assessment_cols[-1]
-    
+
     # Get the serials of the assessment spreadsheet
     assessment_serials: pd.Series = assessment_df.iloc[:, 0]
-    
+
     # Get the scores of the assessment spreadsheet
     assessment_scores: pd.Series = assessment_df.loc[:, score_col]
 
@@ -132,23 +131,22 @@ Enter the path:  """
 
     # Get the name of the assessment score column
     assessment_score_col: str = det_assessment_score_col()
-    
+
     # Get the name of the assessment requirement column
     assessment_req_col: str = det_assessment_req_col()
-    
+
     # Set the assessment scores of the attendance spreadsheet
     data[assessment_score_col] = np.array(assessment_records, dtype=np.float64).round(2)
-    
+
     # Set the assessment requirement of the attendance spreadsheet
     data[assessment_req_col] = req
     print("\nAssessment recorded successfully\n")
-    
+
     # Get the path to the assessment spreadsheet
     assessment_path: Path = paths.get_paths_excel()["Assessment"]
-    
+
     # Write the attendance spreadsheet to the assessment spreadsheet
     DataStream(data).to_excel(assessment_path)
-    
+
     # Record the assessment in the history
     history.record_assessment()
-    

@@ -14,7 +14,8 @@ from pylms.forms.retrieve_form_api.form_questions import (
 from pylms.forms.retrieve_form_api.form_responses import (
     retrieve_form_responses,
 )
-from pylms.utils import DataStream, clean_special
+from pylms.utils import DataStream
+from pylms.preprocess import clean_special
 
 
 def retrieve_form(

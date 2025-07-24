@@ -1,6 +1,6 @@
 import traceback
 from typing import Callable
-from pylms.state import cache_for_cmd
+from pylms.cache import cache_for_cmd
 from pylms.cli import interact, input_option
 from pylms.errors import LMSError
 from pylms.data_ops import load, view
@@ -21,14 +21,15 @@ def handle_err[K](func: Callable[[], K]) -> K | None:
     try:
         return func()
     except LMSError as e:
-        idx, choice = input_option(["Yes", "No"], prompt="Do you wish to view error trace")
+        idx, choice = input_option(
+            ["Yes", "No"], prompt="Do you wish to view error trace"
+        )
         choice = choice.lower()
         if idx == 0:
             traceback.print_exc()
         print(e.message)
     print("\n")
     return None
-    
 
 
 def mainloop() -> bool:

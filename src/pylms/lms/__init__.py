@@ -5,6 +5,7 @@ from pylms.lms.collate.result import collate_result
 from pylms.lms.edit import edit_result, overwrite_result
 from pylms.lms.group import group
 from pylms.lms.view import view_result
+from pylms.lms.mail import send_result
 
 __all__ = [
     "collate_fast_track",
@@ -17,4 +18,5 @@ __all__ = [
     "group",
     "edit_result",
     "overwrite_result",
+    "send_result",
 ]

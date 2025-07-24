@@ -1,7 +1,7 @@
 import pandas as pd
 from pylms.constants import PHONE
 from pylms.utils.data import DataStream
-from pylms.utils.clean.re_phone import match_and_clean
+from pylms.preprocess.clean.re_phone import match_and_clean
 
 
 def clean_phone(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:

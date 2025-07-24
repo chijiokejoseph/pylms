@@ -1,5 +1,6 @@
 {
-  "class_dates": [
+  "cohort": 26,
+  "class_days": [
     0,
     1,
     2
@@ -442,5 +443,9 @@
   "result": [
     true,
     "C:\\Users\\chijioke joseph\\OneDrive\\Documents - Local\\NCAIR\\26th Cohort\\data\\Excel\\Result.xlsx"
+  ],
+  "merit": [
+    true,
+    "C:\\Users\\chijioke joseph\\OneDrive\\Documents - Local\\NCAIR\\26th Cohort\\data\\Excel\\Python Beginners Cohort 26 Merit Awardees.xlsx.xlsx"
   ]
 }

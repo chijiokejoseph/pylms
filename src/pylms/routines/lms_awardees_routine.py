@@ -1,12 +1,13 @@
-from pylms.state import cache_for_cmd
+from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.lms import (
     collate_fast_track,
     collate_merge,
     collate_merit,
+    send_result
 )
 from pylms.data_ops import save
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStore
 
 
@@ -15,6 +16,7 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
         "Collate Fast Track Awardees",
         "Collate Merit Awardees",
         "Merge Fast Track and Merit Awardees",
+        "Email Results to Students",
         "Return to Previous Menu",
     ]
 
@@ -36,12 +38,19 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
                 # collate_merit(app_ds)
                 collate_merit(ds)
                 print("Recorded Merit Awardees.\n")
+                history.record_merit()
             case 3:
                 # app_ds = load()
                 # collate_merge(app_ds)
                 collate_merge(ds)
                 print("\nMerit and Fast Track Awardees merged successfully\n")
             case 4:
+                if history.has_collated_merit:
+                    send_result(ds)
+                    print("\nEmail sent successfully\n")
+                else:
+                    print("\nCollate Merit Awardees first, before emailing results.\n")   
+            case 5:
                 break
             case _:
                 pass

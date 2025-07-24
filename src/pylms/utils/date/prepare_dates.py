@@ -5,6 +5,7 @@ from pylms.utils.data import DataStore
 
 def prepare_dates(ds: DataStore, num_weeks: int = 5) -> None:
     from pylms.history import History
+
     history: History = History.load()
     history.replan_weeks(num_weeks)
     class_dates: list[str] = history.str_dates()

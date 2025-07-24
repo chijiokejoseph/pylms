@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 
 from pylms.constants import DATA_COLUMNS, SPACE_DELIM
-from pylms.data_ops._clean_up import _clean_up
+from pylms.data_ops.append_utils import _clean_up
 from pylms.utils.data import DataStore
 
 

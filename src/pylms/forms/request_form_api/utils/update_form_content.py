@@ -3,7 +3,7 @@ from typing import Generator
 from pylms.constants import (
     CDS,
     COMPLETION,
-    DAYS_IN_WEEK,
+    WORK_DAYS,
     EMAIL,
     GENDER,
     INTERNSHIP,
@@ -163,7 +163,7 @@ def new_content_body(dates_list: list[str]) -> ContentBody:
                                     shuffle=False,
                                     options=[
                                         OptionDict(value=day)
-                                        for day in DAYS_IN_WEEK + ["None"]
+                                        for day in WORK_DAYS + ["None"]
                                     ],
                                 ),
                             )

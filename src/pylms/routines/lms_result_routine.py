@@ -1,4 +1,4 @@
-from pylms.state import cache_for_cmd
+from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.lms import (
     collate_result,
@@ -8,7 +8,7 @@ from pylms.lms import (
     view_result,
 )
 from pylms.data_ops import save
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStore
 
 
@@ -25,7 +25,7 @@ def run_result_lms(ds: DataStore, history: History) -> None:
     :type ds: DataStore
     :param history: (History) - The history object for tracking and saving changes.
     :type history: History
-    
+
     :return: (None) - This function does not return a value.
     :rtype: None
     """

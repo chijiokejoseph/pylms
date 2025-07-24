@@ -14,7 +14,7 @@ from pylms.lms.utils import (
     input_marks_req,
 )
 from pylms.record import RecordStatus
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStore, DataStream, date, paths
 
 
@@ -104,23 +104,23 @@ def collate_attendance(ds: DataStore, history: History) -> None:
     :type ds: DataStore
     :param history: (History) - The state of the application
     :type history: History
-    
-    :return: (None) - returns nothing 
+
+    :return: (None) - returns nothing
     :rtype: None
-    
+
     :raises CollateIncompleteErr: If not all classes have been recorded
     """
-    
+
     # Validate that all classes have been recorded
     _val_all_classes_recorded()
-    
+
     # Extract the dates of classes that were held
     class_held_dates = _extract_class_held_dates(ds)
-    
+
     # Retrieve and filter the relevant data for the held classes
     data: pd.DataFrame = ds.pretty()
     dates_data: pd.DataFrame = data.loc[:, class_held_dates]
-    
+
     # Prompt the user to enter attendance requirement
     req: int = input_marks_req("Enter the Attendance Requirement [1 - 100]: ")
 
@@ -137,12 +137,12 @@ def collate_attendance(ds: DataStore, history: History) -> None:
     count_arr: np.ndarray = count_data.to_numpy()
     count_arr = count_arr.sum(axis=1)
     count_arr = count_arr.flatten()
-    
+
     # Check if all attendance records are complete
     max_len: int = max(count_arr.shape)
     if max_len != count_data.shape[0]:
         raise CollateIncompleteErr("Incomplete class records detected.")
-    
+
     # Calculate attendance scores based on the number of classes held
     num_classes_held: int = len(class_held_dates)
     score_arr: np.ndarray = count_arr * 100 / num_classes_held
@@ -152,7 +152,7 @@ def collate_attendance(ds: DataStore, history: History) -> None:
     total_col: str = det_attendance_total_col(num_classes_held)
     score_col: str = det_attendance_score_col()
     req_col: str = det_attendance_req_col()
-    
+
     # Create a DataFrame with collated attendance data
     collated_data: pd.DataFrame = pd.DataFrame(
         data={
@@ -163,13 +163,13 @@ def collate_attendance(ds: DataStore, history: History) -> None:
             req_col: req,
         }
     )
-    
+
     # Notify user that attendance has been recorded successfully
     print("\nAttendance recorded successfully\n")
-    
+
     # Save the collated data to an Excel file
     path: Path = paths.get_paths_excel()["Attendance"]
     DataStream(collated_data).to_excel(path)
-    
+
     # Record attendance in the history
     history.record_attendance()

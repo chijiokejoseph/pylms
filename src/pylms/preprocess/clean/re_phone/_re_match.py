@@ -3,22 +3,22 @@ from functools import partial
 from typing import Callable
 
 from pylms.constants import BACK_SLASH, COMMA, FRONT_SLASH, NA, SEMI, SPACE_DELIM
-from pylms.utils.clean.re_phone._clean_intl import (
+from pylms.preprocess.clean.re_phone._clean_intl import (
     _clean_intl,
     _clean_intl_comma_sep,
     _clean_intl_semi_sep,
     _clean_intl_space_sep,
     _clean_intl_special,
 )
-from pylms.utils.clean.re_phone._clean_intl_irregular import (
+from pylms.preprocess.clean.re_phone._clean_intl_irregular import (
     _clean_intl_comp_irregular,
     _clean_intl_irregular,
 )
-from pylms.utils.clean.re_phone._clean_irregular import (
+from pylms.preprocess.clean.re_phone._clean_irregular import (
     _clean_composite_irregular,
     _clean_irregular_space,
 )
-from pylms.utils.clean.re_phone._clean_local import (
+from pylms.preprocess.clean.re_phone._clean_local import (
     _clean10,
     _clean11,
     _clean_comma_sep,

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from pylms.state import cache_for_cmd
+from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import save
 from pylms.forms.request_form_api import (
@@ -21,7 +21,7 @@ from pylms.rollcall import (
     record_present,
     new_edit_info,
 )
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStream, DataStore
 
 

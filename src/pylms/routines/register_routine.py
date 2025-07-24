@@ -1,4 +1,4 @@
-from pylms.state import cache_for_cmd
+from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import append_update, new, save
 from pylms.forms.request_form_api import (
@@ -13,8 +13,9 @@ from pylms.rollcall import (
     extract_cds,
     record_cds,
 )
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStore
+from pylms.preprocess import preprocess_states
 
 
 def register(ds: DataStore, history: History) -> None:
@@ -34,6 +35,7 @@ def register(ds: DataStore, history: History) -> None:
             case 1:
                 app_ds: DataStore = new()
                 ds.copy_from(app_ds)
+                preprocess_states(ds, history)
                 print("Onboarding of Registered Students completed successfully.\n")
             case 2:
                 # app_ds = load()
@@ -51,7 +53,7 @@ def register(ds: DataStore, history: History) -> None:
                     # app_ds = append_update(app_ds, data_form_stream)
                     # app_ds = record_cds(app_ds, cds_data_stream)
                     # app_ds = global_record.crosscheck(app_ds)
-                    append_update(ds, data_form_stream)
+                    append_update(ds, data_form_stream, info)
                     record_cds(ds, cds_data_stream)
                     global_record.crosscheck(ds)
                     save_retrieve(info)

@@ -7,8 +7,8 @@ This package clean_pipeline is a custom package that encapsulates the cleaning f
 
 """
 
-from pylms.clean_pipeline.clean_reg_data import clean_reg_data
-from pylms.clean_pipeline.clean_new_data import clean_new_data
+from pylms.preprocess.clean_pipeline.clean_reg_data import clean_reg_data
+from pylms.preprocess.clean_pipeline.clean_new_data import clean_new_data
 
 __all__ = [
     "clean_reg_data",

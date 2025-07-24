@@ -5,7 +5,7 @@ from pylms.forms.request_form_api.class_form_init import init_class_form
 from pylms.forms.request_form_api.utils import ClassFormInfo
 from pylms.forms.request_form_api.utils.class_date_input import input_class_date
 from pylms.utils import DataStore, paths
-from pylms.state import History
+from pylms.history import History
 
 
 def request_class_form(ds: DataStore, history: History) -> None:

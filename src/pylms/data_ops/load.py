@@ -20,12 +20,16 @@ def load() -> DataStore:
 
     # get today's week number
     today_week_num: int = date.det_week_num()
+    
     # get all class dates for this cohort
     dates_list: list[str] = date.retrieve_dates()
+    
     # get all unique week numbers for this cohort
     unique_week_nums: list[int] = date.to_unique_week_nums(dates_list)
+    
     # get the last week number for this cohort
     last_week_num: int = unique_week_nums[-1]
+    
     # check if the cohort period for which the DataStore was first created has ended
     if today_week_num > last_week_num:
         print(

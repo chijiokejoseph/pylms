@@ -7,7 +7,7 @@ from datetime import datetime
 import pandas as pd
 
 from pylms.cli import input_email
-from pylms.constants import CDS, COHORT, DAYS_IN_WEEK, INTERNSHIP, NAME
+from pylms.constants import CDS, COHORT, WORK_DAYS, INTERNSHIP, NAME
 from pylms.forms.request_form_api.errors import FormServiceError
 from pylms.forms.request_form_api.utils import CDSFormInfo
 from pylms.forms.utils.service import (
@@ -29,7 +29,7 @@ from pylms.models import (
 )
 from pylms.utils import DataStore, paths
 from pylms.constants import TIMESTAMP_FMT
-from pylms.state import History
+from pylms.history import History
 
 
 def init_cds_form(ds: DataStore, history: History) -> None:
@@ -83,7 +83,7 @@ def init_cds_form(ds: DataStore, history: History) -> None:
                                     type="RADIO",
                                     shuffle=False,
                                     options=[
-                                        OptionDict(value=day) for day in DAYS_IN_WEEK
+                                        OptionDict(value=day) for day in WORK_DAYS
                                     ],
                                 ),
                             )

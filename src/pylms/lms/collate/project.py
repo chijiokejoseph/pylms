@@ -12,7 +12,7 @@ from pylms.lms.utils import (
     val_assessment_data,
     val_attendance_data,
 )
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStream, paths, read_data
 
 

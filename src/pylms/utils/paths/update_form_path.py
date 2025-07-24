@@ -43,13 +43,14 @@ def ret_update_path(timestamp: str) -> tuple[Path, Path]:
 
 
 class TestLastUpdate(unittest.TestCase):
-
     def setUp(self) -> None:
-        from pylms.state import History
+        from pylms.history import History
+
         self.history: History = History.load()
 
     def test_last_update(self):
         from pylms.forms.utils import select_form
+
         path = last_update_path("form", select_form(self.history, "update").timestamp)
         new_path = to_update_record(path)
         print(path)
@@ -57,6 +58,7 @@ class TestLastUpdate(unittest.TestCase):
 
     def test_ret_update(self):
         from pylms.forms.utils import select_form
+
         form_path, record_path = ret_update_path(
             select_form(self.history, "update").timestamp
         )

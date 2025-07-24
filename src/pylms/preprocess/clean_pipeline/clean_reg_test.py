@@ -1,6 +1,6 @@
 import unittest
 
-from pylms.clean_pipeline.clean_reg_data import _clean_reg
+from pylms.preprocess.clean_pipeline.clean_reg_data import _clean_reg
 from pylms.utils import read_data, DataStream
 import pandas as pd
 from pathlib import Path

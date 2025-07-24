@@ -20,18 +20,17 @@ class TomlProtocol(ABC):
 
 
 class TomlSettings(TomlProtocol):
-    data_dir: str
-
-    def __init__(self, data_dir: str) -> None:
-        self.data_dir = data_dir
+    def __init__(self, data_dir: str, course_name: str) -> None:
+        self.data_dir: str = data_dir
+        self.course_name: str = course_name
 
     @classmethod
     def default(cls) -> Self:
-        return cls(data_dir="")
+        return cls(data_dir="", course_name="")
 
     @classmethod
     def from_value(cls, value_in: Any) -> Self:
-        default = cls(data_dir="")
+        default = cls(data_dir="", course_name="")
         if not isinstance(value_in, dict):
             return default
         keys = list(value_in.keys())
@@ -40,16 +39,16 @@ class TomlSettings(TomlProtocol):
             return default
         if len(values) == 0:
             return default
-        key: Any = keys[0]
-        value: Any = values[0]
-        if key != "data_dir":
-            return default
-        if not isinstance(value, str):
-            return default
-        return cls(data_dir=value)
+        obj = default
+        for key, value in zip(keys, values):
+            if key == "data_dir":
+                obj.data_dir = value if isinstance(value, str) else ""
+            if key == "course_name":
+                obj.course_name = value if isinstance(value, str) else ""
+        return obj
 
     def to_dict(self) -> dict[str, str]:
-        return {"data_dir": self.data_dir}
+        return {"data_dir": self.data_dir, "course_name": self.course_name}
 
 
 class TomlState(TomlProtocol):
@@ -81,7 +80,7 @@ class TomlState(TomlProtocol):
         return {"open": self.open}
 
 
-class AppToml(TomlProtocol):
+class AppConfig(TomlProtocol):
     settings: TomlSettings
     state: TomlState
 
@@ -119,6 +118,9 @@ class AppToml(TomlProtocol):
         path = Path(self.settings.data_dir)
         return path.exists() and path != Path("")
 
+    def has_course_name(self) -> bool:
+        return self.settings.course_name != ""
+
     def open(self) -> None:
         self.state.open.append(True)
 
@@ -127,6 +129,9 @@ class AppToml(TomlProtocol):
 
     def reset_data_dir(self) -> None:
         self.settings.data_dir = ""
+
+    def reset_course_name(self) -> None:
+        self.settings.course_name = ""
 
     @property
     def data_dir(self) -> str:

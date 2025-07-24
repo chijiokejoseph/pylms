@@ -4,8 +4,8 @@ import pandas as pd
 
 from pylms.cli import input_path, test_path_in
 from pylms.constants import NAME, PHONE
-from pylms.utils import DataStore, DataStream, clean, read_data
-
+from pylms.utils import DataStore, DataStream, read_data
+from pylms.preprocess import clean
 
 def _clean_reg(data_stream: DataStream[pd.DataFrame]) -> DataStore:
     """

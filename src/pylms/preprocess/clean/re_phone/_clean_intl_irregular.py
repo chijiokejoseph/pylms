@@ -1,5 +1,5 @@
 from pylms.constants import SPACE_DELIM
-from pylms.utils.clean.re_phone._clean_intl import _clean_intl
+from pylms.preprocess.clean.re_phone._clean_intl import _clean_intl
 
 
 def _clean_intl_irregular(entry: str) -> str:

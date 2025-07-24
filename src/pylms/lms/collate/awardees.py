@@ -9,16 +9,17 @@ from pylms.constants import (
     AWARDEES_EMTPY,
     AWARDEES_ORDER,
     COHORT,
-    COURSE_NAME,
     EMAIL,
     NAME,
     PHONE,
     ValidateDataFn,
 )
+from pylms.config import read_course_name
 from pylms.lms.utils import (
     fmt_date,
     fmt_phone,
 )
+from pylms.errors import LMSError
 from pylms.utils import DataStream, date, paths
 
 type CollateType = Literal["merit", "fast track"]
@@ -39,11 +40,15 @@ def collate_awardees(
     end_date = fmt_date(end_date)
     cohort_num: int = data[COHORT].iloc[0]
 
+    course_name = read_course_name()
+    if course_name is not None:
+        raise LMSError("Course name has not been set in `state.toml`")
+
     len(AWARDEES_ORDER)
     awardees_data: pd.DataFrame = pd.DataFrame(
         data={
             AWARDEES["Email"]: data[EMAIL],
-            AWARDEES["CourseTitle"]: COURSE_NAME,
+            AWARDEES["CourseTitle"]: course_name,
             AWARDEES["Date"]: end_date,
             AWARDEES["Name"]: data[NAME],
             AWARDEES["Phone"]: data[PHONE].map(fmt_phone),

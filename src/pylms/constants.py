@@ -28,6 +28,7 @@ class Spreadsheets(TypedDict):
     Group: Path
     Project: Path
 
+
 class Json(TypedDict):
     Classes: Path
     Records: Path
@@ -171,12 +172,21 @@ MISSING_NAMES: list[str] = ["Nil", "Null", "None", "N/A"]
 CDS: str = "CDS Days"
 
 # Days of the Week
-DAYS_IN_WEEK: list[str] = [
+WORK_DAYS: list[str] = [
     "Monday",
     "Tuesday",
     "Wednesday",
     "Thursday",
     "Friday",
+]
+WEEK_DAYS: list[str] = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
 ]
 
 WEEK_DAY_FMT: str = "%A"

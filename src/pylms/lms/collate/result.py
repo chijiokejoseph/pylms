@@ -13,7 +13,7 @@ from pylms.lms.utils import (
     det_project_score_col,
     det_result_col,
 )
-from pylms.state import History
+from pylms.history import History
 from pylms.utils import DataStore, DataStream, paths, read_data
 
 
