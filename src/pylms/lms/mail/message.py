@@ -43,7 +43,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[None]:
     result = result_stream()
 
     # Get the data from the DataStore
-    data: pd.DataFrame = ds()
+    data: pd.DataFrame = ds.as_ref()
 
     # Find the relevant column names for each required field
     assessment_score_col: str = find_col(result_stream, "Assessment", "Score")

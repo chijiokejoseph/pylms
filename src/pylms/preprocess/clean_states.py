@@ -5,14 +5,7 @@ from pylms.constants import WEEK_DAYS, COMMA_DELIM
 from pylms.cli import input_option
 
 
-def _load_dates(ds: DataStore) -> list[str]:
-    if not paths.get_paths_json()["Date"].exists():
-        date.prepare_dates(ds)
-    return date.retrieve_dates()
-
-
-def make_weekly_ds(new_ds: DataStore) -> None:
-    dates_list: list[str] = _load_dates(new_ds)
+def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> None:
     unique_week_nums: list[int] = date.to_unique_week_nums(dates_list)
     for each_week_num in unique_week_nums:
         new_ds.to_excel(paths.get_paths_weeks() / f"DataStore{each_week_num}.xlsx")
@@ -42,5 +35,5 @@ def normalize(ds: DataStore, history: History) -> None:
     history.set_cohort(ds)
     history.save()
     date_cols: list[str] = history.str_dates()
-    ds.data[date_cols] = RecordStatus.EMPTY
-    make_weekly_ds(ds)
+    ds.as_ref()[date_cols] = RecordStatus.EMPTY
+    make_weekly_ds(ds, date_cols)

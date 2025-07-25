@@ -45,7 +45,7 @@ class DataStore(DataStream[pd.DataFrame]):
     @classmethod
     def from_local(cls, path: Path) -> Self:
         data: pd.DataFrame = read_data(path, keep_na=True)
-        ds: Self = DataStore.from_data(data)  # type: ignore
+        ds: Self = cls.from_data(data)
         return ds
 
     @classmethod
@@ -67,6 +67,7 @@ class DataStore(DataStream[pd.DataFrame]):
 
     def copy_from(self, ds: Self) -> None:
         self.data = ds.data
+        self.prefilled = ds.prefilled
 
     def raise_for_status(self) -> None:
         if self.prefilled:
@@ -90,11 +91,11 @@ class DataStore(DataStream[pd.DataFrame]):
         true_data: pd.DataFrame = (
             data().copy() if isinstance(data, DataStream) else data
         )
+        self.prefilled: bool = prefilled
         super().__init__(true_data, validate)
-        self.prefilled: bool = False
 
     def pretty(self) -> pd.DataFrame:
-        data: pd.DataFrame = self()
+        data: pd.DataFrame = self.as_clone()
         data[NAME] = data[NAME].apply(lambda x: x.replace(COMMA, ""))
         data[PHONE] = data[PHONE].apply(lambda x: x.replace(SEMI, ""))
         return data
@@ -118,13 +119,13 @@ class DataStore(DataStream[pd.DataFrame]):
         if style == "pretty":
             data: pd.DataFrame = self.pretty()
         else:
-            data = self()
+            data = self.as_ref()
 
         data.to_excel(str(path), index=False)
 
     @property
     def data(self) -> pd.DataFrame:
-        return self()
+        return self.as_clone()
 
     @data.setter
     def data(self, data: pd.DataFrame) -> None:

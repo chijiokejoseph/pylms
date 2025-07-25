@@ -24,10 +24,10 @@ from pylms.utils import DataStore
 
 def init_present_form(ds: DataStore, input_date: str, email: str) -> Form:
     names: list[str] = ds.pretty()[NAME].tolist()
-    cohort_no: int = ds()[COHORT].iloc[0]
+    cohort_no: int = ds.as_ref()[COHORT].iloc[0]
     title_date: str = datetime.strptime(input_date, DATE_FMT).strftime(FORM_DATE_FMT)
     form_title: str = f"Python Beginners Cohort {cohort_no} Attendance for {input_date}"
-    form_name: str = f"Attendance {title_date}"
+    form_name: str = f"Cohort {cohort_no} Attendance {title_date}"
     present_form: Form | None = run_create_form(form_title, form_name)
     if present_form is None:
         raise FormServiceError(

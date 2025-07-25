@@ -10,14 +10,14 @@ from pylms.utils import DataStore, DataStream, date
 
 def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> DataStore:
     pretty_data: pd.DataFrame = ds.pretty()
-    data: pd.DataFrame = ds()
+    data_ref: pd.DataFrame = ds.as_ref()
     cds_data: pd.DataFrame = cds_data_stream()
 
     cds_names: list[str] = cds_data[NAME].tolist()
     cds_names = [name.title() for name in cds_names]
     cds_days: list[str] = cds_data[CDS].tolist()
 
-    for row_idx, row in data.iterrows():
+    for row_idx, row in data_ref.iterrows():
         idx: int = cast(int, row_idx)
         new_row: pd.Series = row.copy()
         each_name: str = pretty_data.iloc[idx].loc[NAME]
@@ -39,7 +39,6 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> Data
                 and new_row.at[date_col] != RecordStatus.NO_CLASS
             ):
                 new_row.at[date_col] = RecordStatus.CDS
-        data.iloc[idx, :] = new_row
+        data_ref.iloc[idx, :] = new_row
 
-    ds.data = data
     return ds

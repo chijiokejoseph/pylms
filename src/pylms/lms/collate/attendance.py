@@ -68,7 +68,7 @@ def _val_all_classes_recorded() -> None:
 
 
 def _extract_class_held_dates(ds: DataStore) -> list[str]:
-    data: pd.DataFrame = ds()
+    data: pd.DataFrame = ds.as_ref()
 
     def test_col(col_data: pd.Series, col_name: str) -> bool:
         if re.fullmatch(r"^\d{2}/\d{2}/\d{4}$", col_name) is None:

@@ -14,5 +14,6 @@ def new(history: History) -> DataStore:
 
     app_ds = clean_reg_data()
     normalize(app_ds, history)
+    app_ds.prefilled = False
     print("Preprocessing operation completed successfully.")
     return app_ds

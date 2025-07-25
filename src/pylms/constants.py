@@ -189,6 +189,17 @@ WEEK_DAYS: list[str] = [
     "Sunday",
 ]
 
+COURSES: list[str] = [
+    "Python Beginners",
+    "Python Advanced",
+    "Data Science Beginners",
+    "Data Science Advanced",
+    "Product Design Beginners",
+    "Product Design Advanced",
+    "Product Development",
+    "Embedded Systems",
+]
+
 WEEK_DAY_FMT: str = "%A"
 
 

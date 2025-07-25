@@ -37,14 +37,12 @@ def edit_all_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
             # Else unequivocally return the fill record set by the user.
             return fill_record
 
-        data: pd.DataFrame = ds()
-        new_data: pd.DataFrame = data.copy()
-        temp: list[str] = data[each_date].tolist()
+        data_ref: pd.DataFrame = ds.as_ref()
+        temp: list[str] = data_ref[each_date].tolist()
         class_record = cast(list[RecordStatus], temp)
         new_class_record = [
             fill_record_fn(old_record, selected_record) for old_record in class_record
         ]
-        new_data.loc[:, each_date] = new_class_record
-        ds.data = new_data
+        data_ref.loc[:, each_date] = new_class_record
 
     return ds

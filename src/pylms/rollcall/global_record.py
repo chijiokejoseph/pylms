@@ -70,9 +70,13 @@ class GlobalRecord:
         return self.date_record.unwrap(target_date, new_record)
 
     def crosscheck(self, ds: DataStore) -> DataStore:
-        data = ds()
+        data_ref = ds.as_ref()
         for target_date, value in self.dates.items():
             if value != RecordStatus.EMPTY:
-                data.loc[:, target_date] = value
-        ds.data = data
+                data_ref.loc[:, target_date] = value
         return ds
+    
+    def retrieve_unset_dates(self) -> list[str]:
+        return [
+            date for date, value in self.dates.items() if value == RecordStatus.EMPTY
+        ]

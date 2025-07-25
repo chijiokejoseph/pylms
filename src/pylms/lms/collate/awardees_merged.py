@@ -28,7 +28,7 @@ validator = cast(ValidatorFn, _val_awardees)
 
 
 def collate_merge(ds: DataStore) -> None:
-    cohort_num: int = ds()[COHORT].iloc[0]
+    cohort_num: int = ds.as_ref()[COHORT].iloc[0]
     merged_path: Path = paths.get_merged_path(cohort_num)
     merit_path: Path = paths.get_merit_path(cohort_num)
     fast_track_path: Path = paths.get_fast_track_path(cohort_num)

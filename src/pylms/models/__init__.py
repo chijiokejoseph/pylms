@@ -20,6 +20,7 @@ from pylms.models.setup_form_data import (
     Question,
     QuestionItem,
     TextQuestion,
+    counter_setup
 )
 
 
@@ -50,4 +51,5 @@ __all__ = [
     "Location",
     "OptionDict",
     "PermissionsData",
+    "counter_setup",
 ]

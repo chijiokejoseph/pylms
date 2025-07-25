@@ -1,4 +1,4 @@
-from pylms.utils import paths, data, date, grade
+from pylms.utils import paths, data, date
 from pylms.utils.data import DataStore, DataStream, read_csv, read_data
 from pylms.utils.print_fns import print_stream
 from pylms.utils.rm import rm_path
@@ -18,7 +18,6 @@ def prepare_paths() -> None:
 __all__ = [
     "data",
     "date",
-    "grade",
     "paths",
     "prepare_paths",
     "print_stream",

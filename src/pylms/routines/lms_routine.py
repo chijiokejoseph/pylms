@@ -6,6 +6,7 @@ from pylms.lms import (
 from pylms.routines.lms_awardees_routine import run_awardees_lms
 from pylms.routines.lms_result_routine import run_result_lms
 from pylms.routines.lms_collate_routine import run_collate_lms
+from pylms.forms import request_assessment_form
 from pylms.data_ops import save
 from pylms.history import History
 from pylms.utils import DataStore
@@ -14,6 +15,7 @@ from pylms.utils import DataStore
 def run_lms(ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Group Students",
+        "Request Assessment Form Template",
         "Collate Student Metrics",
         "Manage Results",
         "Manage Awardees",
@@ -34,21 +36,22 @@ def run_lms(ds: DataStore, history: History) -> None:
                 group(ds)
                 print("Students have been grouped successfully\n")
             case 2:
-                # app_ds = load()
                 ds.raise_for_status()
-                run_collate_lms(ds, history)
+                request_assessment_form(ds)
             case 3:
                 # app_ds = load()
                 ds.raise_for_status()
-                run_result_lms(ds, history)
+                run_collate_lms(ds, history)
             case 4:
                 # app_ds = load()
                 ds.raise_for_status()
-                run_awardees_lms(ds, history)
+                run_result_lms(ds, history)
             case 5:
-                break
+                # app_ds = load()
+                ds.raise_for_status()
+                run_awardees_lms(ds, history)
             case _:
-                pass
+                break
                 # app_ds = load()
         # save(app_ds)
         save(ds)

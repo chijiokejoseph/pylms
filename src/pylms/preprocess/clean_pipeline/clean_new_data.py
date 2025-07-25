@@ -44,9 +44,9 @@ def _clean_new(data_stream: DataStream[pd.DataFrame]) -> DataStore:
     subset1_ds = clean.clean_order(subset1_ds)
 
     # create a DataStore from the cleaned data
-    ds: DataStore = DataStore(subset1_ds())
+    ds: DataStore = DataStore(subset1_ds.as_ref())
     # recombine the data in the DataStore and the data corresponding to columns not in `DATA_COLUMNS`
-    recombined_data = pd.concat([ds(), subset2_data], axis="columns")
+    recombined_data = pd.concat([ds.as_ref(), subset2_data], axis="columns")
     # use a setter to replace the underlying data of `ds` with `recombined_data`
     ds.data = recombined_data
 

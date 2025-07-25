@@ -2,7 +2,7 @@ from pathlib import Path
 from pylms.errors import LMSError
 from pylms.config.config import Config
 from pylms.constants import DEFAULT_DATA_PATH
-
+from pylms.constants import COURSES
 
 def input_fn(msg: str) -> str:
     msg += "\n[To forcefully exit the operation enter 'quit', 'exit' or 'q']: "
@@ -48,16 +48,6 @@ def input_dir(table: Config) -> None:
 def input_course_name(config: Config) -> None:
     from pylms.cli import input_option
 
-    options: list[str] = [
-        "Python Beginners",
-        "Python Advanced",
-        "Data Science Beginners",
-        "Data Science Advanced",
-        "Product Design Beginners",
-        "Product Design Advanced",
-        "Product Development",
-        "Embedded Systems",
-    ]
-    _, course_name = input_option(options, prompt="Select the course name")
+    _, course_name = input_option(COURSES, prompt="Select the course name")
     print(f"\nYou have selected {course_name}\n")
     config.settings.course_name = course_name

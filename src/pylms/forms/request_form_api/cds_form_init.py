@@ -39,7 +39,7 @@ def init_cds_form(ds: DataStore, history: History) -> None:
     corper_names: list[str] = corpers.tolist()
     cohort_no: int = data[COHORT].iloc[0]
     form_title: str = f"Python Beginners Cohort {cohort_no} CDS Entry Form"
-    form_name: str = f"CDS Cohort {cohort_no}"
+    form_name: str = f"Cohort {cohort_no} CDS"
     cds_form: Form | None = run_create_form(form_title, form_name)
 
     if cds_form is None:

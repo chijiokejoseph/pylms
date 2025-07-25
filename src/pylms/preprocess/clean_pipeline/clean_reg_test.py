@@ -16,4 +16,4 @@ class CleanRegTest(unittest.TestCase):
         data = read_data(self.path)
         data_stream = DataStream[pd.DataFrame](data)
         ds = _clean_reg(data_stream)
-        print(ds())
+        print(ds.as_ref())

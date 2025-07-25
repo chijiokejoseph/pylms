@@ -43,11 +43,17 @@ class DataStream[T: pd.DataFrame | pd.Series]:
 
     def __call__(self) -> T:
         """
-        return the underlying data from its `self.value` attribute.
+        return a copy of the underlying data from its `self._value` attribute.
 
         :rtype: T
         :return: the data which was stored in the DataStream instance.
         """
+        return self._value[0]
+    
+    def as_ref(self) -> T:
+        return self._value[0]
+    
+    def as_clone(self) -> T:
         result = self._value[0].copy()
         return cast(T, result)
 

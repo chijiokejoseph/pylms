@@ -11,7 +11,6 @@ from pylms.utils.date.det_date_features import (
     to_week_num,
     to_week_nums,
 )
-from pylms.utils.date.prepare_dates import prepare_dates
 from pylms.utils.date.retrieve_dates import retrieve_dates
 
 
@@ -29,7 +28,6 @@ def format_form_timestamp(date_var: str | datetime, str_format: str) -> str:
 
 
 __all__ = [
-    "prepare_dates",
     "retrieve_dates",
     "det_week_num",
     "det_class_num",

@@ -2,6 +2,14 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
+from typing import Generator
+
+
+def counter_setup(start: int = 0) -> Generator[int, None, None]:
+    while True:
+        yield start
+        start += 1
+
 
 class DateQuestion(BaseModel):
     includeTime: bool = False

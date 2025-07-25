@@ -11,7 +11,7 @@ from pylms.utils import DataStore, date, paths
 def edit_multiple_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
     student_serials: list[int] = select_student(ds)
     pretty_names: pd.Series = ds.pretty()[NAME]
-    data: pd.DataFrame = ds()
+    data_ref: pd.DataFrame = ds.as_ref()
     for each_serial in student_serials:
         student_idx: int = each_serial - 1
         student_name: str = pretty_names.iloc[student_idx]
@@ -31,7 +31,6 @@ def edit_multiple_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
                 each_date,
                 [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.EXCUSED],
             )
-            data.loc[student_idx, each_date] = selected_record
+            data_ref.loc[student_idx, each_date] = selected_record
 
-    ds.data = data
     return ds

@@ -4,13 +4,15 @@ from typing import Any
 import pandas as pd
 
 from pylms.constants import DATA_COLUMNS, SPACE_DELIM
-from pylms.data_ops.append_utils import _clean_up
+from pylms.data_ops.append_utils import clean_after_ops
 from pylms.utils.data import DataStore
 
 
 def add(superset: DataStore, subset: DataStore) -> DataStore:
-    superset_cols: list[str] = superset().columns.tolist()
-    subset_cols: list[str] = subset().columns.tolist()
+    superset_ref: pd.DataFrame = superset.as_ref()
+    subset_ref: pd.DataFrame = subset.as_ref()
+    superset_cols: list[str] = superset_ref.columns.tolist()
+    subset_cols: list[str] = subset_ref.columns.tolist()
 
     def validate_subset() -> None:
         superset_extras: list[str] = [
@@ -30,14 +32,14 @@ def add(superset: DataStore, subset: DataStore) -> DataStore:
     subset_num_rows: int = subset().shape[0]
     for column in superset_cols:
         if column in subset_cols:
-            new_entry: list[Any] = subset()[column].tolist()
+            new_entry: list[Any] = subset_ref[column].tolist()
         else:
             new_entry = [SPACE_DELIM for _ in range(subset_num_rows)]
         data_dict.update({column: new_entry})
 
     new_row: pd.DataFrame = pd.DataFrame(data=data_dict)
 
-    new_data: pd.DataFrame = pd.concat([superset(), new_row])
+    new_data: pd.DataFrame = pd.concat([superset_ref, new_row])
     new_ds: DataStore = DataStore(new_data[DATA_COLUMNS])
     new_ds.data = new_data
-    return _clean_up(new_ds)
+    return clean_after_ops(new_ds)

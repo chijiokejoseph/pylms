@@ -10,7 +10,7 @@ from pylms.forms.request_form_api.utils import (
     UpdateFormDetails,
     UpdateFormInfo,
     new_content_body,
-    scrape_update_form,
+    extract_update_details,
 )
 from pylms.forms.utils.service import (
     run_create_form,
@@ -26,12 +26,15 @@ from pylms.utils import DataStore, date, paths
 
 
 def init_update_form(ds: DataStore) -> None:
+    from pylms.rollcall.global_record import GlobalRecord
+    
     msg: str = """
 You'll now select the dates for which the fillers of this form can fill their attendance.
 Please select all the dates for which attendance can be filled using the instructions below.    
     """
-    dates_list: list[str] = select_class_date(msg)
-    result: UpdateFormDetails = scrape_update_form(ds)
+    src_dates: list[str] = GlobalRecord().retrieve_unset_dates()
+    dates_list: list[str] = select_class_date(msg, src_dates)
+    result: UpdateFormDetails = extract_update_details(ds)
     form_title: str = result.title
     form_name: str = result.name
     week_num: int = result.week_num

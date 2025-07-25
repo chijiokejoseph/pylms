@@ -9,7 +9,7 @@ def request_cds_form(ds: DataStore, history: History) -> None:
     dates_list: list[str] = date.retrieve_dates()
     unique_week_nums: list[int] = date.to_unique_week_nums(dates_list)
     week_num: int = date.det_week_num()
-    cohort_no: int = ds()[COHORT].iloc[0]
+    cohort_no: int = ds.as_ref()[COHORT].iloc[0]
 
     start_date: str = dates_list[0]
     cds_week: int = unique_week_nums[1]

@@ -1,6 +1,6 @@
 from pylms.cache import cache_for_cmd, rollback_to_cmd
 from pylms.cli import interact
-from pylms.data_ops import edit, list_ds, remove_students, save, view
+from pylms.data_ops import edit, list_ds, remove_students, save, view, load
 from pylms.utils import DataStore
 
 
@@ -45,6 +45,7 @@ def handle_data(ds: DataStore) -> None:
             case 5:
                 ds.raise_for_status()
                 rollback_to_cmd()
+                ds.copy_from(load())
                 # app_ds = load()
             case _:
                 break

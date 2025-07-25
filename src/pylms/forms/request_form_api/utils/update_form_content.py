@@ -23,13 +23,8 @@ from pylms.models import (
     Question,
     QuestionItem,
     TextQuestion,
+    counter_setup
 )
-
-
-def counter_setup(start: int = 0) -> Generator[int, None, None]:
-    while True:
-        yield start
-        start += 1
 
 
 def new_content_body(dates_list: list[str]) -> ContentBody:

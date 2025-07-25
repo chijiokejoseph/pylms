@@ -4,6 +4,8 @@ from pylms.utils import DataStore, date, paths
 
 
 def save(ds: DataStore) -> None:
+    if ds.prefilled:
+        return None
     week_num: int = date.det_week_num()
     # get all week nums for this cohort
     week_nums: list[int] = date.to_unique_week_nums(date.retrieve_dates())

@@ -7,18 +7,16 @@ from pylms.utils import DataStore, DataStream
 
 
 def record_absent(ds: DataStore, turnout_stream: DataStream[pd.DataFrame], turnout_date: str) -> DataStore:
+    data_ref: pd.DataFrame = ds.as_ref()
     if turnout_stream.is_empty():
-        data: pd.DataFrame = ds()
-        data[turnout_date] = RecordStatus.ABSENT
-        ds.data = data
+        data_ref[turnout_date] = RecordStatus.ABSENT
         return ds
         
     turnout_stream = filter_names(turnout_stream)
     turnout_data: pd.DataFrame = turnout_stream()
     date_col: str = turnout_data[DATE].iloc[0]
 
-    data = ds()
-    class_record: list[str] = data[date_col].tolist()
+    class_record: list[str] = data_ref[date_col].tolist()
     new_class_record: list[str] = [
         RecordStatus.ABSENT
         if old_record
@@ -32,6 +30,5 @@ def record_absent(ds: DataStore, turnout_stream: DataStream[pd.DataFrame], turno
         for old_record in class_record
     ]
 
-    data[date_col] = new_class_record
-    ds.data = data
+    data_ref[date_col] = new_class_record
     return ds

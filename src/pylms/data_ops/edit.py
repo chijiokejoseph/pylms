@@ -83,7 +83,7 @@ def _preprocess(col_name: str, value: str) -> Any | None:
 def edit(ds: DataStore) -> DataStore:
     print("\nPlease select the students whose records you wish to edit")
     serials = select_student(ds)
-    data = ds()
+    data_ref = ds.as_ref()
     for serial in serials:
         print_stream(ds, [serial])
         idx = serial - 1
@@ -98,12 +98,11 @@ def edit(ds: DataStore) -> DataStore:
             proc_value = _preprocess(column, value)
             print()
 
-        column_type = data.loc[:, column].dtype.type
+        column_type = data_ref.loc[:, column].dtype.type
         new_value: np.ndarray = np.array(proc_value).astype(column_type)
         if column in [DATE, COHORT]:
-            data.loc[:, column] = new_value
+            data_ref.loc[:, column] = new_value
         else:
-            data.loc[idx, column] = new_value
+            data_ref.loc[idx, column] = new_value
         print()
-    ds.data = data
     return ds

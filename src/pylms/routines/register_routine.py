@@ -2,7 +2,7 @@ from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import append_update, new, save
 from pylms.forms.request_form_api import (
-    request_update_form,
+    request_update_form, request_unregistered_form
 )
 from pylms.forms.retrieve_form_api import (
     retrieve_update_form,
@@ -22,6 +22,7 @@ def register(ds: DataStore, history: History) -> None:
         "Register New Cohort Data",
         "Request Update Form",
         "Update Cohort Data",
+        "Request Unregistered Form",
         "Return to Main Menu",
     ]
 
@@ -61,6 +62,8 @@ def register(ds: DataStore, history: History) -> None:
                     print(
                         "Couldn't mark CDS data. See the earlier prints for the reasons.\n"
                     )
+            case 4:
+                request_unregistered_form(ds)
             case _:
                 break
 
