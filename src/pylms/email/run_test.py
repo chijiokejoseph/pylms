@@ -1,5 +1,6 @@
 import unittest
 from smtplib import SMTP
+from pylms.errors import Result
 from pylms.email.run import run_email, must_get_env
 from dotenv import load_dotenv
 
@@ -15,19 +16,27 @@ class RunEmailTest(unittest.TestCase):
         :return: (None) - This method does not return a value.
         :rtype: None
         """
-        def mock_mail_fn(smtp: SMTP) -> None:
+        def mock_mail_fn(smtp: SMTP) -> Result[None]:
             """
             Mock mail function that retrieves an email address from the environment and verifies it using the provided SMTP instance.
 
             :param smtp: (SMTP) - The SMTP instance used to verify the email address.
             :type smtp: SMTP
-            :return: (None) - This function does not return a value.
-            :rtype: None
+            :return: (Result[None]) - This function does not return a value.
+            :rtype: Result[None]
             """
             email: str = must_get_env("EMAIL")
-            smtp.verify(email)
+            try:
+                smtp.verify(email)
+                return Result.ok(None)
+            except Exception as e:
+                return Result[None].err(e)
 
-        run_email(mock_mail_fn)
+        result = run_email(mock_mail_fn)
+        if result.is_ok():
+            print("Email sent successfully.")
+        else:
+            print(f"Failed to send email: {result.unwrap_err()}")
 
 
 if __name__ == "__main__":

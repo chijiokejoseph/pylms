@@ -15,6 +15,7 @@ from pylms.routines import (
 )
 from pylms.history import History
 from pylms.utils import DataStore
+from pylms.config import Config
 
 
 def handle_err[K](func: Callable[[], K]) -> K | None:
@@ -25,14 +26,14 @@ def handle_err[K](func: Callable[[], K]) -> K | None:
             ["Yes", "No"], prompt="Do you wish to view error trace"
         )
         choice = choice.lower()
-        if idx == 0:
+        if idx == 1:
             traceback.print_exc()
         print(e.message)
     print("\n")
     return None
 
 
-def mainloop() -> bool:
+def mainloop(config: Config) -> bool:
     menu: list[str] = [
         "Attendance",
         "CDS",
@@ -54,7 +55,7 @@ def mainloop() -> bool:
         case 2:
             handle_cds(ds, history)
         case 3:
-            handle_cohort()
+            handle_cohort(config)
         case 4:
             handle_data(ds)
         case 5:
@@ -69,7 +70,7 @@ def mainloop() -> bool:
     return True
 
 
-def closed_loop() -> bool:
+def closed_loop(config: Config) -> bool:
     print("\nCohort is closed.\n")
     menu: list[str] = [
         "View Data Records",
@@ -86,7 +87,7 @@ def closed_loop() -> bool:
             app_ds = load()
             view_result(app_ds)
         case 3:
-            handle_cohort()
+            handle_cohort(config)
         case _:
             print(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"

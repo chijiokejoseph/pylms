@@ -1,6 +1,6 @@
 from pathlib import Path
 from pylms.errors import LMSError
-from pylms.config.app_config import AppConfig
+from pylms.config.config import Config
 from pylms.constants import DEFAULT_DATA_PATH
 
 
@@ -13,7 +13,7 @@ def input_fn(msg: str) -> str:
         return user_input
 
 
-def input_dir(table: AppConfig) -> None:
+def input_dir(table: Config) -> None:
     from pylms.cli import input_str
 
     save_path = Path(table.settings.data_dir)
@@ -45,7 +45,7 @@ def input_dir(table: AppConfig) -> None:
     return None
 
 
-def input_course_name(config: AppConfig) -> None:
+def input_course_name(config: Config) -> None:
     from pylms.cli import input_option
 
     options: list[str] = [
@@ -59,4 +59,5 @@ def input_course_name(config: AppConfig) -> None:
         "Embedded Systems",
     ]
     _, course_name = input_option(options, prompt="Select the course name")
+    print(f"\nYou have selected {course_name}\n")
     config.settings.course_name = course_name

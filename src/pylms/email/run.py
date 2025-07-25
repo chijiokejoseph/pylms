@@ -1,20 +1,18 @@
 from smtplib import SMTP, SMTP_SSL
 from typing import Callable
-from pylms.errors import LMSError
+from pylms.errors import Result
 from pylms.utils import must_get_env
 
 
-def run_email(mail_fn: Callable[[SMTP], None]) -> None:
+def run_email(mail_fn: Callable[[SMTP], Result[None]]) -> Result[None]:
     """
     Establish an SMTP connection, authenticate, execute a mail function, and close the connection.
 
-    :param mail_fn: (Callable[[SMTP], None]) - A function that takes an SMTP object and performs email operations.
-    :type mail_fn: Callable[[SMTP], None]
+    :param mail_fn: (Callable[[SMTP], Result[None]]) - A function that takes an SMTP object and performs email operations.
+    :type mail_fn: Callable[[SMTP], Result[None]]
 
-    :return: (None) - returns nothing
-    :rtype: None
-
-    :raises LMSError: If required environment variables are missing or authentication fails.
+    :return: (Result[None]) - returns a Result object indicating success or failure.
+    :rtype: Result[None]
     """
     # Retrieve the sender's email address from environment variables
     email: str = must_get_env("EMAIL")
@@ -26,7 +24,7 @@ def run_email(mail_fn: Callable[[SMTP], None]) -> None:
     try:
         # Create an SMTP connection to Gmail's SMTP server on port 587
         server = SMTP_SSL("smtp.gmail.com", 465)
-        
+
         # Disable debug logging
         server.set_debuglevel(False)
 
@@ -35,12 +33,11 @@ def run_email(mail_fn: Callable[[SMTP], None]) -> None:
 
         # Execute the provided mail function, passing the authenticated SMTP server object
         mail_fn(server)
+        return Result.ok(None)
     except Exception as e:
         # Raise a custom error if any SMTP-related exception occurs
-        raise LMSError(f"SMTP error: {e}")
+        return Result[None].err(e)
     finally:
-        if server is None:
-            # If the server was never created, exit the function
-            return
         # Close the SMTP connection to free resources
-        server.quit()
+        if server is not None:
+            server.quit()

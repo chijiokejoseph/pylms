@@ -115,7 +115,7 @@ class History:
         # Validate that exactly three class weekdays are specified
         if len(self.class_days) != 3:
             raise HistoryError(
-                "Class dayss must contain exactly 3 integers corresponding to the weekdays on which classes are held."
+                "Class days must contain exactly 3 integers corresponding to the weekdays on which classes are held."
             )
         # Ensure the orientation date is set before proceeding
         if self.orientation_date is None:
@@ -419,10 +419,18 @@ class History:
         # Save the dates to the JSON file (`Json/dates.json`)
         # if the dates have changed
 
-        dates_json_list: list[str] = []
-
-        # Load the dates from the JSON file `Json/dates.json`
+        # Get `Json/dates.json`
         dates_json_path: Path = paths.get_paths_json()["Date"]
+        
+        # Check if `Json/dates.json` exists
+        if not dates_json_path.exists():
+            # Create `Json/dates.json`, save the dates and return
+            with dates_json_path.open("w") as file:
+                json.dump(self.str_dates(), file, indent=2)
+            return
+        
+        # Load the dates from the JSON file `Json/dates.json`
+        dates_json_list: list[str] = []
         with dates_json_path.open("r") as file:
             dates_json_list.extend(json.load(file))
 
@@ -435,7 +443,7 @@ class History:
         self.orientation_date = datetime.strptime(
             ds.data[DATE].astype(str).iloc[0], DATE_FMT
         )
-        self.cohort = ds.data[COHORT].astype(int).iloc[0]
+        self.cohort = ds.data[COHORT].astype(int).tolist()[0]
         self._update_dates()
 
     def set_class_days(

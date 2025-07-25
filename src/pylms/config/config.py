@@ -80,7 +80,7 @@ class TomlState(TomlProtocol):
         return {"open": self.open}
 
 
-class AppConfig(TomlProtocol):
+class Config(TomlProtocol):
     settings: TomlSettings
     state: TomlState
 
@@ -107,6 +107,10 @@ class AppConfig(TomlProtocol):
                     pass
 
         return default
+
+    def from_self(self, other: Self) -> None:
+        self.settings = other.settings
+        self.state = other.state
 
     def to_dict(self) -> dict:
         return {"settings": self.settings.to_dict(), "state": self.state.to_dict()}

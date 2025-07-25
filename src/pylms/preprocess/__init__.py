@@ -1,6 +1,6 @@
 from pylms.preprocess import clean, clean_pipeline, clean_special
 from pylms.preprocess.clean_pipeline import clean_new_data, clean_reg_data
-from pylms.preprocess.clean_states import preprocess_states
+from pylms.preprocess.clean_states import normalize
 
 
 __all__ = [
@@ -9,5 +9,5 @@ __all__ = [
     "clean_special",
     "clean_new_data",
     "clean_reg_data",
-    "preprocess_states"
+    "normalize",
 ]

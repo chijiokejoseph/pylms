@@ -15,7 +15,6 @@ from pylms.rollcall import (
 )
 from pylms.history import History
 from pylms.utils import DataStore
-from pylms.preprocess import preprocess_states
 
 
 def register(ds: DataStore, history: History) -> None:
@@ -33,9 +32,8 @@ def register(ds: DataStore, history: History) -> None:
             cache_for_cmd(cmd)
         match int(selection):
             case 1:
-                app_ds: DataStore = new()
+                app_ds: DataStore = new(history)
                 ds.copy_from(app_ds)
-                preprocess_states(ds, history)
                 print("Onboarding of Registered Students completed successfully.\n")
             case 2:
                 # app_ds = load()

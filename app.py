@@ -1,6 +1,6 @@
 from src.pylms.mainloop import mainloop, closed_loop, handle_err
 from src.pylms.utils import prepare_paths
-from src.pylms.config import load, input_dir, input_course_name, write_state
+from src.pylms.config import load, input_dir, input_course_name, write_config
 from src.pylms.constants import ENV_PATH
 from dotenv import load_dotenv
 
@@ -26,17 +26,17 @@ def main() -> None:
     run: bool = True
     while run:
         # Load the current application state from persistent storage
-        app_state = load()
+        config = load()
 
         # If the data directory is not set, prompt the user to input it and save the state
-        if not app_state.has_data_dir():
-            input_dir(app_state)
-            write_state(app_state)
+        if not config.has_data_dir():
+            input_dir(config)
+            write_config(config)
 
         # If the course name is not set, prompt the user to input it and save the state
-        if not app_state.has_course_name():
-            input_course_name(app_state)
-            write_state(app_state)
+        if not config.has_course_name():
+            input_course_name(config)
+            write_config(config)
 
         # Prepare any necessary file paths for the application
         prepare_paths()
@@ -44,7 +44,7 @@ def main() -> None:
         # Run the main loop if the application is open, otherwise run the closed loop.
         # Any exceptions are handled by handle_err.
         result = handle_err(
-            lambda: mainloop() if app_state.is_open() else closed_loop()
+            lambda: mainloop(config) if config.is_open() else closed_loop(config)
         )
 
         # Determine whether to continue running based on the result of handle_err
