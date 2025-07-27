@@ -10,7 +10,7 @@ from datetime import datetime
 
 def init_assessment_form(ds: DataStore) -> None:
     options = [
-        "Mid-term Assessment",
+        "Midterm Assessment",
         "Final Assessment",
     ]
     _, assessment_type = input_option(options, prompt="Select the assessment type")

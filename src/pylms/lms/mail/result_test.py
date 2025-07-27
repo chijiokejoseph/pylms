@@ -1,5 +1,5 @@
 import unittest
-from pylms.lms.mail.message import send_result
+from pylms.lms.mail.result import send_result
 
 
 class TestSendResult(unittest.TestCase):
