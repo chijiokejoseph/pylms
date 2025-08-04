@@ -7,10 +7,10 @@ import pandas as pd
 from smtplib import SMTP
 from email.message import EmailMessage
 from pylms.email import run_email
-from pylms.errors import LMSError, Result
+from pylms.errors import LMSError, Result, Unit
 
 
-def _send_result(ds: DataStore, server: SMTP) -> Result[None]:
+def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     """
     Sends individualized result breakdown emails to students using the provided SMTP server.
 
@@ -23,8 +23,8 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[None]:
     :param server: (SMTP) - An SMTP server instance used to send emails.
     :type server: SMTP
 
-    :return: (Result[None]) - returns a Result object indicating success or failure.
-    :rtype: Result[None]
+    :return: (Result[Unit]) - returns a Result object indicating success or failure.
+    :rtype: Result[Unit]
 
     :raises Exception: Any exceptions raised by the SMTP server's send_message method or data reading functions will propagate.
     """
@@ -233,9 +233,9 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[None]:
         print(f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}")
     if len(bad_records) > 0:
       err = LMSError(f"Failed to send emails to {len(bad_records)} recipients.")
-      return Result[None].err(err)
+      return Result[Unit].err(err)
 
-    return Result.ok(None)
+    return Result[Unit].unit()
 
 def send_result(ds: DataStore) -> None:
     """

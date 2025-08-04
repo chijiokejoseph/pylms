@@ -15,6 +15,7 @@ def confirm_onboard_req() -> None:
     :return: a None value
     :rtype: None
     """
+    
     warning: str = """
 Before going ahead, please confirm that the following requirements are met. 
 If these requirements are not met, your code will not run successfully.

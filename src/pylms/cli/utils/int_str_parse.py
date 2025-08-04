@@ -3,7 +3,6 @@ from pylms.constants import COMMA_DELIM, COMMA, HYPHEN
 from pylms.cli.errors import InvalidSelectionInputError
 
 
-# TODO: test this function
 def _parse_int_str(entry: str) -> list[int]:
     """Parses a string containing integers and returns a list of integers.
     The string can contain integers separated by commas, spaces, or hyphens.

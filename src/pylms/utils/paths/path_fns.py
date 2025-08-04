@@ -48,7 +48,7 @@ def get_paths_json() -> Json:
         "CDS": json_path / "CDS",
         "UpdateForm": json_path / "update",
         "UpdateRecord": json_path / "update",
-        "CDSForm": json_path / "CDS" / "cds_form",
-        "CDSRecord": json_path / "CDS" / "cds_record",
+        "CDSForm": json_path / "CDS",
+        "CDSRecord": json_path / "CDS",
         "Date": json_path / "dates.json",
     }

@@ -1,10 +1,21 @@
-from typing import Self, Callable
+from typing import Self, Callable, cast
+import sys
+
+
+
+def eprint(msg: str) -> None:
+    sys.stderr.write(msg)
 
 
 class LMSError(Exception):
     def __init__(self, message: str) -> None:
         self.message: str = message
         super().__init__(self.message)
+
+
+class Unit:
+    def __init__(self) -> None:
+        self._value = ()
 
 
 class Result[T]:
@@ -26,6 +37,10 @@ class Result[T]:
     @classmethod
     def err(cls, error: Exception) -> Self:
         return cls(None, error)
+    
+    @classmethod
+    def unit(cls) -> Self:
+        return cls.ok(cast(T, Unit()))
 
     def is_ok(self) -> bool:
         return self._error is None and self._value is not None
@@ -72,12 +87,12 @@ class Result[T]:
         return self._error
 
 
-class ResultMap:
-    def __init__(self, result: Result) -> None:
-        self.result = result
+class ResultMap[T]:
+    def __init__(self, result: Result[T]) -> None:
+        self.result: Result[T] = result
 
-    def map[T, K](self, func: Callable[[T], K]) -> Result[K]:
-        item = self.result
+    def map[K](self, func: Callable[[T], K]) -> Result[K]:
+        item: Result[T] = self.result
         if item.is_ok():
             assert item.value is not None, "value is None"
             return Result.ok(func(item.value))

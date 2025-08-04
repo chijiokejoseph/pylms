@@ -23,18 +23,26 @@ def input_option(options: list[str], title: str = "Select from the following: ",
     
     :raises InvalidInputError: If the user fails to input a valid number within the allowed number of trials.
     """
-
+    # Print the title above the options list
     print(f"\n{title}")
+    
+    # Enumerate and print each option with its index starting from 1
     for i, option in enumerate(options, start=1):
         print(f"{i}. {option}")
     print()
 
+    # Prompt the user to input a number corresponding to their choice
     temp = input_num(
         f"{prompt}\nSelect an Option: ",
         "int",
         diagnosis=f"The number you have entered does not match the range 1 - {len(options)}, hence it is invalid",
         test_fn=lambda x: 1 <= x <= len(options),
     )
+    # Cast the input to int
     choice: int = cast(int, temp)
+    
+    # Calculate zero-based index for list access
     choice_idx: int = choice - 1
+    
+    # Return the 1-based choice and the corresponding option string
     return choice, options[choice_idx]

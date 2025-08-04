@@ -41,6 +41,7 @@ def mainloop(config: Config) -> bool:
         "Data Records",
         "LMS",
         "Register",
+        "Mail",
         "Quit",
     ]
     history: History = History.load()

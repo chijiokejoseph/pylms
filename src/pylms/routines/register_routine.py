@@ -1,13 +1,14 @@
+import pandas as pd
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import append_update, new, save
-from pylms.forms.request_form_api import (
-    request_update_form, request_unregistered_form
-)
+from pylms.errors import Result, eprint
+from pylms.forms.request_form_api import request_update_form, request_unregistered_form
 from pylms.forms.retrieve_form_api import (
     retrieve_update_form,
     save_retrieve,
 )
+from pylms.models.form_info import UpdateFormInfo
 from pylms.rollcall import (
     GlobalRecord,
     extract_cds,
@@ -15,6 +16,7 @@ from pylms.rollcall import (
 )
 from pylms.history import History
 from pylms.utils import DataStore
+from pylms.utils.data.datastream import DataStream
 
 
 def register(ds: DataStore, history: History) -> None:
@@ -37,8 +39,6 @@ def register(ds: DataStore, history: History) -> None:
                 ds.copy_from(app_ds)
                 print("Onboarding of Registered Students completed successfully.\n")
             case 2:
-                # app_ds = load()
-                # request_update_form(app_ds)
                 ds.raise_for_status()
                 request_update_form(ds)
                 print("Generated Data Form successfully\n")
@@ -46,12 +46,17 @@ def register(ds: DataStore, history: History) -> None:
                 ds.raise_for_status()
                 global_record: GlobalRecord = GlobalRecord()
                 # app_ds = load()
-                data_form_stream, info = retrieve_update_form(history)
+                result: Result[
+                    tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]
+                ] = retrieve_update_form(history)
+                if result.is_err():
+                    eprint(
+                        f"\nFailed to retrieve update form with error: {result.unwrap_err()}\n"
+                    )
+                    continue
+                data_form_stream, info = result.unwrap()
                 if data_form_stream is not None:
                     data_form_stream, cds_data_stream = extract_cds(data_form_stream)
-                    # app_ds = append_update(app_ds, data_form_stream)
-                    # app_ds = record_cds(app_ds, cds_data_stream)
-                    # app_ds = global_record.crosscheck(app_ds)
                     append_update(ds, data_form_stream, info)
                     record_cds(ds, cds_data_stream)
                     global_record.crosscheck(ds)

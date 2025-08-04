@@ -18,6 +18,7 @@ from pylms.forms.retrieve_form_api import (
     save_retrieve,
     ClassType,
 )
+from pylms.forms.utils import select_form
 
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "request_class_form",
     "request_unregistered_form",
     "request_update_form",
+    "select_form",
     "UpdateFormInfo",
     "ClassFormInfo",
     "CDSFormInfo",

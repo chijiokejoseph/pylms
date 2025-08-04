@@ -13,13 +13,32 @@ def input_path(
     path_test_diagnosis: str | None = None,
     trials: int = 3,
 ) -> Path:
+    """
+    Prompt the user to input a path string, validate it, and return a Path object.
+
+    :param msg: (str) - The prompt message to display to the user.
+    :param str_test_fn: (Callable[[str], bool]) - Function to validate the input string.
+    :param path_test_fn: (Callable[[Path], bool]) - Function to validate the Path object.
+    :param str_test_diagnosis: (str | None) - Optional diagnosis message for string validation failure.
+    :param path_test_diagnosis: (str | None) - Optional diagnosis message for path validation failure.
+    :param trials: (int) - Number of allowed input attempts.
+
+    :return: (Path) - The validated Path object.
+    :rtype: Path
+
+    :raises InvalidPathError: If the input path does not meet validation criteria.
+    """
+    # Prompt user for input string with validation
     path_str = input_str(msg, str_test_fn, str_test_diagnosis, trials, lower_case=False)
+    # Strip whitespace and remove surrounding quotes
     path_str = path_str.strip()
     path_str = path_str.removesuffix('"')
     path_str = path_str.removesuffix("'")
     path_str = path_str.removeprefix('"')
     path_str = path_str.removeprefix("'")
+    # Convert string to Path object
     path: Path = Path(path_str)
+    # Validate the Path object
     if not path_test_fn(path):
         diagnosis = (
             f"\nInput Path: '{path}', diagnosis: {path_test_diagnosis}"
@@ -27,15 +46,29 @@ def input_path(
             else ""
         )
         err_msg: str = f"'{path_str}' does not meet input requirements. {diagnosis}"
+        # Raise error if validation fails
         raise InvalidPathError(err_msg)
+    # Return the validated Path object
     return path
 
 
 def test_path_in(path_input: Path) -> bool:
+    """
+    Validate that the given path is an absolute path pointing to an Excel file that exists.
+
+    :param path_input: (Path) - The path to validate.
+    :type path_input: Path
+
+    :return: (bool) - True if the path is absolute, points to an Excel file, and exists; False otherwise.
+    :rtype: bool
+    """
+    # Check if the path is absolute
     if not path_input.is_absolute():
         print(f"{path_input} is not absolute")
         return False
+    # Check if the file has an Excel extension
     if not path_input.name.endswith("xlsx"):
         print(f"{path_input} does not point to an excel file")
         return False
+    # Check if the path exists
     return path_input.exists()

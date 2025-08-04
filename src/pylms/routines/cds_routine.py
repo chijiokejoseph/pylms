@@ -1,6 +1,7 @@
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import save
+from pylms.errors import eprint
 from pylms.forms.request_form_api import (
     request_cds_form,
 )
@@ -36,7 +37,11 @@ def handle_cds(ds: DataStore, history: History) -> None:
                 print("Generated CDS Form Successfully\n")
             case 2:
                 # app_ds = load()
-                cds_form_stream, info = retrieve_cds_form(history)
+                result = retrieve_cds_form(history)
+                if result.is_err():
+                    eprint(f"\nFailed to retrieve cds forms due to error: {result.unwrap_err()}\n")
+                    continue
+                cds_form_stream, info = result.unwrap()
                 if cds_form_stream is not None:
                     # app_ds = record_cds(app_ds, cds_form_stream)
                     record_cds(ds, cds_form_stream)

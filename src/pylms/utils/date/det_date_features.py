@@ -30,7 +30,9 @@ def to_week_nums(date_string_list: list[str]) -> list[int]:
 
 
 def to_unique_week_nums(date_string_list: list[str]) -> list[int]:
-    return list(set(to_week_nums(date_string_list)))
+    week_nums: list[int] = list(set(to_week_nums(date_string_list)))
+    week_nums.sort()
+    return week_nums
 
 
 def det_year() -> int:
