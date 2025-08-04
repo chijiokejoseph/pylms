@@ -208,3 +208,6 @@ __marimo__/
 
 # Secrets
 secrets.json
+
+# Test Html files
+src/pylms/html/
