@@ -64,17 +64,7 @@ class DataStore(DataStream[pd.DataFrame]):
         ds: Self = cls(subset_data)
         ds.data = data
         return ds
-
-    def copy_from(self, ds: Self) -> None:
-        self.data = ds.data
-        self.prefilled = ds.prefilled
-
-    def raise_for_status(self) -> None:
-        if self.prefilled:
-            raise ValidationError(
-                "The DataStore contains dummy data. You need to register a new cohort before you can use this DataStore."
-            )
-
+    
     def __init__(
         self, data: pd.DataFrame | DataStream[pd.DataFrame], prefilled: bool = False
     ) -> None:
@@ -93,6 +83,17 @@ class DataStore(DataStream[pd.DataFrame]):
         )
         self.prefilled: bool = prefilled
         super().__init__(true_data, validate)
+
+    def copy_from(self, ds: Self) -> None:
+        self.data = ds.data
+        self.prefilled = ds.prefilled
+
+    def raise_for_status(self) -> None:
+        if self.prefilled:
+            raise ValidationError(
+                "The DataStore contains dummy data. You need to register a new cohort before you can use this DataStore."
+            )
+
 
     def pretty(self) -> pd.DataFrame:
         data: pd.DataFrame = self.as_clone()

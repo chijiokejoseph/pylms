@@ -54,7 +54,7 @@ def _retrieve_form_questions(
             ):
                 form_response = resource.get(formId=form_info.excused_id).execute()
             case _ if not isinstance(form_info, ClassFormInfo):
-                form_response = resource.get(formId=form_info.timestamp).execute()
+                form_response = resource.get(formId=form_info.uuid).execute()
             case _:
                 raise InvalidRetrieveArgsError("")
 

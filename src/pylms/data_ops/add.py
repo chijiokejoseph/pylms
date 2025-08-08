@@ -37,9 +37,9 @@ def add(superset: DataStore, subset: DataStore) -> DataStore:
             new_entry = [SPACE_DELIM for _ in range(subset_num_rows)]
         data_dict.update({column: new_entry})
 
-    new_row: pd.DataFrame = pd.DataFrame(data=data_dict)
+    new_rows: pd.DataFrame = pd.DataFrame(data=data_dict)
 
-    new_data: pd.DataFrame = pd.concat([superset_ref, new_row])
-    new_ds: DataStore = DataStore(new_data[DATA_COLUMNS])
-    new_ds.data = new_data
-    return clean_after_ops(new_ds)
+    new_data: pd.DataFrame = pd.concat([superset_ref, new_rows])
+    new_ds: DataStore = DataStore.from_data(new_data)
+    clean_after_ops(new_ds)
+    return new_ds

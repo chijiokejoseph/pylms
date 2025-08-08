@@ -62,7 +62,7 @@ def _retrieve_form_responses(
             ):
                 request = response_resource.list(formId=form_info.excused_id)
             case _ if not isinstance(form_info, ClassFormInfo):
-                request = response_resource.list(formId=form_info.timestamp)
+                request = response_resource.list(formId=form_info.uuid)
             case _:
                 raise InvalidRetrieveArgsError("")
             

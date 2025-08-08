@@ -1,7 +1,6 @@
 import json
 from io import TextIOWrapper
 from pathlib import Path
-from datetime import datetime
 from typing import cast
 
 from pylms.cli import input_email, select_class_date
@@ -17,17 +16,17 @@ from pylms.forms.utils.service import (
     run_setup_form,
     run_share_form,
 )
+from pylms.history.history import History
 from pylms.models import (
     ContentBody,
     Form,
 )
-from pylms.constants import TIMESTAMP_FMT
 from pylms.utils import DataStore, date, paths
 
 
-def init_update_form(ds: DataStore) -> None:
+def init_update_form(ds: DataStore, history: History) -> None:
     from pylms.rollcall.global_record import GlobalRecord
-    
+
     msg: str = """
 You'll now select the dates for which the fillers of this form can fill their attendance.
 Please select all the dates for which attendance can be filled using the instructions below.    
@@ -38,6 +37,7 @@ Please select all the dates for which attendance can be filled using the instruc
     form_title: str = result.title
     form_name: str = result.name
     week_num: int = result.week_num
+    timestamp: str = result.timestamp
 
     dates_list = [
         each_date for each_date in dates_list if date.to_week_num(each_date) <= week_num
@@ -76,8 +76,9 @@ Please select all the dates for which attendance can be filled using the instruc
         dates=dates_list,
         url=data_form.url,
         uuid=data_form.uuid,
-        timestamp=datetime.now().strftime(TIMESTAMP_FMT),
+        timestamp=timestamp,
     )
+    history.add_update_form(info)
     update_form_path: Path = paths.get_update_path("form", info.timestamp)
     with open(update_form_path, "w") as json_file:
         json.dump(info.model_dump(), cast(TextIOWrapper, json_file), indent=2)

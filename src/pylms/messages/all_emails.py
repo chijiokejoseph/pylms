@@ -1,15 +1,101 @@
+from pylms.history.history import History
+from pylms.messages.utils import MessageBuilder, TextBody
 from pylms.utils import DataStore, must_get_env
 from pylms.errors import Result, Unit
 from smtplib import SMTP
 from email.message import EmailMessage
 from pylms.email import run_email, MailError
-from pylms.messages.all_msg_builders import build_all_message
+from pylms.messages.all_msg_builders import (
+    build_assessment_all_msg,
+    build_custom_all_msg,
+)
 from pylms.messages.message_record import MessageRecord
+from pylms.constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
 from typing import Callable
 
 
+def _construct_html_message(
+    *, title: str, designation: str, name: str, body: str
+) -> str:
+    return f"""
+<h2 style="padding-bottom: 4px; font-size: 18px; font-weight: bold">
+    Dear {designation}{name}
+</h2>
+<br>
+<p style="text-transform: uppercase; padding-bottom: 4px; font-weight: bold; text-align: center;">{title}</p>
+{"\n".join([f"<p style='padding-bottom: 1px'>{line}</p>" for line in body.split("\n")])}
+<br>
+<footer style="padding: 4px">
+    <p style="font-weight: bold">Best Regards</p>
+    <p style="font-weight: bold; font-style: italic">Jason, Joseph</p>
+</footer>
+        """
+
+
+def _build_all_message(
+    ds: DataStore, builder: MessageBuilder
+) -> Result[list[MessageRecord]]:
+    """
+    Build personalized email messages for each student in the DataStore.
+
+    :param ds: (DataStore) - A DataStore object containing student data.
+    :type ds: DataStore
+
+    :param builder: (MessageBuilder) - A builder to return the text body to be used in the email message.
+    :type body: MessageBuilder
+
+    :return: (Result[list[MessageRecord]]) - A Result object containing a list of MessageRecord objects representing the personalized email messages.
+    :rtype: Result[list[MessageRecord]]
+    """
+    # Get the number of rows (students) in the DataStore
+    nrows: int = ds.as_ref().shape[0]
+
+    # Initialize a list to collect any mail errors
+    messages: list[MessageRecord] = []
+
+    # Retrieve sender email from environment variables
+    sender: str = must_get_env("EMAIL")
+
+    result: Result[TextBody] = builder()
+    if result.is_err():
+        return Result[list[MessageRecord]].err(result.unwrap_err())
+
+    title, body = result.unwrap()
+
+    # Iterate over each student to send personalized email
+    for i in range(nrows):
+        # Determine designation based on gender
+        gender: str = ds.as_ref()[GENDER].astype(str).iloc[i]
+        designation: str = (
+            "Mr. "
+            if gender.startswith("M")
+            else "Ms. "
+            if gender.startswith("F")
+            else ""
+        )
+
+        # Retrieve student name and email
+        name: str = (
+            ds.as_ref()[NAME].astype(str).iloc[i].replace(COMMA_DELIM, SPACE_DELIM)
+        )
+        email: str = ds.as_ref()[EMAIL].astype(str).iloc[i]
+
+        # Create an EmailMessage object and set its subject
+        message: EmailMessage = EmailMessage()
+        message["Subject"] = title
+        message["From"] = sender
+
+        # construct the html email message from its parameters
+        html_body = _construct_html_message(
+            title=title, designation=designation, name=name, body=body
+        )
+        message.set_content(html_body, subtype="html")
+        messages.append(MessageRecord(name=name, email=email, message=message))
+    return Result[list[MessageRecord]].ok(messages)
+
+
 def _message_all_emails(
-    server: SMTP, builder: Callable[[], Result[list[MessageRecord]]]
+    server: SMTP, ds: DataStore, builder: Callable[[], Result[TextBody]]
 ) -> Result[Unit]:
     """
     Send personalized emails to all students using the provided SMTP server.
@@ -17,8 +103,10 @@ def _message_all_emails(
     :param server: (SMTP) - An SMTP server instance used to send emails.
     :type server: SMTP
 
-    :param builder: (Callable[[], Result[list[MessageRecord]]]) - A callable that returns a Result containing a list of MessageRecord objects.
-    :type builder: Callable[[], Result[list[MessageRecord]]]
+    :param builder: (Callable[[], Result[Text]]) - A callable that returns a result
+                    object containing the email title and body.
+    :type builder: Callable[[str], Result[Text]]
+
 
     :return: (Result[Unit]) - returns a Result object indicating success or failure.
     :rtype: Result[Unit]
@@ -31,7 +119,7 @@ def _message_all_emails(
     sender: str = must_get_env("EMAIL")
 
     # Call the builder function to get the list of messages to send
-    result = builder()
+    result: Result[list[MessageRecord]] = _build_all_message(ds, builder)
     if result.is_err():
         # Return error result if builder failed
         return Result[Unit].err(result.unwrap_err())
@@ -41,21 +129,22 @@ def _message_all_emails(
 
     # Iterate over each message and send it
     for i, message in enumerate(messages):
+        name: str | None = message.name
         content: EmailMessage = message.message
         email: str = message.email
         try:
-            # Testing logic: override email for testing purposes
-            email = "josephchijokeobodo@gmail.com"  # testing logic
             # Attempt to send the email via the SMTP server
             err: MailError = server.send_message(
                 content, from_addr=sender, to_addrs=email
             )
-            break  # testing logic
             # Check if there were any errors sending to this email
             if err != {}:
                 # Append any errors to the errors list
                 errors.append({f"{i + 1}": (1, bytes(str(err), "utf-8"))})
                 continue
+            print(
+                f"\nMail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
+            )
         except Exception as e:
             # Catch any exceptions during sending and record the error
             errors.append({f"{i + 1}": (1, bytes(str(e), "utf-8"))})
@@ -84,7 +173,7 @@ def _message_all_emails(
     return Result[Unit].unit()
 
 
-def custom_message_all_emails(ds: DataStore) -> Result[Unit]:
+def custom_message_all(ds: DataStore) -> Result[Unit]:
     """
     Send a message to all email addresses stored in the provided DataStore.
 
@@ -103,15 +192,20 @@ def custom_message_all_emails(ds: DataStore) -> Result[Unit]:
     :rtype: Result[Unit]
     """
 
-    # Define a builder function to create the list of messages to send
-    def _all_msg_build() -> Result[list[MessageRecord]]:
-        """
-        custom builder function that captures the DataStore object to be used in the provided builder `build_all_message`
-
-        :return: (Result[list[MessageRecord]]) - A result containing MessageRecord objects if successful else an error result
-        :rtype: Result[list[MessageRecord]]
-        """
-        return build_all_message(ds)
-
     # Use run_email to establish SMTP connection and execute the email sending routine
-    return run_email(lambda service: _message_all_emails(service, _all_msg_build))
+    return run_email(
+        lambda service: _message_all_emails(
+            service,
+            ds,
+            build_custom_all_msg,
+        )
+    )
+
+
+def assessment_message_all(ds: DataStore, history: History) -> Result[Unit]:
+    def _builder_intermediary() -> Result[TextBody]:
+        return build_assessment_all_msg(history)
+
+    return run_email(
+        lambda service: _message_all_emails(service, ds, _builder_intermediary)
+    )

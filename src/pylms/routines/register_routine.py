@@ -23,7 +23,7 @@ def register(ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Register New Cohort Data",
         "Request Update Form",
-        "Update Cohort Data",
+        "Retrieve Update Form and Update Cohort Data",
         "Request Unregistered Form",
         "Return to Main Menu",
     ]
@@ -40,8 +40,8 @@ def register(ds: DataStore, history: History) -> None:
                 print("Onboarding of Registered Students completed successfully.\n")
             case 2:
                 ds.raise_for_status()
-                request_update_form(ds)
-                print("Generated Data Form successfully\n")
+                request_update_form(ds, history)
+                print("Generated Update Form successfully\n")
             case 3:
                 ds.raise_for_status()
                 global_record: GlobalRecord = GlobalRecord()

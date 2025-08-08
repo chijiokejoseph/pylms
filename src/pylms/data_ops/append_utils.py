@@ -28,11 +28,11 @@ def _clean_date(data: pd.DataFrame):
             data.loc[:, column] = data[column].map(fill_space)
 
 
-def clean_after_ops(ds: DataStore) -> DataStore:
+def clean_after_ops(ds: DataStore) -> None:
     data_ref: pd.DataFrame = ds.as_ref()
     data_ref.drop_duplicates(subset=UNIQUE_COLUMNS, keep="first", inplace=True)
     data_ref.sort_values(by=[NAME], inplace=True)
     data_ref.reset_index(drop=True, inplace=True)
     data_ref[SERIAL] = [i + 1 for i in range(data_ref.shape[0])]
     _clean_date(data_ref)
-    return ds
+    return

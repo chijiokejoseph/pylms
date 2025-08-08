@@ -1,8 +1,9 @@
 from pylms.forms.request_form_api.update_form_init import init_update_form
+from pylms.history.history import History
 from pylms.utils import DataStore
 
 
-def request_update_form(ds: DataStore) -> None:
+def request_update_form(ds: DataStore, history: History) -> None:
     # if update_form_path.exists():
     #     with open(update_form_path, "r", encoding="utf-8") as file:
     #         data_dict = json.load(file)
@@ -15,4 +16,4 @@ def request_update_form(ds: DataStore) -> None:
     #         )
     #         print(f"\nClass Dates included in the form: {data_form.dates}\n")
     # else:
-    init_update_form(ds)
+    init_update_form(ds, history)

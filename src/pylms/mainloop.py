@@ -10,6 +10,7 @@ from pylms.routines import (
     handle_cohort,
     handle_data,
     handle_rollcall,
+    handle_message,
     register,
     run_lms,
 )
@@ -41,7 +42,7 @@ def mainloop(config: Config) -> bool:
         "Data Records",
         "LMS",
         "Register",
-        "Mail",
+        "Message",
         "Quit",
     ]
     history: History = History.load()
@@ -63,6 +64,8 @@ def mainloop(config: Config) -> bool:
             run_lms(ds, history)
         case 6:
             register(ds, history)
+        case 7:
+            handle_message(ds, history)
         case _:
             print(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"

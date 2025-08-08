@@ -38,8 +38,11 @@ def init_cds_form(ds: DataStore, history: History) -> None:
     corpers: pd.Series = data[NAME].loc[nysc_selector]
     corper_names: list[str] = corpers.tolist()
     cohort_no: int = data[COHORT].iloc[0]
+    timestamp: str = datetime.now().strftime(TIMESTAMP_FMT)
+    
     form_title: str = f"Python Beginners Cohort {cohort_no} CDS Entry Form"
-    form_name: str = f"Cohort {cohort_no} CDS"
+    form_name: str = f"Cohort {cohort_no} CDS {timestamp}"
+    
     cds_form: Form | None = run_create_form(form_title, form_name)
 
     if cds_form is None:
@@ -115,7 +118,7 @@ def init_cds_form(ds: DataStore, history: History) -> None:
         title=cds_form.title,
         url=cds_form.url,
         uuid=cds_form.uuid,
-        timestamp=datetime.now().strftime(TIMESTAMP_FMT),
+        timestamp=timestamp,
     )
     history.add_cds_form(info)
     cds_form_path: Path = paths.get_cds_path("form", info.timestamp)

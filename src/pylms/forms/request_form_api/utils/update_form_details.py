@@ -10,6 +10,7 @@ class UpdateFormDetails(NamedTuple):
     year_num: int
     title: str
     name: str
+    timestamp: str
 
 
 def extract_update_details(ds: DataStore) -> UpdateFormDetails:
@@ -20,5 +21,5 @@ def extract_update_details(ds: DataStore) -> UpdateFormDetails:
     form_title: str = f"Python Beginners Cohort {cohort_no} Registration Update Form"
     form_name: str = f"Cohort {cohort_no} Update {timestamp}"
     return UpdateFormDetails(
-        title=form_title, name=form_name, week_num=week_num, year_num=year_num
+        title=form_title, name=form_name, week_num=week_num, year_num=year_num, timestamp=timestamp
     )

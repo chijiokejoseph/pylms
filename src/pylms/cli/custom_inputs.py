@@ -49,12 +49,12 @@ def input_num(
                 print()
                 return selection
             elif diagnosis is None:
-                print(f"{selection} is a number but not a valid value")
+                print(f"{selection} is a number but not a valid value\n")
             else:
-                print(f"You have selected {selection}. {diagnosis}")
+                print(f"You have selected {selection}. {diagnosis}\n")
         except ValueError:
             # print warning message if the user input is not parsable to a number
-            print(f"{response} is not a valid number")
+            print(f"{response} is not a valid number\n")
 
     # Forcefully exit the program by raising an InvalidInputError if the loop is exhausted and no valid input has been entered
     raise InvalidInputError(
@@ -111,9 +111,9 @@ def input_str(
             # print default message if `diagnosis` is None
             # else print `diagnosis`
             if diagnosis is None:
-                print("You have entered an invalid response")
+                print("You have entered an invalid response\n")
             else:
-                print(f"You have entered {response}. {diagnosis}")
+                print(f"You have entered {response}. {diagnosis}\n")
     raise InvalidInputError(
         f"You've entered an invalid response {trials} times. Please restart the program.",
         parsing_to="str",

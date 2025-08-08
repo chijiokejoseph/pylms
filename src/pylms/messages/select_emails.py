@@ -1,29 +1,73 @@
+from pylms.messages.utils import MessageBuilder, TextBody, provide_emails
 from pylms.utils import must_get_env
-from pylms.errors import Result, Unit, ResultMap
+from pylms.errors import Result, Unit
 from pylms.email import run_email, MailError
 from email.message import EmailMessage
 from smtplib import SMTP
-from typing import Callable
 from pylms.messages.message_record import MessageRecord
 from pylms.messages.select_msg_builders import (
-    build_select_message,
-    build_update_form_msg,
+    build_custom_select_msg,
+    build_update_msg,
 )
 from pylms.history import History
 
 
-def _message_select_emails(
-    server: SMTP, builder: Callable[[], Result[list[MessageRecord]]]
-) -> Result[Unit]:
+def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]]:
+    """
+    Build a list of MessageRecord objects for sending a select message to multiple recipients.
+
+    :return: (Result[list[MessageRecord]]) - A Result object containing a list of MessageRecord objects if successful,
+             or an error if the cohort is None.
+    :rtype: Result[list[MessageRecord]]
+    """
+
+    # Retrieve the list of email addresses to send the message to
+    result: Result[list[str]] = provide_emails()
+    if result.is_err():
+        return Result[list[MessageRecord]].err(result.unwrap_err())
+    emails: list[str] = result.unwrap()
+
+    # Initialize an empty list to hold the MessageRecord objects
+    messages: list[MessageRecord] = []
+
+    # Retrieve the sender's email address from environment variables
+    sender: str = must_get_env("EMAIL")
+
+    # Construct the HTML body of the email with styling and content
+    text_body_result: Result[TextBody] = builder()
+    if result.is_err():
+        return Result[list[MessageRecord]].err(text_body_result.unwrap_err())
+    title, body = text_body_result.unwrap()
+
+    # Create the email message object
+    message: EmailMessage = EmailMessage()
+    # Set the email subject to the title provided
+    message["Subject"] = title
+    # Set the sender's email address
+    message["From"] = sender
+    # Set the email content as HTML
+    message.set_content(body, subtype="html")
+
+    # Iterate over each email address to send the message
+    for email in emails:
+        # Append the constructed MessageRecord to the messages list
+        messages.append(MessageRecord(name=None, email=email, message=message))
+
+    # Return the list of MessageRecord objects
+    return Result[list[MessageRecord]].ok(messages)
+
+
+def _message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]:
     """
     Send emails to a list of recipients selected through various input formats.
 
     :param server: (SMTP) - The SMTP server instance used to send emails.
     :type server: SMTP
 
-    :param builder: (Callable[[], Result[list[MessageRecord]]]) -
-                    A function that returns a list of MessageRecord objects.
-    :type builder: Callable[[], Result[list[MessageRecord]]]
+    :param builder: (Callable[[], Result[TextBody]) -
+                    A function that returns a Result containing the TextBody object
+                    that holds the title, and body of the message to be sent.
+    :type builder: Callable[[], Result[TextBody]
 
     :return: (Result[Unit]) - Result indicating success or
                                 failure of the email sending operation.
@@ -41,7 +85,7 @@ def _message_select_emails(
     sender: str = must_get_env("EMAIL")
 
     # get the messages to be sent by calling the passed in builder
-    result = builder()
+    result = _build_select_message(builder)
     if result.is_err():
         # handle errors that occur during the building process
         return Result[Unit].err(result.unwrap_err())
@@ -51,6 +95,7 @@ def _message_select_emails(
 
     # iterate over each message and send it
     for message in messages:
+        name: str | None = message.name
         email: str = message.email
         content: EmailMessage = message.message
         try:
@@ -64,6 +109,10 @@ def _message_select_emails(
                     {email: (1, bytes(f"Failed to send email to {email}", "utf-8"))}
                 )
                 continue
+
+            print(
+                f"\nMail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
+            )
         except Exception as e:
             # Catch any exceptions during sending and record the error
             errors.append(
@@ -74,81 +123,6 @@ def _message_select_emails(
                     )
                 }
             )
-            continue
-
-    # If there were any errors, print them and return an error result
-    if len(errors) > 0:
-        for error in errors:
-            for email in error:
-                print(f"Failed to send to {email}")
-
-        return Result[Unit].err(ValueError("Failed to send some emails"))
-    # Return success result if all emails were sent without errors
-    return Result[Unit].unit()
-
-
-def custom_message_select_emails() -> Result[Unit]:
-    """
-    Execute the email sending process by establishing an SMTP connection and running the email operation.
-    The message to be sent is generated from user input.
-
-    :return: (Result[Unit]) - Result indicating success or failure of the email sending operation.
-    :rtype: Result[Unit]
-
-    This function manages the email sending workflow by invoking a helper utility which manages sending emails
-    to addresses provided through user input. It handles establishing the SMTP connection and delegates the
-    actual email sending logic to the helper function.
-    """
-    # Invoke the helper utility to send emails to user-provided email addresses
-    return run_email(
-        lambda service: _message_select_emails(service, build_select_message)
-    )
-
-
-def _message_update_form(history: History, server: SMTP) -> Result[Unit]:
-    """
-    Send update form emails based on the provided history and SMTP server.
-
-    :param history: (History) - History object containing data for building update form messages.
-    :type history: History
-
-    :param server: (SMTP) - The SMTP server instance used to send emails.
-    :type server: SMTP
-
-    :return: (Result[Unit]) - Result indicating success or failure of the email sending operation.
-    :rtype: Result[Unit]
-
-    This function builds update form messages from the given history, sends each email through the SMTP server,
-    collects any errors encountered during sending, and reports them with detailed information including
-    recipient name and email address.
-    """
-    result: Result[list[MessageRecord]] = build_update_form_msg(history)
-    if result.is_err():
-        # Return a successful result with no operation if building messages failed
-        return ResultMap(result).map(lambda _: Unit())
-
-    # Unwrap the result to get the list of MessageRecord objects
-    messages: list[MessageRecord] = result.unwrap()
-
-    errors: list[MailError] = []
-
-    # get the sender from the environment
-    sender: str = must_get_env("EMAIL")
-
-    # iterate over each message and send it through the SMTP server
-    for i, message in enumerate(messages):
-        name, email, content = message
-        try:
-            # Attempt to send the email via the SMTP server
-            err: MailError = server.send_message(
-                content, from_addr=sender, to_addrs=email
-            )
-            # Collect any errors returned by the SMTP server
-            if err != {}:
-                errors.append(err)
-        except Exception as e:
-            # Catch exceptions during sending and record the error with index
-            errors.append({email: (i + 1, bytes(str(e), "utf-8"))})
             continue
 
     # If there were any errors, print detailed error messages
@@ -173,5 +147,28 @@ def _message_update_form(history: History, server: SMTP) -> Result[Unit]:
     return Result[Unit].unit()
 
 
-def message_update_form(history: History) -> Result[Unit]:
-    return run_email(lambda service: _message_update_form(history, service))
+def custom_message_select() -> Result[Unit]:
+    """
+    Execute the email sending process by establishing an SMTP connection and running the email operation.
+    The message to be sent is generated from user input.
+
+    :return: (Result[Unit]) - Result indicating success or failure of the email sending operation.
+    :rtype: Result[Unit]
+
+    This function manages the email sending workflow by invoking a helper utility which manages sending emails
+    to addresses provided through user input. It handles establishing the SMTP connection and delegates the
+    actual email sending logic to the helper function.
+    """
+    # Invoke the helper utility to send emails to user-provided email addresses
+    return run_email(
+        lambda service: _message_select_emails(service, build_custom_select_msg)
+    )
+
+
+def update_message_select(history: History) -> Result[Unit]:
+    def _builder_intermediary() -> Result[TextBody]:
+        return build_update_msg(history)
+
+    return run_email(
+        lambda server: _message_select_emails(server, _builder_intermediary)
+    )

@@ -1,5 +1,6 @@
 import unittest
-from pylms.messages.all_emails import custom_message_all_emails
+from pylms.history.history import History
+from pylms.messages.all_emails import assessment_message_all, custom_message_all
 from pylms.errors import Result, Unit
 from pylms.data_ops.load import load
 from pylms.utils import DataStore
@@ -29,6 +30,8 @@ class AllEmailsTest(unittest.TestCase):
         load_dotenv()
         # Load the data store for use in tests
         self.ds: DataStore = load()
+        # Load History
+        self.history: History = History.load()
 
     def test_custom_message_all(self) -> None:
         """
@@ -40,8 +43,17 @@ class AllEmailsTest(unittest.TestCase):
         This test calls the message_all_emails function with the loaded data store and asserts
         that the result unwraps without exceptions, indicating success.
         """
-        # Call the message_all_emails function with the data store
-        result: Result[Unit] = custom_message_all_emails(self.ds)
+        # Call the custom_message_all_emails function with the data store
+        result: Result[Unit] = custom_message_all(self.ds)
+        # Print error message if Result contains error
+        if result.is_err():
+            print(f"{result.error = }")
+        # Assert that the result is successful and unwrap without error
+        result.unwrap()
+
+    def test_assessment_message_all(self) -> None:
+        # Call the custom_message_all_emails function with the data store
+        result: Result[Unit] = assessment_message_all(self.ds, self.history)
         # Print error message if Result contains error
         if result.is_err():
             print(f"{result.error = }")

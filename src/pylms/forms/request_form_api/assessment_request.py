@@ -11,7 +11,7 @@ from pylms.utils import DataStore
 
 
 def init_assessment_form(ds: DataStore) -> None:
-    options = [
+    options: list[str] = [
         "Midterm Assessment",
         "Final Assessment",
     ]

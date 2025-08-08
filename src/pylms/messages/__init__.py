@@ -1,9 +1,16 @@
-from pylms.messages.all_emails import custom_message_all_emails
-from pylms.messages.select_emails import custom_message_select_emails, message_update_form
+from pylms.messages.all_emails import (
+    custom_message_all,
+    assessment_message_all,
+)
+from pylms.messages.select_emails import (
+    custom_message_select,
+    update_message_select,
+)
 
 
 __all__ = [
-    "custom_message_all_emails",
-    "custom_message_select_emails",
-    "message_update_form",
+    "custom_message_all",
+    "custom_message_select",
+    "assessment_message_all",
+    "update_message_select",
 ]

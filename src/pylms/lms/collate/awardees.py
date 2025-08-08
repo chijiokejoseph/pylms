@@ -40,8 +40,8 @@ def collate_awardees(
     end_date = fmt_date(end_date)
     cohort_num: int = data[COHORT].iloc[0]
 
-    course_name = read_course_name()
-    if course_name is not None:
+    course_name: str = read_course_name()
+    if course_name is None:
         raise LMSError("Course name has not been set in `state.toml`")
 
     len(AWARDEES_ORDER)

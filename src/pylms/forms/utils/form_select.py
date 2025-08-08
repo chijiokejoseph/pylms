@@ -17,13 +17,12 @@ def select_form(
         if kind == "cds"
         else history.get_available_update_forms()
     )
-    print(f"\n{available_forms = }\n")
     forms_list: list[str] = [str_form(form) for form in available_forms]
     title: str = kind.upper() if kind == "cds" else kind.title()
     if len(forms_list) == 0:
         return Result[CDSFormInfo | UpdateFormInfo].err(ValueError(f"list of {title} forms is empty"))
     num, _ = input_option(
-        forms_list, prompt=f"Select the {title} Form to retrieve data from"
+        forms_list, prompt=f"Select the {title} Form to retrieve its metadata"
     )
     idx: int = num - 1
     return Result[CDSFormInfo | UpdateFormInfo].ok(available_forms[idx])

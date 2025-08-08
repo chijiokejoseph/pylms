@@ -1,8 +1,17 @@
+from typing import Callable, NamedTuple
 import pandas as pd
-from pylms.cli import input_str, input_option, input_path
+from pylms.cli import input_option, input_path
+from pylms.errors import Result, eprint
 from pylms.utils import read_data, DataStream
 from pylms.constants import SEMI, COMMA
 
+
+class TextBody(NamedTuple):
+    title: str
+    body: str
+
+
+type MessageBuilder = Callable[[], Result[TextBody]]
 
 
 def verify_excel(data: pd.DataFrame) -> bool:
@@ -30,7 +39,7 @@ def verify_excel(data: pd.DataFrame) -> bool:
         return True
 
 
-def provide_emails() -> list[str]:
+def provide_emails() -> Result[list[str]]:
     # List of options for providing email addresses
     provide_emails_formats = [
         "Provide emails as .txt file (one email per line)",
@@ -51,6 +60,12 @@ def provide_emails() -> list[str]:
     match pos:
         case 1 | 2:
             # Read emails from a text or CSV file, one email per line
+            if not filepath.suffix.endswith("txt") and not filepath.suffix.endswith(
+                "csv"
+            ):
+                msg = f"Error: Invalid file type. {filepath} is not a txt or csv file. Please select a .txt or .csv file."
+                eprint(msg)
+                return Result[list[str]].err(ValueError(msg))
             with filepath.open() as file:
                 emails: list[str] = file.readlines()
                 emails = [email.strip() for email in emails]
@@ -63,7 +78,7 @@ def provide_emails() -> list[str]:
             emails = stream.as_ref().iloc[:, 0].tolist()
         case _:
             # Read emails from a delimited input string
-            response: str = input_str(f"{format_msg}: ")
+            response: str = str(filepath)
             emails = (
                 response.split(SEMI)
                 if SEMI in response
@@ -72,4 +87,4 @@ def provide_emails() -> list[str]:
                 else [response]
             )
             emails = [email.strip() for email in emails if email.strip() != ""]
-    return emails
+    return Result[list[str]].ok(emails)

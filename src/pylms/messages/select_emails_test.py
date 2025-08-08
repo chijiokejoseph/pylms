@@ -1,12 +1,13 @@
 import unittest
 from pylms.messages.select_emails import _message_select_emails
-from pylms.messages.select_msg_builders import build_update_form_msg
-from pylms.messages.message_record import MessageRecord
+from pylms.messages.select_msg_builders import build_update_msg
 from pylms.email import run_email
 from pylms.history import History
 from pylms.errors import Result, Unit
 from smtplib import SMTP
 from dotenv import load_dotenv
+
+from pylms.messages.utils import TextBody
 
 
 class SelectEmailsTest(unittest.TestCase):
@@ -26,17 +27,17 @@ class SelectEmailsTest(unittest.TestCase):
         """
         # load environment
         load_dotenv()
-        
+
         self.history: History = History.load()
 
-    def test_message_select_emails(self) -> None:
+    def test_update_message_select(self) -> None:
         """
-        Test the message_select_emails function to ensure it executes and returns a successful result.
+        Test the `_message_select_emails` with the `build_update_msg` builder function to ensure it executes and returns a successful result.
 
         :return: (None) - This test method does not return a value.
         :rtype: None
 
-        This test calls the message_select_emails function and asserts that the result indicates success.
+        This test calls the `_message_select_emails` function with the `build_update_msg` builder and asserts that the result indicates success.
         """
 
         # Inform about the test steps for different email input modes
@@ -60,8 +61,8 @@ class SelectEmailsTest(unittest.TestCase):
             """
             # Initialize a list to store the results of sending emails
             results: list[Result[Unit]] = []
-            
-            def builder() -> Result[list[MessageRecord]]:
+
+            def builder() -> Result[TextBody]:
                 """
                 Build update form messages from the test history.
 
@@ -71,8 +72,8 @@ class SelectEmailsTest(unittest.TestCase):
                 This function calls the build_update_form_msg function with the test history to generate
                 the messages to be sent in the test.
                 """
-                return build_update_form_msg(self.history)
-            
+                return build_update_msg(self.history)
+
             for _ in range(4):
                 # Call the function under test for each input mode
                 result: Result[Unit] = _message_select_emails(server, builder)

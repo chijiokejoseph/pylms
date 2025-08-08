@@ -1,80 +1,59 @@
-from pylms.utils import DataStore, must_get_env
-from pylms.cli import input_str
-from pylms.messages.construct import construct_msg
-from pylms.constants import NAME, GENDER, EMAIL
-from email.message import EmailMessage
-from pylms.messages.message_record import MessageRecord
+from pylms.cli.custom_inputs import input_str
+from pylms.cli.option_input import input_option
 from pylms.errors import Result
+from pylms.history.history import History
+from pylms.messages.construct import construct_msg
+from pylms.messages.utils import TextBody
 
 
-def build_all_message(ds: DataStore) -> Result[list[MessageRecord]]:
+# Define a builder function to create the list of messages to send
+def build_custom_all_msg() -> Result[TextBody]:
     """
-    Build personalized email messages for each student in the DataStore.
+    custom builder function that returns the text of a string
 
-    :param ds: (DataStore) - A DataStore object containing student data.
-    :type ds: DataStore
-
-    :return: (Result[list[MessageRecord]]) - A Result object containing a list of MessageRecord objects representing the personalized email messages.
-    :rtype: Result[list[MessageRecord]]
+    :return: (str) - The main text a message is to hold
+    :rtype: str
     """
-    # Get the number of rows (students) in the DataStore
-    nrows: int = ds.as_ref().shape[0]
-
-    # Initialize a list to collect any mail errors
-    messages: list[MessageRecord] = []
 
     # Prompt user for the email subject title
     title: str = input_str("Enter the title of the message: ", lower_case=False)
 
-    # Construct the email body; instructions included to avoid valedictions
     body: str = construct_msg(
         "Please do not enter any valedictions such as 'Yours Faithfully' or 'Best Regards'. This will be added automatically."
     )
 
-    # Retrieve sender email from environment variables
-    sender: str = must_get_env("EMAIL")
+    return Result[TextBody].ok(TextBody(title, body))
 
-    # Iterate over each student to send personalized email
-    for i in range(nrows):
-        # Determine designation based on gender
-        gender: str = ds.as_ref()[GENDER].astype(str).iloc[i]
-        designation: str = (
-            "Mr. "
-            if gender.startswith("M")
-            else "Ms. "
-            if gender.startswith("F")
-            else ""
+
+def build_assessment_all_msg(history: History) -> Result[TextBody]:
+    options: list[str] = [
+        "Midterm Assessment",
+        "Final Assessment",
+    ]
+
+    # Check if the cohort attribute in history is None and return an error if so
+    if history.cohort is None:
+        return Result[TextBody].err(
+            ValueError("history.cohort is None. Expected an int value.")
         )
 
-        # Retrieve student name and email
-        name: str = ds.as_ref()[NAME].astype(str).iloc[i]
-        email: str = ds.as_ref()[EMAIL].astype(str).iloc[i]
+    # Extract the cohort number from the history object
+    cohort: int = history.cohort
 
-        # Create an EmailMessage object and set its subject
-        message: EmailMessage = EmailMessage()
-        message["Subject"] = title
-        message["From"] = sender
+    _, assessment_type = input_option(options, prompt="Select the assessment type")
+    assessment_id: str = input_str("Enter the Assessment ID: ", lower_case=False)
 
-        # Construct the HTML body of the email
-        html_body: str = f"""
-<h2 style="padding-bottom: 4px; font-size: 18px; font-weight: bold">
-    Dear {designation}{name}
-</h2>
+    # Define the email title using the cohort number
+    title: str = f"Python Beginners Cohort {cohort} {assessment_type} {assessment_id}"
+
+    print(f"\nForm title is {title}\n")
+
+    url: str = input_str("Enter the form url: ", lower_case=False)
+    
+    body = f"""
+Your {assessment_type} with ID: {assessment_id} for the Python Beginners Class for Cohort {cohort} has been scheduled. Please access the form at the scheduled time through the url provided in the link below.
 <br>
-<p style="text-transform: uppercase; padding-bottom: 4px; font-weight: bold; text-align: center;">{title}</p>
-{"\n".join([f"<p style='padding-bottom: 1px'>{line}</p>" for line in body.split("\n")])}
-<br>
-<footer style="padding: 4px">
-    <p style="font-weight: bold">Best Regards</p>
-    <p style="font-weight: bold; font-style: italic">Jason, Joseph and King</p>
-</footer>
-        """
-        message.set_content(html_body, subtype="html")
-        messages.append(MessageRecord(name=name, email=email, message=message))
-    return Result[list[MessageRecord]].ok(messages)
+FORM: {url}
+    """
 
-
-def build_assessment_message(ds: DataStore) -> list[MessageRecord]:
-    return []
-
-
+    return Result[TextBody].ok(TextBody(title, body))
