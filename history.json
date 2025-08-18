@@ -29,7 +29,10 @@
     "30/07/2025",
     "04/08/2025",
     "05/08/2025",
-    "06/08/2025"
+    "06/08/2025",
+    "11/08/2025",
+    "12/08/2025",
+    "13/08/2025"
   ],
   "marked_classes": [
     "22/07/2025",
@@ -39,7 +42,13 @@
     "30/07/2025",
     "04/08/2025",
     "05/08/2025",
-    "06/08/2025"
+    "06/08/2025",
+    "11/08/2025",
+    "12/08/2025",
+    "13/08/2025",
+    "18/08/2025",
+    "19/08/2025",
+    "20/08/2025"
   ],
   "class_forms": [
     {
@@ -113,6 +122,42 @@
       "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSc4FKVMxvVEUpCyk52Db6YOS3E9lk5NVreT3ve-3g6APizbRw/viewform",
       "excused_id": "1Aby7hSjnvdAR9GIzfh0507hwzn3mro1WzMgiKVOVdQY",
       "timestamp": "Aug05_215853"
+    },
+    {
+      "date": "11/08/2025",
+      "present_name": "Cohort 27 Attendance 08/11/2025",
+      "present_title": "Python Beginners Cohort 27 Attendance for 11/08/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLScrsrBKEUCEjOuLgJtqtrEHfAnChhmp4EPlxtX-kxZXTMXdNg/viewform",
+      "present_id": "1Fh_Klz8SXvbyzvYadX7os4b-TkeFZZ_x9nAL9L0uJ6U",
+      "excused_name": "Cohort 27 Excused 08/11/2025",
+      "excused_title": "Python Beginners Cohort 27 Excused List for 11/08/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLScfLJ4KF7-P8pHsYtvLHYCHBlspwvnsmiu3T2d6hRBt93abow/viewform",
+      "excused_id": "18O7lCUQWh_kI2KE3e2rMQTHIdL8oXO6zRl2_39OlFgU",
+      "timestamp": "Aug11_102350"
+    },
+    {
+      "date": "12/08/2025",
+      "present_name": "Cohort 27 Attendance 08/12/2025",
+      "present_title": "Python Beginners Cohort 27 Attendance for 12/08/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfL3KgpeLYjCzfwxiKKxtkdTqxJZIJMi3kQpoSayhUvtvl_LA/viewform",
+      "present_id": "19P7l6I3YuODXg2x-RYV8yuDg5XDi3aQXY1H8zFj07_k",
+      "excused_name": "Cohort 27 Excused 08/12/2025",
+      "excused_title": "Python Beginners Cohort 27 Excused List for 12/08/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSfEmy0bamck9nHb9u1rLf0OCyhm0r9uekBD_bXutDRI2zluYA/viewform",
+      "excused_id": "1guX2_yoUb_Pmgzlrr1xbMB-BPnQdyNrQ7oHly0jFZZw",
+      "timestamp": "Aug11_102414"
+    },
+    {
+      "date": "13/08/2025",
+      "present_name": "Cohort 27 Attendance 08/13/2025",
+      "present_title": "Python Beginners Cohort 27 Attendance for 13/08/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSco1lcYE8Kdgz-9J47NIhM6phRT0MncmfG4BQqzgjTsZkZOmw/viewform",
+      "present_id": "1UNtIlYOwyqsdxGY6-T-Dt2U7sJOyTA9K6mq5Fec4t5o",
+      "excused_name": "Cohort 27 Excused 08/13/2025",
+      "excused_title": "Python Beginners Cohort 27 Excused List for 13/08/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSfYWTd4_-8UYu2nEdS2HikGC3EetpeV0waD09137HbH2SOc7g/viewform",
+      "excused_id": "1Px6TQwPi3Lmqb1cNvrdy-q4RBQidH1avHC8hj4ZOB38",
+      "timestamp": "Aug11_102436"
     }
   ],
   "recorded_class_forms": [
@@ -187,6 +232,30 @@
       "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSc4FKVMxvVEUpCyk52Db6YOS3E9lk5NVreT3ve-3g6APizbRw/viewform",
       "excused_id": "1Aby7hSjnvdAR9GIzfh0507hwzn3mro1WzMgiKVOVdQY",
       "timestamp": "Aug05_215853"
+    },
+    {
+      "date": "11/08/2025",
+      "present_name": "Cohort 27 Attendance 08/11/2025",
+      "present_title": "Python Beginners Cohort 27 Attendance for 11/08/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLScrsrBKEUCEjOuLgJtqtrEHfAnChhmp4EPlxtX-kxZXTMXdNg/viewform",
+      "present_id": "1Fh_Klz8SXvbyzvYadX7os4b-TkeFZZ_x9nAL9L0uJ6U",
+      "excused_name": "Cohort 27 Excused 08/11/2025",
+      "excused_title": "Python Beginners Cohort 27 Excused List for 11/08/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLScfLJ4KF7-P8pHsYtvLHYCHBlspwvnsmiu3T2d6hRBt93abow/viewform",
+      "excused_id": "18O7lCUQWh_kI2KE3e2rMQTHIdL8oXO6zRl2_39OlFgU",
+      "timestamp": "Aug11_102350"
+    },
+    {
+      "date": "12/08/2025",
+      "present_name": "Cohort 27 Attendance 08/12/2025",
+      "present_title": "Python Beginners Cohort 27 Attendance for 12/08/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfL3KgpeLYjCzfwxiKKxtkdTqxJZIJMi3kQpoSayhUvtvl_LA/viewform",
+      "present_id": "19P7l6I3YuODXg2x-RYV8yuDg5XDi3aQXY1H8zFj07_k",
+      "excused_name": "Cohort 27 Excused 08/12/2025",
+      "excused_title": "Python Beginners Cohort 27 Excused List for 12/08/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSfEmy0bamck9nHb9u1rLf0OCyhm0r9uekBD_bXutDRI2zluYA/viewform",
+      "excused_id": "1guX2_yoUb_Pmgzlrr1xbMB-BPnQdyNrQ7oHly0jFZZw",
+      "timestamp": "Aug11_102414"
     }
   ],
   "cds_forms": [
@@ -270,8 +339,8 @@
     }
   ],
   "attendance": [
-    false,
-    "."
+    true,
+    "C:\\Users\\chijioke joseph\\OneDrive\\Documents - Local\\NCAIR\\27th Cohort\\data\\Excel\\Attendance.xlsx"
   ],
   "assessment": [
     false,

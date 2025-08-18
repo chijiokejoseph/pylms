@@ -1,4 +1,5 @@
-from pylms.messages.utils import MessageBuilder, TextBody, provide_emails
+from pylms.messages.utils import MessageBuilder, TextBody
+from pylms.cli import provide_emails
 from pylms.utils import must_get_env
 from pylms.errors import Result, Unit
 from pylms.email import run_email, MailError

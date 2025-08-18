@@ -5,17 +5,16 @@ import numpy as np
 import pandas as pd
 
 from pylms.cli import input_num
+from pylms.cli.option_input import input_option
 from pylms.constants import GROUP, NAME, SERIAL
-from pylms.utils import DataStore, DataStream, date, paths
+from pylms.history.history import History
+from pylms.utils import DataStore, DataStream, paths
 
 
-def group(ds: DataStore) -> None:
-    week_nums: tuple[int, ...] = date.to_unique_week_nums(date.retrieve_dates())
-    penultimate_week: int = week_nums[-1]
-    current_week: int = date.det_week_num()
-    if current_week not in [penultimate_week - 1, penultimate_week]:
+def group(ds: DataStore, history: History) -> None:
+    if len(history.recorded_update_forms) == 0 and len(history.update_forms) > 0:
         print(
-            "You can only group students at the penultimate week or the week preceding it.\n"
+            "\nYou need to record at least one of the update forms you created for the cohort before grouping students\n"
         )
         return None
 
@@ -24,14 +23,15 @@ def group(ds: DataStore) -> None:
         print(
             f"You have already grouped students. \nPlease check the path {group_data_path.resolve()} for the previous grouping operation you performed."
         )
-        print(
-            f"Should you need to update or redo the grouping, delete the old {group_data_path.name} file and then rerun the program.\n"
-        )
-        return None
+        prompt: str = "Do you wish to update or redo the grouping?"
+        options: list[str] = ["Yes", "No"]
+        idx, _ = input_option(options, prompt=prompt)
+        if idx == 2:
+            return None
 
     pretty_data: pd.DataFrame = ds.pretty()
-    msg: str = "Please enter the number of groups [Must be between 3 - 10]: "
-    temp: int | float = input_num(msg, "int", lambda x: 3 <= x <= 10)
+    msg: str = "Please enter the number of groups [Must be between 3 - 100]: "
+    temp: int | float = input_num(msg, "int", lambda x: 3 <= x <= 100)
     num_groups: int = cast(int, temp)
     groups: list[int] = [
         num_groups if serial % num_groups == 0 else serial % num_groups

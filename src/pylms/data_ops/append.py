@@ -7,7 +7,7 @@ from pylms.models import UpdateFormInfo
 
 def append_update(
     ds: DataStore, update_stream: DataStream[pd.DataFrame], info: UpdateFormInfo
-) -> DataStore:
+) -> None:
     week_num: int = date.det_week_num()
     update_form_path, update_record_path = paths.ret_update_path(info.timestamp)
 
@@ -15,9 +15,10 @@ def append_update(
         print(
             f"Entries in the Data Form whose metadata is located at {update_form_path.resolve()} have already been appended."
         )
-        return ds
+        return None
 
     ds_to_add: DataStore = clean_new_data(update_stream)
-    ds = add(ds, ds_to_add)
+    new_ds: DataStore = add(ds, ds_to_add)
     print(f"Entries retrieved from the Data Form for Week {week_num} have been saved")
-    return ds
+    ds.copy_from(new_ds)
+    return None

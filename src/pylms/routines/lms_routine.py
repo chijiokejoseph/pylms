@@ -33,7 +33,7 @@ def run_lms(ds: DataStore, history: History) -> None:
                 # app_ds: DataStore = load()
                 # group(app_ds)
                 ds.raise_for_status()
-                group(ds)
+                group(ds, history)
                 print("Students have been grouped successfully\n")
             case 2:
                 ds.raise_for_status()
