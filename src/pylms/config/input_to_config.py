@@ -14,40 +14,39 @@ def input_fn(msg: str) -> Result[str]:
         return Result[str].ok(user_input)
 
 
-def input_dir(table: Config) -> Result[Unit]:
-    from pylms.cli import input_str
+def input_dir(config: Config) -> Result[Unit]:
+    from pylms.cli import input_path
 
-    save_path = Path(table.settings.data_dir)
+    save_path = Path(config.settings.data_dir)
     if save_path.exists() and save_path != Path(""):
         print(f"Data Path has been successfully initialized to {save_path}")
         return Result[Unit].unit()
-    result: Result[str] = input_str(
+    result: Result[Path] = input_path(
         "Enter the location to save files to. Enter the letter 's' to skip. [Ensure that the location has no file called 'data']: "
     )
     if result.is_err():
         return Result[Unit].err(result.unwrap_err())
-    data_dir: str = result.unwrap().strip()
-    if data_dir.lower() == "s":
+    data_dir: Path = result.unwrap()
+    if data_dir.name.lower() == "s":
         print("Skipping Data Path setup")
         print(f"Data Path not set. Defaulting to {DEFAULT_DATA_PATH}")
-        table.settings.data_dir = str(DEFAULT_DATA_PATH)
+        config.settings.data_dir = str(DEFAULT_DATA_PATH)
         return Result[Unit].unit()
 
-    data_path: Path = Path(data_dir).resolve()
-    if not data_path.is_dir():
+    if not data_dir.is_dir():
         return Result[Unit].err(LMSError("The save path entered is not a directory"))
-    for each_item in data_path.iterdir():
+    for each_item in data_dir.iterdir():
         each_path: Path = Path(each_item)
         if each_path.is_dir() and each_path.name == "data":
             return Result[Unit].err(
                 LMSError("The save path entered contains a directory called 'data'")
             )
 
-    if not data_path.exists():
+    if not data_dir.exists():
         return Result[Unit].err(LMSError("The save path entered does not exist"))
 
-    table.settings.data_dir = str(data_path)
-    print(f"Data Path has been successfully initialized to {data_path}")
+    config.settings.data_dir = str(data_dir)
+    print(f"Data Path has been successfully initialized to {data_dir}")
     return Result[Unit].unit()
 
 

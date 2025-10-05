@@ -4,7 +4,7 @@ from typing import Callable, cast
 import numpy as np
 import pandas as pd
 
-from pylms.cli import input_path, test_path_in
+from pylms.cli import input_path
 from pylms.constants import GROUP, NAME, ValidateDataFn
 from pylms.lms.collate.errors import NoProjectGroupsErr, SpreadSheetFmtErr
 from pylms.lms.utils import (
@@ -107,9 +107,6 @@ Enter the path: """
     # Read the project scores spreadsheet
     result = input_path(
         msg,
-        path_test_fn=test_path_in,
-        path_test_diagnosis="The path entered does not exist, "
-        "is not absolute or is not a valid excel file.",
     )
     if result.is_err():
         return None

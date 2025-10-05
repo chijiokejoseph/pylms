@@ -1,0 +1,72 @@
+{
+  "cohort": 29,
+  "class_days": [
+    0,
+    1,
+    2
+  ],
+  "dates": [
+    "30/09/2025",
+    "01/10/2025",
+    "06/10/2025",
+    "07/10/2025",
+    "08/10/2025",
+    "13/10/2025",
+    "14/10/2025",
+    "15/10/2025",
+    "20/10/2025",
+    "21/10/2025",
+    "22/10/2025",
+    "27/10/2025",
+    "28/10/2025",
+    "29/10/2025"
+  ],
+  "orientation_date": "29/09/2025",
+  "weeks": 5,
+  "held_classes": [
+    "06/10/2025"
+  ],
+  "marked_classes": [
+    "30/09/2025",
+    "01/10/2025"
+  ],
+  "class_forms": [
+    {
+      "date": "06/10/2025",
+      "present_name": "Cohort 29 Attendance 10/06/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 06/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSd8Y-hcgYOOH0WreNrrn8jmPXZKz1AH6ISBUFBA0JV6HzBgvQ/viewform",
+      "present_id": "1HtJY9enAGhbtPLa64DKyiRz0RqpwFsc4SsFneb_eOY8",
+      "excused_name": "Cohort 29 Excused 10/06/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 06/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeO1eWqQEH3fuc7qajCF0rGer529a8TBK70Acn_VUoNSf0vxQ/viewform",
+      "excused_id": "1gLhDH6KQoNj4oNUKYdizV77xLv0thJ9Xy0w7DOriI0E",
+      "timestamp": "Oct05_170211"
+    }
+  ],
+  "recorded_class_forms": [],
+  "cds_forms": [],
+  "recorded_cds_forms": [],
+  "update_forms": [],
+  "recorded_update_forms": [],
+  "attendance": [
+    false,
+    "."
+  ],
+  "assessment": [
+    false,
+    "."
+  ],
+  "project": [
+    false,
+    "."
+  ],
+  "result": [
+    false,
+    "."
+  ],
+  "merit": [
+    false,
+    "."
+  ]
+}

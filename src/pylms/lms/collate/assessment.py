@@ -4,7 +4,7 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from pylms.cli import input_path, test_path_in
+from pylms.cli import input_path
 from pylms.history import History
 from pylms.constants import SERIAL, ValidateDataFn
 from pylms.lms.utils import (
@@ -101,9 +101,6 @@ Enter the path:  """
     # Get the path to the assessment spreadsheet from the user
     result = input_path(
         msg,
-        path_test_fn=test_path_in,
-        path_test_diagnosis="The path entered does not exist, "
-        "is not absolute or is not a valid excel file.",
     )
     if result.is_err():
         return None

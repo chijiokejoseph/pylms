@@ -1,5 +1,5 @@
 import traceback
-from typing import Any, Callable
+from typing import Callable
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact, input_option
 from pylms.errors import LMSError, Result
@@ -19,8 +19,7 @@ from pylms.utils import DataStore
 from pylms.config import Config
 
 
-
-def handle_err(func: Callable[[], Result[Any]]) -> Any | None: 
+def handle_err(func: Callable[[], Result[bool]]) -> bool | None:
     try:
         result = func()
         if result.is_err():

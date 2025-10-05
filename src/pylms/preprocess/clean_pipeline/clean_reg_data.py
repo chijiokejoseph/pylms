@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from pylms.cli import input_path, test_path_in
+from pylms.cli import input_path
 from pylms.constants import NAME, PHONE
 from pylms.errors import Result
 from pylms.utils import DataStore, DataStream, read_data
@@ -80,9 +80,6 @@ Enter the path:  """
 
     result = input_path(
         msg,
-        path_test_fn=test_path_in,
-        path_test_diagnosis="The path entered does not exist, "
-        "is not absolute or is not a valid excel file.",
     )
     if result.is_err():
         return Result[DataStore].err(result.unwrap_err())

@@ -30,12 +30,16 @@ def main() -> None:
 
         # If the data directory is not set, prompt the user to input it and save the state
         if not config.has_data_dir():
-            input_dir(config)
+            config_result = input_dir(config)
+            if config_result.is_err():
+                continue
             write_config(config)
 
         # If the course name is not set, prompt the user to input it and save the state
         if not config.has_course_name():
-            input_course_name(config)
+            course_result = input_course_name(config)
+            if course_result.is_err():
+                continue
             write_config(config)
 
         # Prepare any necessary file paths for the application
