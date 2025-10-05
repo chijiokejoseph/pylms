@@ -105,7 +105,12 @@ def init_cds_form(ds: DataStore, history: History) -> None:
             f"Form setup failed when setting up CDS Entry Forms for students for cohort {cohort_no}. \nPlease restart the program and try again.",
         )
 
-    recipient_email: str = input_email("Enter email to share the form with: ")
+    email_result = input_email(
+        "Enter an email address to share the form with: ",
+    )
+    if email_result.is_err():
+        return
+    recipient_email: str = email_result.unwrap()
     cds_form = run_share_form(cds_form, recipient_email)
     if cds_form is None:
         raise FormServiceError(

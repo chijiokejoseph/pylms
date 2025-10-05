@@ -15,9 +15,12 @@ from pylms.history import History
 
 
 def init_class_form(ds: DataStore, history: History, form_dates: list[str]) -> None:
-    recipient_email: str = input_email(
+    email_result = input_email(
         "Enter an email address to share the form with: ",
     )
+    if email_result.is_err():
+        return
+    recipient_email: str = email_result.unwrap()
 
     for date in form_dates:
         metadata_path: Path = paths.get_class_path(date, "class")

@@ -1,5 +1,6 @@
 import pandas as pd
 
+from pylms.errors import Result
 from pylms.preprocess import clean_new_data
 from pylms.data_ops.add import add
 from pylms.utils import DataStore, DataStream, date, paths
@@ -17,7 +18,11 @@ def append_update(
         )
         return None
 
-    ds_to_add: DataStore = clean_new_data(update_stream)
+    ds_result: Result[DataStore] = clean_new_data(update_stream)
+    if ds_result.is_err():
+        print(f"Error cleaning new data: {ds_result.unwrap_err()}")
+        return None
+    ds_to_add: DataStore = ds_result.unwrap()
     new_ds: DataStore = add(ds, ds_to_add)
     print(f"Entries retrieved from the Data Form for Week {week_num} have been saved")
     ds.copy_from(new_ds)

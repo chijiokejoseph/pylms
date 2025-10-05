@@ -22,7 +22,11 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
 
     ds.raise_for_status()
     while True:
-        selection: int = interact(menu)
+        selection_result = interact(menu)
+        if selection_result.is_err():
+            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            continue
+        selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)

@@ -3,6 +3,7 @@ from typing import Callable
 
 from pylms.cli.custom_inputs import input_str
 from pylms.cli.errors import InvalidPathError
+from pylms.errors import Result
 
 
 def input_path(
@@ -12,7 +13,7 @@ def input_path(
     str_test_diagnosis: str | None = None,
     path_test_diagnosis: str | None = None,
     trials: int = 3,
-) -> Path:
+) -> Result[Path]:
     """
     Prompt the user to input a path string, validate it, and return a Path object.
 
@@ -23,13 +24,18 @@ def input_path(
     :param path_test_diagnosis: (str | None) - Optional diagnosis message for path validation failure.
     :param trials: (int) - Number of allowed input attempts.
 
-    :return: (Path) - The validated Path object.
-    :rtype: Path
+    :return: (Result[Path]) - A result containing the validated Path object.
+    :rtype: Result[Path]
 
     :raises InvalidPathError: If the input path does not meet validation criteria.
     """
     # Prompt user for input string with validation
-    path_str = input_str(msg, str_test_fn, str_test_diagnosis, trials, lower_case=False)
+    result: Result[str] = input_str(
+        msg, str_test_fn, str_test_diagnosis, trials, lower_case=False
+    )
+    if result.is_err():
+        return Result[Path].err(result.unwrap_err())
+    path_str: str = result.unwrap()
     # Strip whitespace and remove surrounding quotes
     path_str = path_str.strip()
     path_str = path_str.removesuffix('"')
@@ -49,7 +55,7 @@ def input_path(
         # Raise error if validation fails
         raise InvalidPathError(err_msg)
     # Return the validated Path object
-    return path
+    return Result[Path].ok(path)
 
 
 def test_path_in(path_input: Path) -> bool:

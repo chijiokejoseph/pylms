@@ -1,7 +1,7 @@
-from src.pylms.mainloop import mainloop, closed_loop, handle_err
-from src.pylms.utils import prepare_paths
-from src.pylms.config import load, input_dir, input_course_name, write_config
-from src.pylms.constants import ENV_PATH
+from pylms.mainloop import mainloop, closed_loop, handle_err
+from pylms.utils import prepare_paths
+from pylms.config import load, input_dir, input_course_name, write_config
+from pylms.constants import ENV_PATH
 from dotenv import load_dotenv
 
 

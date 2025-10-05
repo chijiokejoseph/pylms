@@ -111,9 +111,13 @@ def rollback_to_cmd(test_path: Path | None = None) -> None:
         )
     
     # Prompt user to enter index for rollback
-    value: int | float = input_num(
+    value_result = input_num(
         "Enter the index of the state to roll back to: ", "int"
     )
+    if value_result.is_err():
+        print(f"Error retrieving index: {value_result.unwrap_err()}")
+        return None
+    value = value_result.unwrap()
     idx: int = cast(int, value)
     
     # Get the snapshot ID from the selected cache record

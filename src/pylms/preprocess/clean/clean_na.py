@@ -1,5 +1,6 @@
 from typing import Callable
 
+import numpy as np
 import pandas as pd
 
 from pylms.constants import DATA_COLUMNS, NA_COLUMNS_FILL
@@ -29,7 +30,7 @@ def clean_na(
     data = data.fillna(NA_COLUMNS_FILL)
 
     def validate(test_data: pd.DataFrame) -> bool:
-        test1: bool = test_data.isna().any().any()
+        test1: np.bool = test_data.isna().any().any()
         if test1:
             return False
         columns_list: list[str] = test_data.columns.tolist()

@@ -36,7 +36,10 @@ def init_unregistered_form(ds: DataStore) -> None:
             "Form setup failed when setting up unregistered entry form. \nPlease try again.",
         )
 
-    email: str = input_email("Enter an email address to share the form with: ")
+    email_result = input_email("Enter an email address to share the form with: ")
+    if email_result.is_err():
+        return
+    email: str = email_result.unwrap()
 
     form = run_share_form(form, email)
 

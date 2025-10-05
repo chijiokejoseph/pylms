@@ -19,13 +19,13 @@ class EditAllTest(unittest.TestCase):
         print("Select the last date for this test\n\n")
         print("Select the Global Attendance Record as PRESENT.")
         time.sleep(1)
-        input_dates: list[str] = input_date_for_edit(self.history, EditType.ALL)
-        app_ds = edit_all_records(self.ds, input_dates)
+        input_dates: list[str] = input_date_for_edit(self.history, EditType.ALL).unwrap()
+        edit_all_records(self.ds, input_dates)
         all_dates = date.retrieve_dates("all")
         last_date = all_dates[-1]
         record = GlobalRecord().dates.get(last_date)
         self.assertEqual(record, RecordStatus.PRESENT)  # add assertion here
-        cond: pd.Series = app_ds.as_ref().loc[:, last_date] == RecordStatus.PRESENT
+        cond: pd.Series = self.ds.as_ref().loc[:, last_date] == RecordStatus.PRESENT
         self.assertTrue(cond.all())
 
 

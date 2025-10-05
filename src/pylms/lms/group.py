@@ -25,13 +25,20 @@ def group(ds: DataStore, history: History) -> None:
         )
         prompt: str = "Do you wish to update or redo the grouping?"
         options: list[str] = ["Yes", "No"]
-        idx, _ = input_option(options, prompt=prompt)
+        option_result = input_option(options, prompt=prompt)
+        if option_result.is_err():
+            return None
+        idx, _ = option_result.unwrap()
         if idx == 2:
             return None
 
     pretty_data: pd.DataFrame = ds.pretty()
     msg: str = "Please enter the number of groups [Must be between 3 - 100]: "
-    temp: int | float = input_num(msg, "int", lambda x: 3 <= x <= 100)
+    num_result = input_num(msg, "int", lambda x: 3 <= x <= 100)
+    if num_result.is_err():
+        print(f"Error retrieving number of groups: {num_result.unwrap_err()}")
+        return None
+    temp = num_result.unwrap()
     num_groups: int = cast(int, temp)
     groups: list[int] = [
         num_groups if serial % num_groups == 0 else serial % num_groups

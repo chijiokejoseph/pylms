@@ -105,12 +105,15 @@ Note: Student names must match existing data in spelling and casing.
 Enter the path: """
 
     # Read the project scores spreadsheet
-    path: Path = input_path(
+    result = input_path(
         msg,
         path_test_fn=test_path_in,
         path_test_diagnosis="The path entered does not exist, "
         "is not absolute or is not a valid excel file.",
     )
+    if result.is_err():
+        return None
+    path = result.unwrap()
     print()
     project_df: pd.DataFrame = read_data(path)
     validate_fn = cast(ValidateDataFn, _val_input_data)

@@ -1,9 +1,12 @@
 from typing import cast
 
 from pylms.cli.custom_inputs import input_num
+from pylms.errors import Result
 
 
-def input_option(options: list[str], title: str = "Select from the following: ", prompt: str = "") -> tuple[int, str]:
+def input_option(
+    options: list[str], title: str = "Select from the following: ", prompt: str = ""
+) -> Result[tuple[int, str]]:
     """
     Prompts the user to select an option from a list and returns the selected option's index and value.
 
@@ -11,38 +14,40 @@ def input_option(options: list[str], title: str = "Select from the following: ",
 
     :param options: A list of strings representing the options available for selection.
     :type options: list[str]
-    
+
     :param title: An optional title to display above the list of options. Defaults to "Select from the following: ".
     :type title: str, optional
-    
+
     :param prompt: An optional prompt message to display before the input. Defaults to an empty string.
     :type prompt: str, optional
-    
-    :return: A tuple containing the index of the selected option (1-based) and the selected option itself.
-    :rtype: tuple[int, str]
-    
-    :raises InvalidInputError: If the user fails to input a valid number within the allowed number of trials.
+
+    :return: A result containing a tuple that contains the index of the selected option (1-based) and the selected option itself.
+    :rtype: Result[tuple[int, str]]
+
     """
     # Print the title above the options list
     print(f"\n{title}")
-    
+
     # Enumerate and print each option with its index starting from 1
     for i, option in enumerate(options, start=1):
         print(f"{i}. {option}")
     print()
 
     # Prompt the user to input a number corresponding to their choice
-    temp = input_num(
+    result: Result = input_num(
         f"{prompt}\nSelect an Option: ",
         "int",
         diagnosis=f"The number you have entered does not match the range 1 - {len(options)}, hence it is invalid",
         test_fn=lambda x: 1 <= x <= len(options),
     )
+    if result.is_err():
+        return Result[tuple[int, str]].err(result.unwrap_err())
+    temp = result.unwrap()
     # Cast the input to int
     choice: int = cast(int, temp)
-    
+
     # Calculate zero-based index for list access
     choice_idx: int = choice - 1
-    
+
     # Return the 1-based choice and the corresponding option string
-    return choice, options[choice_idx]
+    return Result[tuple[int, str]].ok((choice, options[choice_idx]))

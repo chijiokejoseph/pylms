@@ -1,3 +1,4 @@
+from pylms.errors import Result
 from pylms.utils import DataStore, date, paths
 from pylms.history import History
 from pylms.record import RecordStatus
@@ -12,7 +13,7 @@ def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> None:
     return None
 
 
-def input_class_days() -> list[str]:
+def input_class_days() -> Result[list[str]]:
     days: list[str] = [""] * 3
     for i in range(3):
         match i:
@@ -23,15 +24,21 @@ def input_class_days() -> list[str]:
             case _:
                 title = "third"
         prompt = f"Select {title} class day"
-        _, class_day = input_option(WEEK_DAYS, prompt=prompt)
+        result = input_option(WEEK_DAYS, prompt=prompt)
+        if result.is_err():
+            return Result[list[str]].err(result.unwrap_err())
+        _, class_day = result.unwrap()
         days[i] = class_day
-        print(f"\nYou selected {COMMA_DELIM.join(days[slice(None, i+1)]).strip()}\n")
+        print(f"\nYou selected {COMMA_DELIM.join(days[slice(None, i + 1)]).strip()}\n")
     days.sort()
-    return days
+    return Result[list[str]].ok(days)
 
 
 def normalize(ds: DataStore, history: History) -> None:
-    history.set_class_days(input_class_days(), start=None)
+    result = input_class_days()
+    if result.is_err():
+        return
+    history.set_class_days(result.unwrap(), start=None)
     history.set_cohort(ds)
     history.save()
     date_cols: list[str] = history.str_dates()

@@ -17,9 +17,15 @@ def build_custom_select_msg() -> Result[TextBody]:
     """
 
     # Prompt for the title of the message for each recipient
-    title: str = input_str("Enter the title of the message: ", lower_case=False)
+    title_result = input_str("Enter the title of the message: ", lower_case=False)
+    if title_result.is_err():
+        return Result[TextBody].err(title_result.unwrap_err())
+    title: str = title_result.unwrap()
 
-    body: str = construct_msg("Enter the message to be included in each email")
+    body_result = construct_msg("Enter the message to be included in each email")
+    if body_result.is_err():
+        return Result[TextBody].err(body_result.unwrap_err())
+    body: str = body_result.unwrap()
 
     html_body: str = f"""
 <h2 style="padding-bottom: 8px; font-size: 18px; font-weight: bold">Dear Intern</h2>

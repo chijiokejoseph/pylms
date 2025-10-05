@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from pylms.constants import NAME, SERIAL
+from pylms.errors import Result, Unit
 from pylms.lms.collate.errors import CollateIncompleteErr
 from pylms.lms.utils import (
     det_attendance_req_col,
@@ -92,7 +93,7 @@ def _extract_class_held_dates(ds: DataStore) -> list[str]:
     ]
 
 
-def collate_attendance(ds: DataStore, history: History) -> None:
+def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     """
     Collate the attendance spreadsheet for the students.
 
@@ -122,7 +123,10 @@ def collate_attendance(ds: DataStore, history: History) -> None:
     dates_data: pd.DataFrame = data.loc[:, class_held_dates]
 
     # Prompt the user to enter attendance requirement
-    req: int = input_marks_req("Enter the Attendance Requirement [1 - 100]: ")
+    req_result = input_marks_req("Enter the Attendance Requirement [1 - 100]: ")
+    if req_result.is_err():
+        return Result[Unit].err(req_result.unwrap_err())
+    req: int = req_result.unwrap()
 
     # Define a function to map attendance status to integer values
     def map_to_int(value: str) -> int:
@@ -141,7 +145,8 @@ def collate_attendance(ds: DataStore, history: History) -> None:
     # Check if all attendance records are complete
     max_len: int = max(count_arr.shape)
     if max_len != count_data.shape[0]:
-        raise CollateIncompleteErr("Incomplete class records detected.")
+        error = CollateIncompleteErr("Incomplete class records detected.")
+        return Result[Unit].err(error)
 
     # Calculate attendance scores based on the number of classes held
     num_classes_held: int = len(class_held_dates)
@@ -173,3 +178,5 @@ def collate_attendance(ds: DataStore, history: History) -> None:
 
     # Record attendance in the history
     history.record_attendance()
+
+    return Result[Unit].unit()

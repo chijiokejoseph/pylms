@@ -1,9 +1,10 @@
 from pylms.cli.select_class_date import select_class_date
 from pylms.constants import DATE_FMT
+from pylms.errors import Result
 from pylms.history import History
 
 
-def input_class_date(history: History) -> list[str]:
+def input_class_date(history: History) -> Result[list[str]]:
     """
     Prompts the user to input class dates for which attendance forms should be generated.
 

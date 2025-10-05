@@ -88,9 +88,16 @@ def overwrite_result(ds: DataStore) -> None:
         proc_value: float | None = None
         column: str = ""
         while proc_value is None:
-            _, column = input_option(mutable_cols, "Result Cols to Edit")
-            value = input_str(f"Enter the new value for {column}: ", lower_case=False)
-            proc_value = _preprocess(result_stream, column, value)
+            option_result = input_option(mutable_cols, "Result Cols to Edit")
+            if option_result.is_err():
+                return
+            _, column = option_result.unwrap()
+            value_result = input_str(
+                f"Enter the new value for {column}: ", lower_case=False
+            )
+            if value_result.is_err():
+                return
+            proc_value = _preprocess(result_stream, column, value_result.unwrap())
             print()
 
         type_value = result_data.loc[:, column].dtype

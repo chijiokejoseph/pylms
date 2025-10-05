@@ -1,9 +1,11 @@
 from pathlib import Path
+from pylms.cli.option_input import input_option
 from pylms.utils import paths, read_data, DataStream, DataStore, must_get_env
 from pylms.config import read_course_name
 from pylms.lms.utils import find_col
 from pylms.constants import REASON, REMARK, NAME, GENDER, EMAIL, COHORT
 import pandas as pd
+import re
 from smtplib import SMTP
 from email.message import EmailMessage
 from pylms.email import run_email
@@ -47,11 +49,29 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 
     # Find the relevant column names for each required field
     assessment_score_col: str = find_col(result_stream, "Assessment", "Score")
+    assessment_max_match: re.Match[str] | None = re.search(
+        r"(\d+)", assessment_score_col
+    )
+    if assessment_max_match is None:
+        err_msg: str = "Error parsing assessment max score"
+        print(f"\n{err_msg}\n")
+        return Result[Unit].err(Exception(err_msg))
+    assessment_max: float = float(assessment_max_match.group(1))
+
     assessment_req_col: str = find_col(result_stream, "Assessment", "Req")
+
     attendance_count_col: str = find_col(result_stream, "Attendance", "Count")
     attendance_score_col: str = find_col(result_stream, "Attendance", "Score")
     attendance_req_col: str = find_col(result_stream, "Attendance", "Req")
+
     project_score_col: str = find_col(result_stream, "Project", "Score")
+    project_max_match: re.Match[str] | None = re.search(r"(\d+)", project_score_col)
+    if project_max_match is None:
+        err_msg = "Error parsing project max score"
+        print(f"\n{err_msg}\n")
+        return Result[Unit].err(Exception(err_msg))
+    project_max: float = float(project_max_match.group(1))
+
     result_col: str = find_col(result_stream, "Result", "Score")
     result_req_col: str = find_col(result_stream, "Result", "Req")
 
@@ -67,7 +87,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     )
     classes_float: float = attendance_score_data.mode().iloc[0]
     classes: int = int(round(classes_float, 0))
-    
+
     bad_records: list[tuple[int, str, str, dict]] = []
 
     # Iterate over each student in the result DataFrame
@@ -106,12 +126,12 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         gender = gender.strip()
         email: str = data.loc[:, EMAIL].astype(str).iloc[idx]
         email = email.strip()
-        
+
         # Check if the email is empty
         if email == "":
             bad_records.append((idx + 1, name, email, {"error": (1, "Email is empty")}))
             continue
-          
+
         cohort: int = data.loc[:, COHORT].astype(int).iloc[idx]
 
         attendance_score_str: str = f"{attendance_score:.2f}%"
@@ -140,38 +160,38 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     <thead>
       <tr>
         <th style="padding: 10px;">Metric</th>
-        <th style="padding: 10px;">Score (100%)</th>
-        <th style="padding: 10px;">Requirement (100%)</th>
+        <th style="padding: 10px;">Score</th>
+        <th style="padding: 10px;">Requirement</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td style="padding: 8px;">Attendance</td>
+        <td style="padding: 8px;">Attendance (100%)</td>
         <td style="padding: 8px;">{attendance_score_str}</td>
         <td style="padding: 8px;">{attendance_req_str}</td>
       </tr>
       <tr>
-        <td style="padding: 8px;">Assessment</td>
+        <td style="padding: 8px;">Assessment ({assessment_max:.0f}%)</td>
         <td style="padding: 8px;">{assessment_score_str}</td>
         <td style="padding: 8px;">{assessment_req_str}</td>
       </tr>
       <tr>
-        <td style="padding: 8px;">Project</td>
+        <td style="padding: 8px;">Project ({project_max:.0f}%)</td>
         <td style="padding: 8px;">{project_score_str}</td>
         <td style="padding: 8px;">N/A</td>
       </tr>
       <tr>
-        <td style="padding: 8px;">Bonus Marks</td>
+        <td style="padding: 8px;">Bonus Marks (+ve)</td>
         <td style="padding: 8px;">{bonus_marks_str}</td>
         <td style="padding: 8px;">N/A</td>
       </tr>
       <tr>
-        <td style="padding: 8px;">Penalty Marks</td>
+        <td style="padding: 8px;">Penalty Marks (-ve)</td>
         <td style="padding: 8px;">{penalty_marks_str}</td>
         <td style="padding: 8px;">N/A</td>
       </tr>
       <tr>
-        <td style="padding: 8px;">Result</td>
+        <td style="padding: 8px;">Result (100%)</td>
         <td style="padding: 8px;">{result_score_str}</td>
         <td style="padding: 8px;">{result_req_str}</td>
       </tr>
@@ -217,25 +237,61 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 
         try:
             # Send the email to the student
-            send_err: dict[str, tuple[int, bytes]] = server.send_message(
-                email_msg, from_addr=sender_email, to_addrs=email
-            )
+            if idx == 0:
+                email_msg = EmailMessage()
+                email_msg["Subject"] = (
+                    f"Test: {read_course_name()} Cohort {cohort} Result"
+                )
+                email_msg.set_content(
+                    "This is an HTML email. Please view in a compatible client."
+                )
+                mod_msg = f"""
+<h2>
+  <bold>
+    Dear Facilitator. Please confirm the format for this email before I send to all the students.
+  <bold>
+</h2>
+{msg}
+              """
+                email_msg.add_alternative(mod_msg, subtype="html")
+                email1: str = must_get_env("FACILITATOR_EMAIL1")
+                email2: str = must_get_env("FACILITATOR_EMAIL2")
+                send_err: dict[str, tuple[int, bytes]] = server.send_message(
+                    email_msg, from_addr=sender_email, to_addrs=[email1, email2]
+                )
+                
+                option_result = input_option(
+                    ["Yes", "No"],
+                    prompt=f"Please confirm the format of the email as sent to either {email1} or {email2}. Is it okay? ",
+                )
+                if option_result.is_err():
+                    return Result[Unit].err(option_result.unwrap_err())
+                option_idx, _ = option_result.unwrap()
+                if option_idx != 1:
+                    return Result[Unit].err(Exception("Email format not okay"))
+                  
+            send_err = server.send_message(email_msg, from_addr=sender_email, to_addrs=email)
         except Exception as e:
             send_err = {"error": (1, bytes(str(e), "utf-8"))}
-        
+
         num: int = idx + 1
         if send_err != {}:
             bad_records.append((num, name, email, send_err))
         else:
-          print(f"\nS/N: {num}. Successfully sent email to {name} with email: {email}")
+            print(
+                f"\nS/N: {num}. Successfully sent email to {name} with email: {email}"
+            )
 
     for num, name, email, send_err in bad_records:
-        print(f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}")
+        print(
+            f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}"
+        )
     if len(bad_records) > 0:
-      err = LMSError(f"Failed to send emails to {len(bad_records)} recipients.")
-      return Result[Unit].err(err)
+        err = LMSError(f"Failed to send emails to {len(bad_records)} recipients.")
+        return Result[Unit].err(err)
 
     return Result[Unit].unit()
+
 
 def send_result(ds: DataStore) -> None:
     """

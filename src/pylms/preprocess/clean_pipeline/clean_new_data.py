@@ -1,12 +1,13 @@
 import pandas as pd
 from pylms.constants import PHONE, NAME, DATA_COLUMNS
+from pylms.errors import Result
 from pylms.utils import DataStream, DataStore, data
 from pylms.preprocess import clean
 
 read_data = data.read_data
 
 
-def _clean_new(data_stream: DataStream[pd.DataFrame]) -> DataStore:
+def _clean_new(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     def validate_na_removal(test_data: pd.DataFrame) -> bool:
         return not test_data.isna().any().any()
 
@@ -15,12 +16,21 @@ def _clean_new(data_stream: DataStream[pd.DataFrame]) -> DataStore:
     data_stream = clean.clean_email(data_stream)
     data_stream = clean.clean_name(data_stream)
     data_stream = clean.clean_phone(data_stream)
-    data_stream = clean.clean_cohort(data_stream)
-    data_stream = clean.clean_date(data_stream)
+    result = clean.clean_cohort(data_stream)
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    data_stream = result.unwrap()
+    result = clean.clean_date(data_stream)
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    data_stream = result.unwrap()
     data_stream = clean.clean_time(data_stream)
     data_stream = clean.clean_internship(data_stream)
     data_stream = clean.clean_training(data_stream)
-    data_stream = clean.clean_completion_date(data_stream)
+    result = clean.clean_completion_date(data_stream)
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    data_stream = result.unwrap()
     data_stream = clean.clean_duplicates(data_stream)
     data_stream = clean.clean_sort(data_stream)
 
@@ -50,17 +60,17 @@ def _clean_new(data_stream: DataStream[pd.DataFrame]) -> DataStore:
     # use a setter to replace the underlying data of `ds` with `recombined_data`
     ds.data = recombined_data
 
-    return ds
+    return Result[DataStore].ok(ds)
 
 
-def clean_new_data(new_data_stream: DataStream[pd.DataFrame]) -> DataStore:
+def clean_new_data(new_data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     """
     cleans data that is passed into the program to add additional entries to the main registration data which has already been stored as a `DataStore` object.
 
     :param new_data_stream: (DataStream[pd.DataFrame]): A `DataStream` object that contains an underlying pandas DataFrame. it is the data read into the program to add extra entries to the already processed registration data.
     :type new_data_stream: DataStream[pd.DataFrame]
 
-    :return: a `DataStore` object of the cleaned data, which makes it suitable for being added to the existing registration data that is also stored as a `DataStore`.
-    :rtype: DataStore
+    :return: (Result[DataStore]) - a `Result` containing the `DataStore` object of the cleaned data, which makes it suitable for being added to the existing registration data that is also stored as a `DataStore`.
+    :rtype: Result[DataStore]
     """
     return _clean_new(new_data_stream)

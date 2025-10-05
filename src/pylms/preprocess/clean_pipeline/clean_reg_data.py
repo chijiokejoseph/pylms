@@ -4,10 +4,12 @@ import pandas as pd
 
 from pylms.cli import input_path, test_path_in
 from pylms.constants import NAME, PHONE
+from pylms.errors import Result
 from pylms.utils import DataStore, DataStream, read_data
 from pylms.preprocess import clean
 
-def _clean_reg(data_stream: DataStream[pd.DataFrame]) -> DataStore:
+
+def _clean_reg(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     """
     private helper function that carries out the actual cleaning operation on the registration data that is passed in as a `DataStream` object containing and underlying pandas DataFrame. After cleaning the data, the data is returned back as a `DataStore`.
 
@@ -29,8 +31,8 @@ def _clean_reg(data_stream: DataStream[pd.DataFrame]) -> DataStore:
 
 
 
-    :param data_stream: (DataStream[pd.DataFrame]): registration data passed in as a `DataStream` Object.
-    :type data_stream: DataStream[pd.DataFrame]
+    :param data_stream: (Result[DataStream[pd.DataFrame]]): A result containing the registration data passed in as a `DataStream` Object.
+    :type data_stream: Result[DataStream[pd.DataFrame]]
 
     :return: a preprocessed `DataStore` object
     :rtype: DataStore
@@ -42,19 +44,28 @@ def _clean_reg(data_stream: DataStream[pd.DataFrame]) -> DataStore:
     data_stream = clean.clean_email(data_stream)
     data_stream = clean.clean_name(data_stream)
     data_stream = clean.clean_phone(data_stream)
-    data_stream = clean.clean_cohort(data_stream)
-    data_stream = clean.clean_date(data_stream)
+    result = clean.clean_cohort(data_stream)
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    data_stream = result.unwrap()
+    result = clean.clean_date(data_stream)
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    data_stream = result.unwrap()
     data_stream = clean.clean_time(data_stream)
     data_stream = clean.clean_internship(data_stream)
     data_stream = clean.clean_training(data_stream)
-    data_stream = clean.clean_completion_date(data_stream)
+    result = clean.clean_completion_date(data_stream)
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    data_stream = result.unwrap()
     data_stream = clean.clean_duplicates(data_stream)
     data_stream = clean.clean_sort(data_stream)
     data_stream = clean.clean_order(data_stream)
-    return DataStore(data_stream())
+    return Result[DataStore].ok(DataStore(data_stream()))
 
 
-def clean_reg_data() -> DataStore:
+def clean_reg_data() -> Result[DataStore]:
     """
     This function takes no arguments and prompts the user to enter certain metadata that confirm that all the requirements for preprocessing a new registration data are met. Please see `cli.input_cleaning_req` for more details.
 
@@ -67,12 +78,15 @@ def clean_reg_data() -> DataStore:
     msg: str = """Enter the absolute path to the new cohort spreadsheet for the students.
 Enter the path:  """
 
-    register_path: Path = input_path(
+    result = input_path(
         msg,
         path_test_fn=test_path_in,
         path_test_diagnosis="The path entered does not exist, "
         "is not absolute or is not a valid excel file.",
     )
+    if result.is_err():
+        return Result[DataStore].err(result.unwrap_err())
+    register_path: Path = result.unwrap()
     dataframe: pd.DataFrame = read_data(register_path)
     register_ds: DataStream[pd.DataFrame] = DataStream(dataframe)
     return _clean_reg(register_ds)

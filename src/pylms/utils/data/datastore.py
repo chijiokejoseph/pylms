@@ -97,8 +97,8 @@ class DataStore(DataStream[pd.DataFrame]):
 
     def pretty(self) -> pd.DataFrame:
         data: pd.DataFrame = self.as_clone()
-        data[NAME] = data[NAME].apply(lambda x: x.replace(COMMA, ""))
-        data[PHONE] = data[PHONE].apply(lambda x: x.replace(SEMI, ""))
+        data[NAME] = data[NAME].astype(str).apply(lambda x: x.replace(COMMA, ""))
+        data[PHONE] = data[PHONE].astype(str).apply(lambda x: x.replace(SEMI, ""))
         return data
 
     def to_excel(

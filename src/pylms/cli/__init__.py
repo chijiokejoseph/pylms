@@ -17,6 +17,7 @@ Exports:
 - input_path, test_path_in: Functions to input and test paths.
 - input_record: Function to input records.
 - provide_emails: Function to provide email addresses in various formats.
+- provide_serials: Function to provide student serial numbers in various formats.
 - select_class_date: Function to select class dates.
 - select_student: Function to select students.
 """
@@ -34,6 +35,7 @@ from pylms.cli.record_input import input_record
 from pylms.cli.select_class_date import select_class_date
 from pylms.cli.select_student import select_student
 from pylms.cli.emails_input import provide_emails
+from pylms.cli.serials_input import provide_serials
 
 __all__ = [
     "interact",
@@ -48,4 +50,5 @@ __all__ = [
     "select_class_date",
     "select_student",
     "provide_emails",
+    "provide_serials",
 ]

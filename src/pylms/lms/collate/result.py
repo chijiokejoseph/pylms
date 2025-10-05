@@ -3,7 +3,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from pylms.lms.collate.input_collate_req import input_collate_req
+from pylms.errors import Result, Unit
+from pylms.lms.collate.input_collate_req import CollateReq, input_collate_req
 from pylms.lms.utils import (
     det_assessment_overall_col,
     det_assessment_score_col,
@@ -17,7 +18,7 @@ from pylms.history import History
 from pylms.utils import DataStore, DataStream, paths, read_data
 
 
-def collate_result(ds: DataStore, history: History) -> None:
+def collate_result(ds: DataStore, history: History) -> Result[Unit]:
     """
     Collate the result spreadsheet for the students.
 
@@ -38,22 +39,30 @@ def collate_result(ds: DataStore, history: History) -> None:
     # Check if all required data (attendance, assessment, and project) has been collated
     if not history.has_collated_all:
         print("\nPlease collate attendance, assessment and project first\n")
-        return None
+        return Result[Unit].err(Exception("Required data not collated"))
 
     # Read the collated project data
     collated_data: pd.DataFrame = read_data(paths.get_paths_excel()["Project"])
 
     # Prompt for and validate the pass mark, assessment ratio, and project ratio
-    (pass_mark, assessment_ratio, project_ratio) = input_collate_req()
-
+    req_result = input_collate_req()
+    if req_result.is_err():
+        return Result[Unit].err(req_result.unwrap_err())
+    req: CollateReq = req_result.unwrap()
+    (pass_mark, assessment_ratio, project_ratio) = req
     # Retrieve column names for assessment and project scores
     assessment_score_col: str = det_assessment_score_col()
+
     assessment_req_col: str = det_assessment_req_col()
     project_score_col: str = det_project_score_col()
     passmark_col: str = det_passmark_col()
 
     # Scale assessment and project scores by their respective ratios
-    collated_data.loc[:, [assessment_score_col, assessment_req_col, project_score_col]] = collated_data.loc[:, [assessment_score_col, assessment_req_col, project_score_col]].astype(float)
+    collated_data.loc[
+        :, [assessment_score_col, assessment_req_col, project_score_col]
+    ] = collated_data.loc[
+        :, [assessment_score_col, assessment_req_col, project_score_col]
+    ].astype(float)
     collated_data.loc[:, assessment_score_col] *= assessment_ratio
     collated_data.loc[:, assessment_req_col] *= assessment_ratio
     collated_data.loc[:, project_score_col] *= project_ratio
@@ -87,3 +96,5 @@ def collate_result(ds: DataStore, history: History) -> None:
 
     # Record the result in the history
     history.record_result()
+
+    return Result[Unit].ok(Unit())

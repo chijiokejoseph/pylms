@@ -11,7 +11,6 @@ from pylms.messages.all_msg_builders import (
 )
 from pylms.messages.message_record import MessageRecord
 from pylms.constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
-from typing import Callable
 
 
 def _construct_html_message(
@@ -95,7 +94,7 @@ def _build_all_message(
 
 
 def _message_all_emails(
-    server: SMTP, ds: DataStore, builder: Callable[[], Result[TextBody]]
+    server: SMTP, ds: DataStore, builder: MessageBuilder
 ) -> Result[Unit]:
     """
     Send personalized emails to all students using the provided SMTP server.
@@ -103,9 +102,9 @@ def _message_all_emails(
     :param server: (SMTP) - An SMTP server instance used to send emails.
     :type server: SMTP
 
-    :param builder: (Callable[[], Result[Text]]) - A callable that returns a result
+    :param builder: (MessageBuilder) - A callable that returns a result
                     object containing the email title and body.
-    :type builder: Callable[[str], Result[Text]]
+    :type builder: MessageBuilder
 
 
     :return: (Result[Unit]) - returns a Result object indicating success or failure.

@@ -158,8 +158,11 @@ You can enter the students serial number using one of the following formats:
     printout_names(names)
     
     # Prompt the user to enter student serial numbers
-    selection: str = input_fn("Enter Student(s) S/N: ")
-    
+    result = input_fn("Enter Student(s) S/N: ")
+    if result.is_err():
+        return []
+    selection = result.unwrap()
+
     # Parse the input string into a list of serial numbers
     student_serials: list[int] = parse_to_serials(selection)
     

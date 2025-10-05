@@ -1,24 +1,29 @@
 from pylms.constants import COHORT, DATE, DATE_FMT
 from pylms.utils.data import DataStream
+from pylms.errors import Result
+from typing import cast
 from datetime import datetime
 import re
 import pandas as pd
 
 
-def clean_cohort(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_cohort(data_stream: DataStream[pd.DataFrame]) -> Result[DataStream[pd.DataFrame]]:
     from pylms.cli import input_num
     msg: str = "\nCleaning Cohort in preprocessing stage... \nPlease enter the cohort number for this current cohort: "
 
     def validator(num: float | int) -> bool:
         return num > 0
 
-    cohort_no: float | int = input_num(msg, "int", validator)
+    result = input_num(msg, "int", validator)
+    if result.is_err():
+        return Result[DataStream[pd.DataFrame]].err(result.unwrap_err())
+    cohort_no: int = cast(int, result.unwrap())
     data = data_stream()
     data[COHORT] = cohort_no
-    return DataStream(data)
+    return Result[DataStream[pd.DataFrame]].ok(DataStream(data))
 
 
-def clean_date(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_date(data_stream: DataStream[pd.DataFrame]) -> Result[DataStream[pd.DataFrame]]:
     from pylms.cli import input_str
     msg: str = "Cleaning Cohort in preprocessing stage... \nPlease enter the orientation date for this current cohort. \nIt should be of the form dd/mm/yyyy: "
 
@@ -41,7 +46,10 @@ def clean_date(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame
             return False
         return True
 
-    cohort_date: str = input_str(msg, validator, diagnosis=diagnosis_map["result"])
+    result = input_str(msg, validator, diagnosis=diagnosis_map["result"])
+    if result.is_err():
+        return Result[DataStream[pd.DataFrame]].err(result.unwrap_err())
+    cohort_date: str = result.unwrap()
     data = data_stream()
     data[DATE] = cohort_date
-    return DataStream(data)
+    return Result[DataStream[pd.DataFrame]].ok(DataStream(data))

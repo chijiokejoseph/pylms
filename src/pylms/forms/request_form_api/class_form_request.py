@@ -9,7 +9,10 @@ from pylms.history import History
 
 
 def request_class_form(ds: DataStore, history: History) -> None:
-    form_dates: list[str] = input_class_date(history)
+    dates_result = input_class_date(history)
+    if dates_result.is_err():
+        return
+    form_dates: list[str] = dates_result.unwrap()
     print(f"You have selected the following dates: {form_dates}")
 
     new_form_dates: list[str] = form_dates.copy()

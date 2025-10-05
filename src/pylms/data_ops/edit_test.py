@@ -9,7 +9,7 @@ class EditTest(TestCase):
         self.ds = load()
 
     def test_edit(self) -> None:
-        self.ds = edit(self.ds)
+        edit(self.ds)
         view(self.ds)
 
 

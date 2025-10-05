@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 
 from pylms.cli.option_input import input_option
@@ -44,13 +45,18 @@ def provide_emails() -> Result[list[str]]:
     ]
 
     # Prompt user to select the format of the email input
-    pos, format_msg = input_option(
+    option_result = input_option(
         provide_emails_formats, prompt="Select the format to provide the email in"
     )
+    if option_result.is_err():
+        return Result[list[str]].err(option_result.unwrap_err())
+    pos, format_msg = option_result.unwrap()
 
     # Get the file path or input string based on the selected format
-    filepath = input_path(f"{format_msg}: ")
-
+    path_result: Result[Path] = input_path(f"{format_msg}: ")
+    if path_result.is_err():
+        return Result[list[str]].err(path_result.unwrap_err())
+    filepath: Path = path_result.unwrap()
     # Read emails based on the selected input format
     match pos:
         case 1 | 2:

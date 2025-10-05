@@ -8,10 +8,13 @@ import pandas as pd
 from pylms.cache.cache import cache_for_cmd
 from pylms.constants import CACHE_ID
 from pylms.data_ops import load
+from pylms.errors import Result
 from pylms.forms.retrieve_form_api import retrieve_cds_form
+from pylms.models.form_info import CDSFormInfo
 from pylms.rollcall import record_cds
 from pylms.utils import paths, read_csv
 from pylms.history import History
+from pylms.utils.data.datastream import DataStream
 
 
 class TestCopyData(TestCase):
@@ -39,7 +42,12 @@ class TestCopyData(TestCase):
         :return: (None) - This test method does not return a value.
         :rtype: None
         """
-        cds_form_stream, _ = retrieve_cds_form(self.history)
+        result: Result[tuple[DataStream[pd.DataFrame] | None, CDSFormInfo]] = (
+            retrieve_cds_form(self.history)
+        )
+        if result.is_err():
+            return
+        cds_form_stream, _ = result.unwrap()
         if cds_form_stream is not None:
             # Record CDS data into the dataset
             self.ds = record_cds(self.ds, cds_form_stream)

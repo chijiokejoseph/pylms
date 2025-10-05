@@ -11,7 +11,10 @@ def collate_fast_track(ds: DataStore) -> None:
     print("Enter the students to be fast tracked to the Advanced Class.")
     student_serials: list[int] = select_student(ds)
     menu: list[str] = ["Yes", "No"]
-    i, _ = input_option(menu, prompt="Confirm the following students should be fast-tracked")
+    result = input_option(menu, prompt="Confirm the following students should be fast-tracked")
+    if result.is_err():
+        return
+    i, _ = result.unwrap()
     if i != 1:
         print("\nFast Tracking has been cancelled.\n")
         return

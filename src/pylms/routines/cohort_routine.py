@@ -13,17 +13,24 @@ def handle_cohort(config: Config) -> None:
     ]
 
     while True:
-        selection: int = interact(menu)
+        selection_result = interact(menu)
+        if selection_result.is_err():
+            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            continue
+        selection: int = selection_result.unwrap()
         match int(selection):
             case 1:
                 if not config.is_open():
                     print("\nCohort is already closed.\n")
                     continue
-                _, choice = input_option(
+                result = input_option(
                     ["Yes", "No"],
                     "End Cohort",
                     prompt="Do you wish to end the current cohort?",
                 )
+                if result.is_err():
+                    continue
+                _, choice = result.unwrap()
                 if choice == "Yes":
                     config.close()
                     print("\nThe Cohort, which was previously open, has been closed.\n")
@@ -31,11 +38,14 @@ def handle_cohort(config: Config) -> None:
                 if config.is_open():
                     print("\nCohort is already open.\n")
                     continue
-                _, choice = input_option(
+                result = input_option(
                     ["Yes", "No"],
                     "Reopen Cohort",
                     prompt="Do you wish to reopen the closed cohort?",
                 )
+                if result.is_err():
+                    continue
+                _, choice = result.unwrap()
                 if choice == "Yes":
                     config.open()
                     print("\nThe Cohort, which was previously closed, is now open.\n")

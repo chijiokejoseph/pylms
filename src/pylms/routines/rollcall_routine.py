@@ -35,7 +35,11 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection: int = interact(menu)
+        selection_result = interact(menu)
+        if selection_result.is_err():
+            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            continue
+        selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
@@ -49,7 +53,10 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                 print("Generated Attendance Form successfully\n")
             case 2:
                 # app_ds = load()
-                class_dates: list[str] = input_class_date(history)
+                dates_result = input_class_date(history)
+                if dates_result.is_err():
+                    continue
+                class_dates = dates_result.unwrap()
                 for each_date in class_dates:
                     present_turnout: DataStream[pd.DataFrame] | None = (
                         retrieve_class_form(each_date, ClassType.PRESENT)
@@ -89,7 +96,10 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
             case 3:
                 # app_ds = load()
                 # app_ds, edit_type, edited_dates = edit_record(app_ds, history)
-                _, edit_type, edited_dates = edit_record(ds, history)
+                edit_result = edit_record(ds, history)
+                if edit_result.is_err():
+                    continue
+                edit_type, edited_dates = edit_result.unwrap()
                 # only save retrieval if the record attendance manually was done for the whole batch of Students
                 if edit_type == EditType.ALL:
                     for each_date in edited_dates:

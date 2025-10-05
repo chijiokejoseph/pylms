@@ -29,13 +29,20 @@ def register(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection: int = interact(menu)
+        selection_result = interact(menu)
+        if selection_result.is_err():
+            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            continue
+        selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
         match int(selection):
             case 1:
-                app_ds: DataStore = new(history)
+                app_ds_result = new(history)
+                if app_ds_result.is_err():
+                    continue
+                app_ds: DataStore = app_ds_result.unwrap()
                 ds.copy_from(app_ds)
                 print("Onboarding of Registered Students completed successfully.\n")
             case 2:

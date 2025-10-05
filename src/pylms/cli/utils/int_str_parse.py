@@ -17,12 +17,12 @@ def _parse_int_str(entry: str) -> list[int]:
 
     match str(entry):
         # matches "1", "12", "13", etc.,
-        case _ if re.fullmatch(r"^\d{1,2}$", entry):
+        case _ if re.fullmatch(r"^\d+$", entry):
             choice: int = int(entry)
             return [choice]
 
         # matches "1, 2, 3," ; "12, 1, 2"
-        case _ if re.fullmatch(r"^(\d{1,2},\s*)+\d{1,2}(?:,|\b)$", entry):
+        case _ if re.fullmatch(r"^(\d+,\s*)+\d+(?:,|\b)$", entry):
             # remove any trailing commas if present
             entry = entry.removesuffix(",")
 
@@ -33,7 +33,10 @@ def _parse_int_str(entry: str) -> list[int]:
             choices_str = [char_seq.strip() for char_seq in choices_str]
 
             # perform match_date_by_index on each string of choices_str after converting to int
-            return [int(num_char) for num_char in choices_str]
+            choices_int: list[int] = [int(num_char) for num_char in choices_str]
+            choices_int = list(set(choices_int))  # remove duplicates
+            choices_int.sort()  # sort the list
+            return choices_int
 
         case _ if (
             re.fullmatch(

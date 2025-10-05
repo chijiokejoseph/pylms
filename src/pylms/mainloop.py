@@ -1,8 +1,8 @@
 import traceback
-from typing import Callable
+from typing import Any, Callable
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact, input_option
-from pylms.errors import LMSError
+from pylms.errors import LMSError, Result
 from pylms.data_ops import load, view
 from pylms.lms.collate import view_result
 from pylms.routines import (
@@ -19,13 +19,21 @@ from pylms.utils import DataStore
 from pylms.config import Config
 
 
-def handle_err[K](func: Callable[[], K]) -> K | None:
+
+def handle_err(func: Callable[[], Result[Any]]) -> Any | None: 
     try:
-        return func()
+        result = func()
+        if result.is_err():
+            return None
+        return result.unwrap()
     except LMSError as e:
-        idx, choice = input_option(
+        option_result = input_option(
             ["Yes", "No"], prompt="Do you wish to view error trace"
         )
+        if option_result.is_err():
+            print(f"Error retrieving option: {option_result.unwrap_err()}")
+            return None
+        idx, choice = option_result.unwrap()
         choice = choice.lower()
         if idx == 1:
             traceback.print_exc()
@@ -34,7 +42,7 @@ def handle_err[K](func: Callable[[], K]) -> K | None:
     return None
 
 
-def mainloop(config: Config) -> bool:
+def mainloop(config: Config) -> Result[bool]:
     menu: list[str] = [
         "Attendance",
         "CDS",
@@ -47,7 +55,10 @@ def mainloop(config: Config) -> bool:
     ]
     history: History = History.load()
     ds: DataStore = load()
-    selection: int = interact(menu)
+    selection_result = interact(menu)
+    if selection_result.is_err():
+        return Result[bool].err(selection_result.unwrap_err())
+    selection: int = selection_result.unwrap()
     cmd: str = menu[selection - 1]
     if selection < len(menu):
         cache_for_cmd(cmd)
@@ -70,11 +81,11 @@ def mainloop(config: Config) -> bool:
             print(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"
             )
-            return False
-    return True
+            return Result[bool].ok(False)
+    return Result[bool].ok(True)
 
 
-def closed_loop(config: Config) -> bool:
+def closed_loop(config: Config) -> Result[bool]:
     print("\nCohort is closed.\n")
     menu: list[str] = [
         "View Data Records",
@@ -82,7 +93,10 @@ def closed_loop(config: Config) -> bool:
         "Cohort",
         "Quit",
     ]
-    selection: int = interact(menu)
+    selection_result = interact(menu)
+    if selection_result.is_err():
+        return Result[bool].err(selection_result.unwrap_err())
+    selection: int = selection_result.unwrap()
     match int(selection):
         case 1:
             app_ds = load()
@@ -96,5 +110,5 @@ def closed_loop(config: Config) -> bool:
             print(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"
             )
-            return False
-    return True
+            return Result[bool].ok(False)
+    return Result[bool].ok(True)

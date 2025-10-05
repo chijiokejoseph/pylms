@@ -36,7 +36,7 @@ def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]
 
     # Construct the HTML body of the email with styling and content
     text_body_result: Result[TextBody] = builder()
-    if result.is_err():
+    if text_body_result.is_err():
         return Result[list[MessageRecord]].err(text_body_result.unwrap_err())
     title, body = text_body_result.unwrap()
 

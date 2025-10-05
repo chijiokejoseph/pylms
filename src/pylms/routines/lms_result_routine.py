@@ -38,7 +38,11 @@ def run_result_lms(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection: int = interact(menu)
+        selection_result = interact(menu)
+        if selection_result.is_err():
+            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            continue
+        selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
@@ -57,7 +61,9 @@ def run_result_lms(ds: DataStore, history: History) -> None:
                 # app_ds = load()
                 # edit_result(app_ds)
                 # collate_merit(app_ds)
-                edit_result(ds)
+                result = edit_result(ds)
+                if result.is_err():
+                    continue
                 collate_merit(ds)
                 print("\nResult edited successfully\n")
             case 4:

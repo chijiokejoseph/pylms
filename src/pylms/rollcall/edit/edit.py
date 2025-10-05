@@ -1,3 +1,4 @@
+from pylms.errors import Result
 from pylms.rollcall.edit.all_records import edit_all_records
 from pylms.rollcall.edit.multiple_records import edit_multiple_records
 from pylms.rollcall.edit.edit_type import EditType, input_edit_type
@@ -10,19 +11,25 @@ from pylms.constants import TIMESTAMP_FMT
 from datetime import datetime
 
 
-def edit_record(ds: DataStore, history: History) -> tuple[DataStore, EditType, list[str]]:
-    edit_type: EditType = input_edit_type()
-    dates_to_edit: list[str] = input_date_for_edit(history, edit_type)
+def edit_record(ds: DataStore, history: History) -> Result[tuple[EditType, list[str]]]:
+    edit_type_result = input_edit_type()
+    if edit_type_result.is_err():
+        return Result[tuple[EditType, list[str]]].err(edit_type_result.unwrap_err())
+    edit_type = edit_type_result.unwrap()
+    dates_result = input_date_for_edit(history, edit_type)
+    if dates_result.is_err():
+        return Result[tuple[EditType, list[str]]].err(dates_result.unwrap_err())
+    dates_to_edit = dates_result.unwrap()
     
     match edit_type:
         case EditType.ALL:
-            ds = edit_all_records(ds, dates_to_edit)
+            edit_all_records(ds, dates_to_edit)
         case EditType.MULTIPLE:
-            ds = edit_multiple_records(ds, dates_to_edit) 
+            edit_multiple_records(ds, dates_to_edit) 
         case EditType.BATCH:
-            ds = edit_batch_records(ds, dates_to_edit)
-    
-    return ds, edit_type, dates_to_edit
+            edit_batch_records(ds, dates_to_edit)
+
+    return Result[tuple[EditType, list[str]]].ok((edit_type, dates_to_edit))
 
 
 def new_edit_info(class_date: str) -> ClassFormInfo:

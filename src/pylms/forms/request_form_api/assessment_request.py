@@ -18,8 +18,14 @@ def init_assessment_form(ds: DataStore) -> None:
         "Midterm Assessment",
         "Final Assessment",
     ]
-    _, assessment_type = input_option(options, prompt="Select the assessment type")
-    assessment_id: str = input_str("Enter the Assessment ID: ", lower_case=False)
+    option_result = input_option(options, prompt="Select the assessment type")
+    if option_result.is_err():
+        return None
+    _, assessment_type = option_result.unwrap()
+    id_result = input_str("Enter the Assessment ID: ", lower_case=False)
+    if id_result.is_err():
+        return None
+    assessment_id: str = id_result.unwrap()
     timestamp: str = datetime.now().strftime(TIMESTAMP_FMT)
     names: list[str] = ds.pretty()[NAME].tolist()
     emails: list[str] = ds.pretty()[EMAIL].tolist()

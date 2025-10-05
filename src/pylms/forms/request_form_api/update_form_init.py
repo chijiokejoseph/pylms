@@ -32,7 +32,10 @@ You'll now select the dates for which the fillers of this form can fill their at
 Please select all the dates for which attendance can be filled using the instructions below.    
     """
     src_dates: list[str] = GlobalRecord().retrieve_unset_dates()
-    dates_list: list[str] = select_class_date(msg, src_dates)
+    dates_result = select_class_date(msg, src_dates)
+    if dates_result.is_err():
+        return None
+    dates_list: list[str] = dates_result.unwrap()
     result: UpdateFormDetails = extract_update_details(ds)
     form_title: str = result.title
     form_name: str = result.name
@@ -60,7 +63,10 @@ Please select all the dates for which attendance can be filled using the instruc
             "Form setup failed when setting up data form. \nPlease restart the program and try again.",
         )
 
-    recipient_email: str = input_email("Enter email to share the form with: ")
+    email_result = input_email("Enter email to share the form with: ")
+    if email_result.is_err():
+        return None
+    recipient_email: str = email_result.unwrap()
     data_form = run_share_form(data_form, recipient_email)
     if data_form is None:
         raise FormServiceError(

@@ -3,11 +3,12 @@ from typing import cast
 import pandas as pd
 
 from pylms.cli import input_num, input_option, select_student
+from pylms.errors import Result
 from pylms.lms.utils import det_result_col
 from pylms.utils import DataStore
 
 
-def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> list[float]:
+def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     result_col: str = det_result_col()
     student_serials: list[int] = select_student(ds)
     num_rows: int = result_data.shape[0]
@@ -21,9 +22,12 @@ def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> list[float]:
         print("\nTarget Record")
         print(f"\n{student_record}\n")
         options: list[str] = ["Add Marks", "Subtract Marks"]
-        idx, choice = input_option(
+        result = input_option(
             options, title="Edit Result", prompt="Choose how to edit this result"
         )
+        if result.is_err():
+            return Result[list[float]].err(result.unwrap_err())
+        idx, choice = result.unwrap()
         print(f"You have selected {choice}")
         marks_temp = input_num(
             f"For {choice}, enter the number of marks: ",
@@ -40,4 +44,4 @@ def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> list[float]:
                 result_data.loc[index, result_col] = student_score - marks
                 updates_list[index] = -marks
 
-    return updates_list
+    return Result[list[float]].ok(updates_list)

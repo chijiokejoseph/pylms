@@ -1,9 +1,12 @@
 from pylms.cli.custom_inputs import input_str
 from pylms.cli.utils import parse_to_dates, val_date_str
+from pylms.errors import Result
 from pylms.utils.date.retrieve_dates import retrieve_dates
 
 
-def select_class_date(msg: str, src_dates_list: list[str] | None = None) -> list[str]:
+def select_class_date(
+    msg: str, src_dates_list: list[str] | None = None
+) -> Result[list[str]]:
     """
     Prompts the user to select a class date from the list of class dates.
 
@@ -22,13 +25,13 @@ def select_class_date(msg: str, src_dates_list: list[str] | None = None) -> list
 
     :param msg: (str) - The message to display before prompting the user for input.
     :type msg: str
-    
+
     :param src_dates_list: (list[str] | None) - An optional list of class dates to choose from. If not provided, it defaults to retrieving dates from the system.
     :type src_dates_list: list[str] | None
 
 
-    :return: A list of class dates selected by the user.
-    :rtype: list[str]
+    :return: A result containing the list of class dates selected by the user.
+    :rtype: Result[list[str]]
     """
 
     # get class dates
@@ -55,16 +58,21 @@ Note: Dates must match the menu displayed above.
     print("The class dates with their class numbers are printed below")
     # print out each class date and an option number for each class date
     for each_date in dates_list:
-        i: int = all_dates.index(each_date) + 1 if each_date != "all" else len(all_dates) + 1
+        i: int = (
+            all_dates.index(each_date) + 1 if each_date != "all" else len(all_dates) + 1
+        )
         print(f"Class {i}. {each_date}")
 
     # uses `input_str` and the validation function `_date_val_input` to validate user input
-    response: str = input_str(
+    result: Result[str] = input_str(
         "Enter the relevant date(s): ",
         val_date_str,
         diagnosis="Your input is invalid. Please confirm that your response matches any of the constraints stated above.",
     )
+    if result.is_err():
+        return Result[list[str]].err(result.unwrap_err())
+    response: str = result.unwrap()
     # parses the user input with the function _parse_date
     class_dates: list[str] = parse_to_dates(response)
     print(f"You have selected {class_dates}\n")
-    return class_dates
+    return Result[list[str]].ok(class_dates)

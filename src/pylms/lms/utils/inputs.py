@@ -1,7 +1,9 @@
 from pylms.cli import input_num
 from typing import cast
 
-def input_marks_req(msg: str, min: int = 1, max: int = 100) -> int:
+from pylms.errors import Result
+
+def input_marks_req(msg: str, min: int = 1, max: int = 100) -> Result[int]:
     """
     Prompts the user to enter a number between 1 and 100 and validates the input.
 
@@ -17,15 +19,18 @@ def input_marks_req(msg: str, min: int = 1, max: int = 100) -> int:
     :return: the validated mark requirement
     :rtype: int
     """
-    temp = input_num(
+    result = input_num(
         msg,
         "int",
         test_fn=lambda x: min <= x <= max,
         diagnosis=f"The entered number must be between {min} and {max}",
     )
-    return cast(int, temp)
+    if result.is_err():
+        return Result[int].err(result.unwrap_err())
+    temp = result.unwrap()
+    return Result[int].ok(cast(int, temp))
 
-def input_ratio_req(msg: str)-> float:
+def input_ratio_req(msg: str)-> Result[float]:
     """
     Prompts the user to enter a number between 0 and 1 and validates the input.
 
@@ -35,11 +40,13 @@ def input_ratio_req(msg: str)-> float:
     :return: the validated ratio requirement
     :rtype: float
     """
-    temp = input_num(
+    result = input_num(
         msg,
         "float",
         test_fn=lambda x: 0 <= x <= 1,
         diagnosis="The entered number must be between 0 and 1",
     )
-    return cast(float, temp)
+    if result.is_err():
+        return Result[float].err(result.unwrap_err())
+    return Result[float].ok(cast(float, result.unwrap()))
 

@@ -8,7 +8,7 @@ from pylms.record import RecordStatus
 from pylms.utils import DataStore, date, paths
 
 
-def edit_multiple_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
+def edit_multiple_records(ds: DataStore, dates_to_mark: list[str]) -> None:
     student_serials: list[int] = select_student(ds)
     pretty_names: pd.Series = ds.pretty()[NAME]
     data_ref: pd.DataFrame = ds.as_ref()
@@ -27,10 +27,13 @@ def edit_multiple_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
             print(
                 f"You are editing Student {each_serial}: {student_name} attendance record for Class {class_num} held on {each_date}"
             )
-            selected_record: RecordStatus = input_record(
+            record_result = input_record(
                 each_date,
                 [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.EXCUSED],
             )
+            if record_result.is_err():
+                continue
+            selected_record: RecordStatus = record_result.unwrap()
             data_ref.loc[student_idx, each_date] = selected_record
 
-    return ds
+    return

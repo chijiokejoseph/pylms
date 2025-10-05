@@ -1,15 +1,16 @@
 from pylms.cli.errors import ForcedExitError
+from pylms.errors import Result
 
 
-def input_fn(msg: str) -> str:
+def input_fn(msg: str) -> Result[str]:
     """
     Prompt the user for input with an option to forcefully exit the operation.
 
     :param msg: (str) - The message to display to the user.
     :type msg: str
 
-    :return: (str) - The user's input if not a forced exit command.
-    :rtype: str
+    :return: (Result[str]) - The user's input if not a forced exit command.
+    :rtype: Result
 
     :raises ForcedExitError: If the user inputs 'quit', 'exit', or 'q' to exit the operation.
     """
@@ -19,7 +20,8 @@ def input_fn(msg: str) -> str:
     user_input: str = input(msg)
     # Check if user wants to forcefully exit
     if user_input in ["quit", "exit", "q"]:
-        raise ForcedExitError("You quit the operation")
+        msg = "You quit the operation"
+        return Result[str].err(ForcedExitError(msg))
     else:
         # Return the user input if not exiting
-        return user_input
+        return Result[str].ok(user_input)

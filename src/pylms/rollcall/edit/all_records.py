@@ -8,12 +8,15 @@ from pylms.rollcall.global_record import GlobalRecord
 from pylms.utils import DataStore
 
 
-def edit_all_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
+def edit_all_records(ds: DataStore, dates_to_mark: list[str]) -> None:
     for each_date in dates_to_mark:
-        selected_record = input_record(
+        record_result = input_record(
             each_date,
             [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.NO_CLASS],
         )
+        if record_result.is_err():
+            return
+        selected_record: RecordStatus = record_result.unwrap()
         GlobalRecord().swap(each_date, selected_record)
 
         def fill_record_fn(
@@ -45,4 +48,4 @@ def edit_all_records(ds: DataStore, dates_to_mark: list[str]) -> DataStore:
         ]
         data_ref.loc[:, each_date] = new_class_record
 
-    return ds
+    return

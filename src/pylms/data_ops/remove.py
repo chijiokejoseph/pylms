@@ -3,6 +3,6 @@ from pylms.data_ops.sub import sub
 from pylms.utils import DataStore
 
 
-def remove_students(ds: DataStore) -> DataStore:
+def remove_students(ds: DataStore) -> None:
     student_serials: list[int] = select_student(ds)
-    return sub(ds, student_serials)
+    sub(ds, student_serials)

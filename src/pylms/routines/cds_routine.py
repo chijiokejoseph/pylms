@@ -24,7 +24,11 @@ def handle_cds(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection: int = interact(menu)
+        selection_result = interact(menu)
+        if selection_result.is_err():
+            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            continue
+        selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
@@ -39,7 +43,9 @@ def handle_cds(ds: DataStore, history: History) -> None:
                 # app_ds = load()
                 result = retrieve_cds_form(history)
                 if result.is_err():
-                    eprint(f"\nFailed to retrieve cds forms due to error: {result.unwrap_err()}\n")
+                    eprint(
+                        f"\nFailed to retrieve cds forms due to error: {result.unwrap_err()}\n"
+                    )
                     continue
                 cds_form_stream, info = result.unwrap()
                 if cds_form_stream is not None:

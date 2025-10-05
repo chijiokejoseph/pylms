@@ -20,9 +20,14 @@ def select_form(
     forms_list: list[str] = [str_form(form) for form in available_forms]
     title: str = kind.upper() if kind == "cds" else kind.title()
     if len(forms_list) == 0:
-        return Result[CDSFormInfo | UpdateFormInfo].err(ValueError(f"list of {title} forms is empty"))
-    num, _ = input_option(
+        msg: str = f"list of {title} forms is empty"
+        print(f"\nError: {msg}\n")
+        return Result[CDSFormInfo | UpdateFormInfo].err(ValueError(msg))
+    option_result = input_option(
         forms_list, prompt=f"Select the {title} Form to retrieve its metadata"
     )
+    if option_result.is_err():
+        return Result[CDSFormInfo | UpdateFormInfo].err(option_result.unwrap_err())
+    num, _ = option_result.unwrap()
     idx: int = num - 1
     return Result[CDSFormInfo | UpdateFormInfo].ok(available_forms[idx])
