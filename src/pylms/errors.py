@@ -1,10 +1,9 @@
-from typing import Self, Callable, cast
 import sys
-
+from typing import Callable, Self, cast, final
 
 
 def eprint(msg: str) -> None:
-    sys.stderr.write(msg)
+    _ = sys.stderr.write(msg)
 
 
 class LMSError(Exception):
@@ -13,6 +12,7 @@ class LMSError(Exception):
         super().__init__(self.message)
 
 
+@final
 class Unit:
     def __init__(self) -> None:
         self._value = ()
@@ -37,7 +37,7 @@ class Result[T]:
     @classmethod
     def err(cls, error: Exception) -> Self:
         return cls(None, error)
-    
+
     @classmethod
     def unit(cls) -> Self:
         return cls.ok(cast(T, Unit()))

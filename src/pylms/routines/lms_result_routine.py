@@ -1,14 +1,14 @@
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
+from pylms.data_ops import save
+from pylms.history import History
 from pylms.lms import (
+    collate_merit,
     collate_result,
     edit_result,
-    collate_merit,
     overwrite_result,
     view_result,
 )
-from pylms.data_ops import save
-from pylms.history import History
 from pylms.utils import DataStore
 
 
@@ -51,7 +51,7 @@ def run_result_lms(ds: DataStore, history: History) -> None:
             case 1:
                 # app_ds = load()
                 # collate_result(app_ds, history)
-                collate_result(ds, history)
+                _ = collate_result(ds, history)
             case 2:
                 # app_ds = load()
                 # view_result(app_ds)
@@ -64,14 +64,14 @@ def run_result_lms(ds: DataStore, history: History) -> None:
                 result = edit_result(ds)
                 if result.is_err():
                     continue
-                collate_merit(ds)
+                collate_merit(ds, history)
                 print("\nResult edited successfully\n")
             case 4:
                 # app_ds = load()
                 # overwrite_result(app_ds)
                 # collate_merit(app_ds)
                 overwrite_result(ds)
-                collate_merit(ds)
+                collate_merit(ds, history)
                 print("\nResult overwritten successfully\n")
             case 5:
                 break

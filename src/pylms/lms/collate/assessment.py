@@ -5,15 +5,15 @@ import numpy as np
 import pandas as pd
 
 from pylms.cli import input_path
-from pylms.history import History
 from pylms.constants import SERIAL, ValidateDataFn
+from pylms.history import History
 from pylms.lms.utils import (
     det_assessment_req_col,
     det_assessment_score_col,
-    val_attendance_data,
     input_marks_req,
+    val_attendance_data,
 )
-from pylms.utils import DataStream, read_data, paths
+from pylms.utils import DataStream, paths, read_data
 
 
 def _val_input_data(test_data: pd.DataFrame) -> bool:
@@ -41,10 +41,8 @@ def _val_input_data(test_data: pd.DataFrame) -> bool:
                 return False
             if len(name_cols) != 1:
                 return False
-            name_list: list = names.astype(str).iloc[:, 0].tolist()
-            return all(
-                isinstance(name, str) and name.strip() != "" for name in name_list
-            )
+            name_list: list[str] = names.astype(str).iloc[:, 0].tolist()
+            return all(name.strip() != "" for name in name_list)
         case 3:
             result = test_data.select_dtypes(include=[np.number])
             result_cols = result.columns.tolist()

@@ -3,13 +3,15 @@ from typing import Literal, cast
 import pandas as pd
 
 from pylms.constants import (
-    ValidateDataFn,
-    REMARK,
+    FAIL,
+    PASS,
     REASON,
+    REMARK,
+    ValidateDataFn,
 )
+from pylms.history import History
 from pylms.lms.collate.awardees import collate_awardees
 from pylms.lms.collate.errors import SpreadSheetFmtErr
-from pylms.constants import PASS, FAIL
 from pylms.lms.utils import (
     det_assessment_req_col,
     det_attendance_req_col,
@@ -35,7 +37,11 @@ def remark(
     remarks: list[str] = []
     reasons: list[str] = []
     for assessment, special_score, special_attendance, attendance, score in zip(
-        assessment_pass, special_score_pass, special_attendance_pass, standard_attendance_pass, standard_score_pass
+        assessment_pass,
+        special_score_pass,
+        special_attendance_pass,
+        standard_attendance_pass,
+        standard_score_pass,
     ):
         score_pass: bool = special_score or special_attendance or (attendance and score)
         passed: bool = assessment and score_pass
@@ -59,7 +65,7 @@ def remark(
     return remarks, reasons
 
 
-def collate_merit(ds: DataStore) -> None:
+def collate_merit(ds: DataStore, history: History) -> None:
     result_data: pd.DataFrame = read_data(paths.get_paths_excel()["Result"])
     result_stream = DataStream(result_data, cast(ValidateDataFn, val_result_data))
     result_data = result_stream()
@@ -131,3 +137,4 @@ def collate_merit(ds: DataStore) -> None:
     passed_data: pd.DataFrame = pretty_data.loc[pass_logic_idx, :]
     passed_stream: DataStream[pd.DataFrame] = DataStream(passed_data)
     collate_awardees(passed_stream)
+    history.record_merit()

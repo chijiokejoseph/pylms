@@ -3,23 +3,21 @@ from typing import Literal, cast
 
 import pandas as pd
 
+from pylms.config import read_course_name
 from pylms.constants import (
     AWARDEES,
     AWARDEES_BATCH,
     AWARDEES_EMTPY,
-    AWARDEES_ORDER,
     COHORT,
     EMAIL,
     NAME,
     PHONE,
     ValidateDataFn,
 )
-from pylms.config import read_course_name
 from pylms.lms.utils import (
     fmt_date,
     fmt_phone,
 )
-from pylms.errors import LMSError
 from pylms.utils import DataStream, date, paths
 
 type CollateType = Literal["merit", "fast track"]
@@ -41,10 +39,7 @@ def collate_awardees(
     cohort_num: int = data[COHORT].iloc[0]
 
     course_name: str = read_course_name()
-    if course_name is None:
-        raise LMSError("Course name has not been set in `state.toml`")
 
-    len(AWARDEES_ORDER)
     awardees_data: pd.DataFrame = pd.DataFrame(
         data={
             AWARDEES["Email"]: data[EMAIL],

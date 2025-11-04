@@ -1,3 +1,5 @@
+import re
+from multiprocessing.reduction import register
 from pathlib import Path
 from typing import Callable, cast
 
@@ -6,13 +8,13 @@ import pandas as pd
 
 from pylms.cli import input_path
 from pylms.constants import GROUP, NAME, ValidateDataFn
+from pylms.history import History
 from pylms.lms.collate.errors import NoProjectGroupsErr, SpreadSheetFmtErr
 from pylms.lms.utils import (
     det_project_score_col,
     val_assessment_data,
     val_attendance_data,
 )
-from pylms.history import History
 from pylms.utils import DataStream, paths, read_data
 
 
@@ -37,14 +39,18 @@ def _val_input_data(test_data: pd.DataFrame) -> bool:
     temp = score_data.dtype
     dtype_var: np.dtype = cast(np.dtype, temp)
     test = np.issubdtype(dtype_var, np.number)
-    return cast(bool, test)
+    return test
 
 
 def _extract_num_groups() -> int:
     group1_path: Path = paths.get_group_path(1)
     parent: Path = group1_path.parent
-    list_subfolders: list[Path] = list(parent.iterdir())
-    num_groups: int = len(list_subfolders)
+    files: list[Path] = list(parent.iterdir())
+    reg: re.Pattern[str] = re.compile(r"^Group\d+.xlsx$")
+    group_files: list[Path] = [
+        file for file in files if reg.match(file.name) is not None
+    ]
+    num_groups: int = len(group_files)
     return num_groups
 
 

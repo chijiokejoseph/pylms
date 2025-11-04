@@ -1,11 +1,11 @@
-from pylms.mainloop import mainloop, closed_loop, handle_err
-from pylms.utils import prepare_paths
-from pylms.config import load, input_dir, input_course_name, write_config
-from pylms.constants import ENV_PATH
 from dotenv import load_dotenv
 
+from pylms.config import input_course_name, input_dir, load, write_config
+from pylms.constants import ENV_PATH
+from pylms.mainloop import closed_loop, handle_err, mainloop
+from pylms.utils import prepare_paths
 
-load_dotenv(ENV_PATH)
+_ = load_dotenv(ENV_PATH)
 
 
 def main() -> None:
@@ -19,6 +19,7 @@ def main() -> None:
 
     :return: (None) - This function does not return a value.
     :rtype: None
+
     :raises Exception: Any exceptions raised by the called functions (such as load, input_dir,
                       input_course_name, prepare_paths, mainloop, closed_loop, or handle_err)
                       will propagate unless handled within handle_err.

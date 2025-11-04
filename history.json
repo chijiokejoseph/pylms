@@ -24,11 +24,27 @@
   "orientation_date": "29/09/2025",
   "weeks": 5,
   "held_classes": [
-    "06/10/2025"
+    "06/10/2025",
+    "07/10/2025",
+    "08/10/2025",
+    "13/10/2025",
+    "14/10/2025",
+    "15/10/2025",
+    "21/10/2025"
   ],
   "marked_classes": [
     "30/09/2025",
-    "01/10/2025"
+    "01/10/2025",
+    "06/10/2025",
+    "07/10/2025",
+    "08/10/2025",
+    "13/10/2025",
+    "14/10/2025",
+    "15/10/2025",
+    "20/10/2025",
+    "21/10/2025",
+    "22/10/2025",
+    "30/09/2025"
   ],
   "class_forms": [
     {
@@ -42,31 +58,240 @@
       "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeO1eWqQEH3fuc7qajCF0rGer529a8TBK70Acn_VUoNSf0vxQ/viewform",
       "excused_id": "1gLhDH6KQoNj4oNUKYdizV77xLv0thJ9Xy0w7DOriI0E",
       "timestamp": "Oct05_170211"
+    },
+    {
+      "date": "07/10/2025",
+      "present_name": "Cohort 29 Attendance 10/07/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 07/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSf4J6Ig1zjzA06RB4GuCCB2QeU_KisDk-j9371--I54FCISMA/viewform",
+      "present_id": "1u9CfET3VD3gkTjTSEd0eebsABMZ6T0cb4Apxhy_mnaU",
+      "excused_name": "Cohort 29 Excused 10/07/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 07/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeLhVwD8R1D6QwyGXJSClXNsqV6cDrXMGVYB22fpIWNTGSEog/viewform",
+      "excused_id": "1p3-r8El4KatlpnHYjIXKog9RTlfvJuOHXEgzgeRIg_0",
+      "timestamp": "Oct07_092447"
+    },
+    {
+      "date": "08/10/2025",
+      "present_name": "Cohort 29 Attendance 10/08/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 08/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfDahtqmyPAtHs5LwMFnifVCl00-qgLr1oTGKKtxmF6z5XMng/viewform",
+      "present_id": "1xUCaanHuo4WsxloqHkGQ-BdOtt8a1qQvSt35eiceE2s",
+      "excused_name": "Cohort 29 Excused 10/08/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 08/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLScmimHXx7lGZZzMmbPb7excMJsgNOzZW9yA812WJ5zjDgS_pA/viewform",
+      "excused_id": "1z_Cvr1YNvfUa4_1AeVJt4FHkwz2JKmLAckbf2hBaXOs",
+      "timestamp": "Oct08_113025"
+    },
+    {
+      "date": "13/10/2025",
+      "present_name": "Cohort 29 Attendance 10/13/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 13/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfuDBTjl8H7xt0tfDrTZHC4y5d66z3mX23vfdZbyj_DgoJnAQ/viewform",
+      "present_id": "1RnWWawLjvie9PXejRCbQSAwt07HQhG-1NHs2JaaEl2s",
+      "excused_name": "Cohort 29 Excused 10/13/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 13/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeiBb2C437lhmH3CE-QwIbVB3eZXxjxL3rfKtgmt2-Wmqk2hQ/viewform",
+      "excused_id": "1ukljgiGBcmt8ExrixV5B-s64GEhDqZOGplm1tk85Hsw",
+      "timestamp": "Oct13_103536"
+    },
+    {
+      "date": "14/10/2025",
+      "present_name": "Cohort 29 Attendance 10/14/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 14/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfXN_7kZDYr1hBel870FMhWGowi__oCh6jRJ1ya_pkCTtMrTQ/viewform",
+      "present_id": "1PMduWC3IVEZSio-dLnKsZibUGCTXRzJn2EnRqXOV0Cw",
+      "excused_name": "Cohort 29 Excused 10/14/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 14/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSe11AR0twoBJAiNcJAWG-Lvub-CcwI-NqwSE-5SZI7hlFD_lQ/viewform",
+      "excused_id": "1bNMeGBYSXd_35c5l_Tdssc8ovHN87Urbtotx6ZsQhKg",
+      "timestamp": "Oct14_102759"
+    },
+    {
+      "date": "15/10/2025",
+      "present_name": "Cohort 29 Attendance 10/15/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 15/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSefMnFYvJN3vfX-axhYoCgo25iMS03emM7HIsiHzSF-2xU1cw/viewform",
+      "present_id": "1N-Xttz7JlsskL4OO8yXgSaLQE9KzB3M3jOaRwQEtEUo",
+      "excused_name": "Cohort 29 Excused 10/15/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 15/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLScme1KZzM1A7UZQQJVPi7CJC7JxFQSxNe3RUXCOf0Z36UBn0g/viewform",
+      "excused_id": "1bzFpHdyDz7WIU-x39WITvsfHHmFbjvzpQbv69nlzAyE",
+      "timestamp": "Oct15_112212"
+    },
+    {
+      "date": "21/10/2025",
+      "present_name": "Cohort 29 Attendance 10/21/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 21/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSdQyzNytZVEnyeef8ftlwSiV62MgIGqDXyiBefaOsuh1rxRIA/viewform",
+      "present_id": "1vPDiTukwdJWheWT3k9kujVPYmxYfb0hUA-Y6rHao_Xg",
+      "excused_name": "Cohort 29 Excused 10/21/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 21/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSd3o9HENL1Ir_zZzr0ersrGCrvBA09V8iXl09XVDLOr95_Szg/viewform",
+      "excused_id": "1U_nYb4cGzIQ7-EdWewzWTDl7rmWhBiA9fk1HOiifWso",
+      "timestamp": "Oct21_114320"
     }
   ],
-  "recorded_class_forms": [],
-  "cds_forms": [],
-  "recorded_cds_forms": [],
-  "update_forms": [],
-  "recorded_update_forms": [],
+  "recorded_class_forms": [
+    {
+      "date": "06/10/2025",
+      "present_name": "Cohort 29 Attendance 10/06/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 06/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSd8Y-hcgYOOH0WreNrrn8jmPXZKz1AH6ISBUFBA0JV6HzBgvQ/viewform",
+      "present_id": "1HtJY9enAGhbtPLa64DKyiRz0RqpwFsc4SsFneb_eOY8",
+      "excused_name": "Cohort 29 Excused 10/06/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 06/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeO1eWqQEH3fuc7qajCF0rGer529a8TBK70Acn_VUoNSf0vxQ/viewform",
+      "excused_id": "1gLhDH6KQoNj4oNUKYdizV77xLv0thJ9Xy0w7DOriI0E",
+      "timestamp": "Oct05_170211"
+    },
+    {
+      "date": "07/10/2025",
+      "present_name": "Cohort 29 Attendance 10/07/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 07/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSf4J6Ig1zjzA06RB4GuCCB2QeU_KisDk-j9371--I54FCISMA/viewform",
+      "present_id": "1u9CfET3VD3gkTjTSEd0eebsABMZ6T0cb4Apxhy_mnaU",
+      "excused_name": "Cohort 29 Excused 10/07/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 07/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeLhVwD8R1D6QwyGXJSClXNsqV6cDrXMGVYB22fpIWNTGSEog/viewform",
+      "excused_id": "1p3-r8El4KatlpnHYjIXKog9RTlfvJuOHXEgzgeRIg_0",
+      "timestamp": "Oct07_092447"
+    },
+    {
+      "date": "08/10/2025",
+      "present_name": "Cohort 29 Attendance 10/08/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 08/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfDahtqmyPAtHs5LwMFnifVCl00-qgLr1oTGKKtxmF6z5XMng/viewform",
+      "present_id": "1xUCaanHuo4WsxloqHkGQ-BdOtt8a1qQvSt35eiceE2s",
+      "excused_name": "Cohort 29 Excused 10/08/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 08/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLScmimHXx7lGZZzMmbPb7excMJsgNOzZW9yA812WJ5zjDgS_pA/viewform",
+      "excused_id": "1z_Cvr1YNvfUa4_1AeVJt4FHkwz2JKmLAckbf2hBaXOs",
+      "timestamp": "Oct08_113025"
+    },
+    {
+      "date": "13/10/2025",
+      "present_name": "Cohort 29 Attendance 10/13/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 13/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfuDBTjl8H7xt0tfDrTZHC4y5d66z3mX23vfdZbyj_DgoJnAQ/viewform",
+      "present_id": "1RnWWawLjvie9PXejRCbQSAwt07HQhG-1NHs2JaaEl2s",
+      "excused_name": "Cohort 29 Excused 10/13/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 13/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSeiBb2C437lhmH3CE-QwIbVB3eZXxjxL3rfKtgmt2-Wmqk2hQ/viewform",
+      "excused_id": "1ukljgiGBcmt8ExrixV5B-s64GEhDqZOGplm1tk85Hsw",
+      "timestamp": "Oct13_103536"
+    },
+    {
+      "date": "14/10/2025",
+      "present_name": "Cohort 29 Attendance 10/14/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 14/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSfXN_7kZDYr1hBel870FMhWGowi__oCh6jRJ1ya_pkCTtMrTQ/viewform",
+      "present_id": "1PMduWC3IVEZSio-dLnKsZibUGCTXRzJn2EnRqXOV0Cw",
+      "excused_name": "Cohort 29 Excused 10/14/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 14/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSe11AR0twoBJAiNcJAWG-Lvub-CcwI-NqwSE-5SZI7hlFD_lQ/viewform",
+      "excused_id": "1bNMeGBYSXd_35c5l_Tdssc8ovHN87Urbtotx6ZsQhKg",
+      "timestamp": "Oct14_102759"
+    },
+    {
+      "date": "15/10/2025",
+      "present_name": "Cohort 29 Attendance 10/15/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 15/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSefMnFYvJN3vfX-axhYoCgo25iMS03emM7HIsiHzSF-2xU1cw/viewform",
+      "present_id": "1N-Xttz7JlsskL4OO8yXgSaLQE9KzB3M3jOaRwQEtEUo",
+      "excused_name": "Cohort 29 Excused 10/15/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 15/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLScme1KZzM1A7UZQQJVPi7CJC7JxFQSxNe3RUXCOf0Z36UBn0g/viewform",
+      "excused_id": "1bzFpHdyDz7WIU-x39WITvsfHHmFbjvzpQbv69nlzAyE",
+      "timestamp": "Oct15_112212"
+    },
+    {
+      "date": "21/10/2025",
+      "present_name": "Cohort 29 Attendance 10/21/2025",
+      "present_title": "Python Beginners Cohort 29 Attendance for 21/10/2025",
+      "present_url": "https://docs.google.com/forms/d/e/1FAIpQLSdQyzNytZVEnyeef8ftlwSiV62MgIGqDXyiBefaOsuh1rxRIA/viewform",
+      "present_id": "1vPDiTukwdJWheWT3k9kujVPYmxYfb0hUA-Y6rHao_Xg",
+      "excused_name": "Cohort 29 Excused 10/21/2025",
+      "excused_title": "Python Beginners Cohort 29 Excused List for 21/10/2025",
+      "excused_url": "https://docs.google.com/forms/d/e/1FAIpQLSd3o9HENL1Ir_zZzr0ersrGCrvBA09V8iXl09XVDLOr95_Szg/viewform",
+      "excused_id": "1U_nYb4cGzIQ7-EdWewzWTDl7rmWhBiA9fk1HOiifWso",
+      "timestamp": "Oct21_114320"
+    }
+  ],
+  "cds_forms": [
+    {
+      "name": "Cohort 29 CDS Oct07_093450",
+      "title": "Python Beginners Cohort 29 CDS Entry Form",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSdmaFXTiq1brJTzHZ6V-GbvrUyq7Ly1FRHwcXkNqf4W40BzaA/viewform",
+      "uuid": "16faoaVpXstZpDwW90USFDkCfPRF50BBmWW5H44M8nwQ",
+      "timestamp": "Oct07_093450"
+    }
+  ],
+  "recorded_cds_forms": [
+    {
+      "name": "Cohort 29 CDS Oct07_093450",
+      "title": "Python Beginners Cohort 29 CDS Entry Form",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSdmaFXTiq1brJTzHZ6V-GbvrUyq7Ly1FRHwcXkNqf4W40BzaA/viewform",
+      "uuid": "16faoaVpXstZpDwW90USFDkCfPRF50BBmWW5H44M8nwQ",
+      "timestamp": "Oct07_093450"
+    }
+  ],
+  "update_forms": [
+    {
+      "week_num": 42,
+      "year_num": 2025,
+      "name": "Cohort 29 Update Oct16_133745",
+      "title": "Python Beginners Cohort 29 Registration Update Form",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSeqMgQaGspuj8ydqmuc5Lx6mOoEyCchMmGVBJ3CFT15_Hu9Ug/viewform",
+      "uuid": "1xz_F9Vo2hXhn3b585f5f7IU_1CiV2QbGA4eYd4X4tOY",
+      "dates": [
+        "06/10/2025",
+        "07/10/2025",
+        "08/10/2025",
+        "13/10/2025",
+        "14/10/2025",
+        "15/10/2025"
+      ],
+      "timestamp": "Oct16_133745"
+    }
+  ],
+  "recorded_update_forms": [
+    {
+      "week_num": 42,
+      "year_num": 2025,
+      "name": "Cohort 29 Update Oct16_133745",
+      "title": "Python Beginners Cohort 29 Registration Update Form",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSeqMgQaGspuj8ydqmuc5Lx6mOoEyCchMmGVBJ3CFT15_Hu9Ug/viewform",
+      "uuid": "1xz_F9Vo2hXhn3b585f5f7IU_1CiV2QbGA4eYd4X4tOY",
+      "dates": [
+        "06/10/2025",
+        "07/10/2025",
+        "08/10/2025",
+        "13/10/2025",
+        "14/10/2025",
+        "15/10/2025"
+      ],
+      "timestamp": "Oct16_133745"
+    }
+  ],
   "attendance": [
-    false,
-    "."
+    true,
+    "C:\\Users\\Justin\\OneDrive\\NCAIR\\Cohorts\\Cohort 29\\data\\Excel\\Attendance.xlsx"
   ],
   "assessment": [
-    false,
-    "."
+    true,
+    "C:\\Users\\Justin\\OneDrive\\NCAIR\\Cohorts\\Cohort 29\\data\\Excel\\Assessment.xlsx"
   ],
   "project": [
-    false,
-    "."
+    true,
+    "C:\\Users\\Justin\\OneDrive\\NCAIR\\Cohorts\\Cohort 29\\data\\Excel\\Project.xlsx"
   ],
   "result": [
-    false,
-    "."
+    true,
+    "C:\\Users\\Justin\\OneDrive\\NCAIR\\Cohorts\\Cohort 29\\data\\Excel\\Result.xlsx"
   ],
   "merit": [
-    false,
-    "."
+    true,
+    "C:\\Users\\Justin\\OneDrive\\NCAIR\\Cohorts\\Cohort 29\\data\\Excel\\Cohort 29 Python Beginners Merit Awardees.xlsx"
   ]
 }

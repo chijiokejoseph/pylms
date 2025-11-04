@@ -19,6 +19,7 @@ def group(ds: DataStore, history: History) -> None:
         return None
 
     group_data_path: Path = paths.get_group_path()
+    group_dir: Path = paths.get_group_dir()
     if group_data_path.exists():
         print(
             f"You have already grouped students. \nPlease check the path {group_data_path.resolve()} for the previous grouping operation you performed."
@@ -32,6 +33,7 @@ def group(ds: DataStore, history: History) -> None:
         if idx == 2:
             return None
 
+    group_dir.mkdir(exist_ok=True)
     pretty_data: pd.DataFrame = ds.pretty()
     msg: str = "Please enter the number of groups [Must be between 3 - 100]: "
     num_result = input_num(msg, "int", lambda x: 3 <= x <= 100)
@@ -57,4 +59,5 @@ def group(ds: DataStore, history: History) -> None:
         grp_num_path: Path = paths.get_group_path(grp_num)
         grp_num_stream.to_excel(grp_num_path)
 
+    history.set_group(num_groups)
     return None

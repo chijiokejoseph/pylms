@@ -8,7 +8,7 @@ from pylms.lms.utils import det_result_col
 from pylms.utils import DataStore
 
 
-def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
+def edit_multiple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     result_col: str = det_result_col()
     student_serials: list[int] = select_student(ds)
     num_rows: int = result_data.shape[0]
@@ -29,16 +29,21 @@ def _edit_mutliple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[floa
             return Result[list[float]].err(result.unwrap_err())
         idx, choice = result.unwrap()
         print(f"You have selected {choice}")
-        marks_temp = input_num(
+        result = input_num(
             f"For {choice}, enter the number of marks: ",
             "float",
             lambda x: x > 0,
             "The value entered is not greater than zero.",
         )
+        if result.is_err():
+            return Result[list[float]].err(result.unwrap_err())
+
+        marks_temp = result.unwrap()
         marks: float = cast(float, marks_temp)
         match idx:
             case 1:
-                result_data.loc[index, result_col] = student_score + marks
+                score: float = student_score + marks
+                result_data.loc[index, result_col] = score if score <= 100 else 100
                 updates_list[index] = marks
             case _:
                 result_data.loc[index, result_col] = student_score - marks

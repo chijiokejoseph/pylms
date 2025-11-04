@@ -3,7 +3,9 @@ from pylms.lms.collate.awardees_merged import collate_merge
 from pylms.lms.collate.awardees_merit import collate_merit
 from pylms.lms.collate.result import collate_result
 from pylms.lms.edit import edit_result, overwrite_result
+from pylms.lms.grade import prepare_grading
 from pylms.lms.group import group
+from pylms.lms.leaders import select_leaders
 from pylms.lms.view import view_result
 from pylms.lms.mail import send_result
 
@@ -18,5 +20,7 @@ __all__ = [
     "group",
     "edit_result",
     "overwrite_result",
+    "prepare_grading",
     "send_result",
+    "select_leaders",
 ]

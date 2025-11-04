@@ -25,13 +25,16 @@ def input_num(
         `T` = float | int
 
     :param msg: (str) - The message to display to the user when prompting for input.
-    :param rtype: (Literal["float", "int"]) - The desired return type of the input, either "float" or "int".
+
     :param test_fn: (Callable[[T], bool]) - A function to test the validity of the parsed input. Defaults to a function that returns True for any input.
+
     :param diagnosis: (str | None) - An optional message to display if the parsed input fails the test function.
+
     :param trials: (int) - The number of attempts to allow the user to input a valid number before raising an error. Defaults to 3.
 
     :return: (Result[T]) - A result containing the validated and parsed number input by the user.
     :rtype: Result[T]
+
     :raises InvalidInputError: If the user fails to input a valid number within the allowed number of trials.
     """
 

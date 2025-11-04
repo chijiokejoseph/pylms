@@ -44,7 +44,7 @@ def _parse(
         return None
 
 
-def get_mutable_cols(data_stream: DataStream) -> list[str]:
+def get_mutable_cols(data_stream: DataStream[pd.DataFrame]) -> list[str]:
     return [
         find_col(data_stream, "Attendance", "Req"),
         find_col(data_stream, "Assessment", "Req"),
@@ -55,7 +55,9 @@ def get_mutable_cols(data_stream: DataStream) -> list[str]:
     ]
 
 
-def _preprocess(data_stream: DataStream, col: str, value: str) -> float | None:
+def _preprocess(
+    data_stream: DataStream[pd.DataFrame], col: str, value: str
+) -> float | None:
     match str(col):
         case _ if col in [
             find_col(data_stream, "Attendance", "Score"),
@@ -76,7 +78,7 @@ def overwrite_result(ds: DataStore) -> None:
         )
 
     result_data: pd.DataFrame = read_data(result_path)
-    result_stream: DataStream = DataStream(
+    result_stream: DataStream[pd.DataFrame] = DataStream(
         result_data, cast(ValidateDataFn, val_result_data)
     )
     result_data = result_stream()

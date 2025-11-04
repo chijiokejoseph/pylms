@@ -1,15 +1,18 @@
-from pathlib import Path
-from pylms.cli.option_input import input_option
-from pylms.utils import paths, read_data, DataStream, DataStore, must_get_env
-from pylms.config import read_course_name
-from pylms.lms.utils import find_col
-from pylms.constants import REASON, REMARK, NAME, GENDER, EMAIL, COHORT
-import pandas as pd
 import re
-from smtplib import SMTP
 from email.message import EmailMessage
+from pathlib import Path
+from smtplib import SMTP
+from typing import Any
+
+import pandas as pd
+
+from pylms.cli.option_input import input_option
+from pylms.config import read_course_name
+from pylms.constants import COHORT, EMAIL, GENDER, NAME, REASON, REMARK
 from pylms.email import run_email
 from pylms.errors import LMSError, Result, Unit
+from pylms.lms.utils import find_col
+from pylms.utils import DataStore, DataStream, must_get_env, paths, read_data
 
 
 def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
@@ -88,7 +91,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     classes_float: float = attendance_score_data.mode().iloc[0]
     classes: int = int(round(classes_float, 0))
 
-    bad_records: list[tuple[int, str, str, dict]] = []
+    bad_records: list[tuple[int, str, str, dict[str, Any]]] = []
 
     # Iterate over each student in the result DataFrame
     for idx in range(result.shape[0]):
@@ -196,16 +199,16 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         <td style="padding: 8px;">{result_req_str}</td>
       </tr>
     </tbody>
-</table>    
-    
+</table>
+
 <h2 style="text-align: center;">Result Formula</h2>
-    
+
 <p style="text-align: center;">
   <italic>
     RESULT = ASSESSMENT + PROJECT + BONUS MARKS - PENALTY MARKS
   <italic>
 </p>
-    
+
 <table border="1" cellspacing="4" cellpadding="8" style="border-collapse: separate; border-spacing: 8px;">
     <thead>
       <tr>
@@ -218,7 +221,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
       <td style="padding: 8px;">{reason}</td>
     </tbody>
 </table>
-    
+
 <p>I hope this gives you a good understanding of where you stand in your programming journey.</p>
 
 <footer>
@@ -259,7 +262,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
                 send_err: dict[str, tuple[int, bytes]] = server.send_message(
                     email_msg, from_addr=sender_email, to_addrs=[email1, email2]
                 )
-                
+
                 option_result = input_option(
                     ["Yes", "No"],
                     prompt=f"Please confirm the format of the email as sent to either {email1} or {email2}. Is it okay? ",
@@ -269,8 +272,10 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
                 option_idx, _ = option_result.unwrap()
                 if option_idx != 1:
                     return Result[Unit].err(Exception("Email format not okay"))
-                  
-            send_err = server.send_message(email_msg, from_addr=sender_email, to_addrs=email)
+
+            send_err = server.send_message(
+                email_msg, from_addr=sender_email, to_addrs=email
+            )
         except Exception as e:
             send_err = {"error": (1, bytes(str(e), "utf-8"))}
 

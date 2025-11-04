@@ -1,11 +1,12 @@
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Self, cast
+
+from pylms.constants import COHORT, DATE, DATE_FMT, HISTORY_PATH, WEEK_DAYS
 from pylms.errors import LMSError
-from pylms.constants import DATE_FMT, HISTORY_PATH, DATE, WEEK_DAYS, COHORT
 from pylms.models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
-from pylms.utils import paths, DataStore
-import json
+from pylms.utils import DataStore, paths
 
 
 class HistoryError(LMSError):
@@ -67,6 +68,8 @@ class History:
         result (tuple[bool, Path]): A tuple containing a boolean indicating whether the result is recorded
             and the path to the result file.
 
+        group (tuple[bool, int]): A tuple containing a boolean indicating whether the groups have been created and the number of groups that was assigned.
+
         merit (tuple[bool, Path]): A tuple containing a boolean indicating whether the merit awardees has been recorded
             and the path to the merit awardees file.
 
@@ -92,6 +95,7 @@ class History:
         self.project: tuple[bool, Path] = (False, Path())
         self.result: tuple[bool, Path] = (False, Path())
         self.merit: tuple[bool, Path] = (False, Path())
+        self.group: tuple[bool, int] = (False, 0)
         self._updated: bool = False
 
     def _update_dates(self) -> None:
@@ -208,6 +212,8 @@ class History:
         if "dates" in data:
             if not isinstance(data["dates"], list):
                 raise HistoryError("Dates must be a list of date strings.")
+            if len(data["dates"]) == 0:
+                raise HistoryError("Dates must have more than one element")
             history.dates = [cls.to_datetime(date_str) for date_str in data["dates"]]
 
         # Check and set attribute `orientation_date`
@@ -421,18 +427,26 @@ class History:
 
         # Get `Json/dates.json`
         dates_json_path: Path = paths.get_paths_json()["Date"]
-        
+
         # Check if `Json/dates.json` exists
         if not dates_json_path.exists():
             # Create `Json/dates.json`, save the dates and return
             with dates_json_path.open("w") as file:
                 json.dump(self.str_dates(), file, indent=2)
             return
-        
+
         # Load the dates from the JSON file `Json/dates.json`
         dates_json_list: list[str] = []
         with dates_json_path.open("r") as file:
-            dates_json_list.extend(json.load(file))
+            dates_data = json.load(file)
+            if not isinstance(dates_data, list):
+                raise HistoryError("dates_data is not a list")
+            if len(dates_data) != 0 and not all(
+                isinstance(value, str) for value in dates_data
+            ):
+                raise HistoryError("dates_data is not a list")
+
+            dates_json_list.extend(dates_data)
 
         # Update the dates in the JSON file if they have changed
         if dates_json_list != self.str_dates():
@@ -913,3 +927,38 @@ class History:
         :rtype: list[datetime]
         """
         return [date for date in self.held_classes if date not in self.marked_classes]
+
+    def set_group(self, num: int) -> None:
+        group_path: Path = paths.get_excel_path() / "groups"
+        if not group_path.exists():
+            print("Unable to set group field of History because no group path exists.")
+            return
+        num_items: int = len(list(group_path.iterdir()))
+        num_groups: int = num_items - 1
+        if num != num_groups:
+            print(
+                "Unable to set group due to mismatch between the actual directory items in the path and the number specified"
+            )
+            return
+
+        self.group = (True, num)
+
+    def has_group(self) -> bool:
+        """
+        Returns True if the students have been grouped. False if not
+
+        :return: (bool) - indicates if the students have been grouped for their projects or not
+        :rtype: bool
+        """
+
+        return self.group[0]
+
+    def get_num_groups(self) -> int:
+        """
+        Returns the number of groups the students have been divided into.
+
+        :return: (int) - The number of groups the students have been divided into.
+        :rtype: int
+        """
+
+        return self.group[1]

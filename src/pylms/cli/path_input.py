@@ -22,8 +22,6 @@ def input_path(
 
     :return: (Result[Path]) - A result containing the validated Path object.
     :rtype: Result[Path]
-
-    :raises InvalidPathError: If the input path does not meet validation criteria.
     """
     # Prompt user for input string with validation
     result: Result[str] = input_str(
@@ -65,9 +63,6 @@ def test_path_in(path_input: Path) -> tuple[bool, str]:
     # Check if the path is absolute
     if not path_input.is_absolute():
         return False, f"{path_input} is not absolute"
-    # Check if the file has an Excel extension
-    if not path_input.name.endswith("xlsx"):
-        return False, f"{path_input} does not point to an excel file"
     # Check if the path exists
     if not path_input.exists():
         return False, f"{path_input} does not exist"

@@ -2,6 +2,7 @@ from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.lms import (
     group,
+    select_leaders,
 )
 from pylms.routines.lms_awardees_routine import run_awardees_lms
 from pylms.routines.lms_result_routine import run_result_lms
@@ -38,6 +39,7 @@ def run_lms(ds: DataStore, history: History) -> None:
                 # group(app_ds)
                 ds.raise_for_status()
                 group(ds, history)
+                _ = select_leaders(ds, history)
                 print("Students have been grouped successfully\n")
             case 2:
                 ds.raise_for_status()

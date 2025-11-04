@@ -112,9 +112,10 @@ def _message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit
                 continue
 
             print(
-                f"\nMail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
+                f"\n✅ Mail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
             )
         except Exception as e:
+            print(f"\n❌ Mail not sent to {f'{name} with ' if name is not None else ''}{email}\n")
             # Catch any exceptions during sending and record the error
             errors.append(
                 {

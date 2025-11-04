@@ -1,8 +1,7 @@
 import unittest
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
-from pylms.utils import paths
 from pylms.utils.paths.path_fns import get_paths_json
 
 
@@ -36,22 +35,25 @@ def ret_update_path(timestamp: str) -> tuple[Path, Path]:
     update_form_path: Path = get_update_path("form", timestamp)
     update_record_path: Path = get_update_path("record", timestamp)
     if not update_form_path.exists():
-        update_form_path = paths.last_update_path("form", timestamp)
+        update_form_path = last_update_path("form", timestamp)
         update_record_path = to_update_record(update_form_path)
 
     return update_form_path, update_record_path
 
 
 class TestLastUpdate(unittest.TestCase):
+    @override
     def setUp(self) -> None:
         from pylms.history import History
 
-        self.history: History = History.load()
+        self.history = History.load()
 
     def test_last_update(self) -> None:
         from pylms.forms.utils import select_form
 
-        path = last_update_path("form", select_form(self.history, "update").unwrap().timestamp)
+        path = last_update_path(
+            "form", select_form(self.history, "update").unwrap().timestamp
+        )
         new_path = to_update_record(path)
         print(path)
         print(new_path)
@@ -67,4 +69,4 @@ class TestLastUpdate(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

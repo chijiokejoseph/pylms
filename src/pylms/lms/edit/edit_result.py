@@ -5,10 +5,10 @@ import pandas as pd
 
 from pylms.constants import RESULT_UPDATE, ValidateDataFn
 from pylms.errors import Result, Unit
+from pylms.lms.edit.edit_for_all import edit_all
+from pylms.lms.edit.edit_for_batch import edit_batch
+from pylms.lms.edit.edit_for_multiple import edit_multiple
 from pylms.lms.edit.select import Select, input_select_type
-from pylms.lms.edit.edit_for_all import _edit_all
-from pylms.lms.edit.edit_for_multiple import _edit_mutliple
-from pylms.lms.edit.edit_for_batch import _edit_batch
 from pylms.lms.utils import val_result_data
 from pylms.lms.utils.find import find_col
 from pylms.utils import DataStore, DataStream, paths, read_data
@@ -82,17 +82,17 @@ def edit_result(ds: DataStore) -> Result[Unit]:
     # Perform the selected edit operation
     match select_type:
         case Select.ALL:
-            result = _edit_all(result_data)
+            result = edit_all(result_data)
             if result.is_err():
                 return Result[Unit].err(result.unwrap_err())
             updates_list.extend(result.unwrap())
         case Select.MULTIPLE:
-            result = _edit_mutliple(ds, result_data)
+            result = edit_multiple(ds, result_data)
             if result.is_err():
                 return Result[Unit].err(result.unwrap_err())
             updates_list.extend(result.unwrap())
         case Select.BATCH:
-            result = _edit_batch(ds, result_data)
+            result = edit_batch(ds, result_data)
             if result.is_err():
                 return Result[Unit].err(result.unwrap_err())
             updates_list.extend(result.unwrap())

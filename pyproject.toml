@@ -1,3 +1,4 @@
+#:tombi schema.strict = false
 [project]
 name = "pylms"
 version = "0.1.0"
@@ -30,3 +31,8 @@ dependencies = [
 
 [tool.mypy]
 follow_untyped_imports = true
+
+[tool.pyright]
+reportUnknownVariableType = false
+reportAny = false
+reportUnknownArgumentType = false

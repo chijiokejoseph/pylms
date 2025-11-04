@@ -4,17 +4,17 @@ import numpy as np
 import pandas as pd
 
 from pylms.errors import Result, Unit
+from pylms.history import History
 from pylms.lms.collate.input_collate_req import CollateReq, input_collate_req
 from pylms.lms.utils import (
     det_assessment_overall_col,
-    det_assessment_score_col,
     det_assessment_req_col,
+    det_assessment_score_col,
     det_passmark_col,
     det_project_overall_col,
     det_project_score_col,
     det_result_col,
 )
-from pylms.history import History
 from pylms.utils import DataStore, DataStream, paths, read_data
 
 
@@ -72,7 +72,9 @@ def collate_result(ds: DataStore, history: History) -> Result[Unit]:
     project_data: pd.Series = collated_data[project_score_col]
     score_data: pd.Series = project_data + assessment_data
     score_arr: np.ndarray = score_data.to_numpy()
-    score_arr = score_arr.round(2)
+    score_arr = np.array(
+        [score if score <= 100 else 100 for score in score_arr.tolist()]
+    ).round(2)
 
     # Rename columns to reflect overall scores
     new_assessment_col: str = det_assessment_overall_col(assessment_ratio)

@@ -1,13 +1,15 @@
-import pandas as pd
-from pylms.cli.serials_input import provide_serials
-from pylms.errors import Result
-from pylms.utils import DataStore
-from pylms.cli import input_num, input_option
-from pylms.lms.utils import det_result_col
 from typing import cast
 
+import pandas as pd
 
-def _edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
+from pylms.cli import input_num, input_option
+from pylms.cli.serials_input import provide_serials
+from pylms.errors import Result
+from pylms.lms.utils import det_result_col
+from pylms.utils import DataStore
+
+
+def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     # generate a very detailed documentation for the function in sphinx format
     """
     Edit the results of multiple students in a batch.
@@ -52,17 +54,22 @@ def _edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]
     print(f"You have selected {choice}")
 
     # get the marks to add or subtract
-    marks_temp = input_num(
+    result_num = input_num(
         f"For {choice}, enter the number of marks: ",
         "float",
         lambda x: x > 0,
         "The value entered is not greater than zero.",
     )
+    if result.is_err():
+        return Result[list[float]].err(result.unwrap_err())
+
+    marks_temp = result_num.unwrap()
     marks: float = cast(float, marks_temp)
     marks = marks if idx == 1 else -marks
     # apply the edit and record the updates
     for index in idxs:
         updates_list[index] = marks
         old_result: float = cast(float, result_data.loc[index, result_col])
-        result_data.loc[index, result_col] = old_result + marks
+        new_result: float = old_result + marks
+        result_data.loc[index, result_col] = new_result if new_result <= 100 else 100
     return Result[list[float]].ok(updates_list)
