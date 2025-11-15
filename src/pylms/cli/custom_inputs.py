@@ -1,8 +1,7 @@
 from typing import Callable, Literal
 
-from pylms.cli.errors import InvalidInputError
 from pylms.cli.input_with_quit import input_fn
-from pylms.errors import Result
+from pylms.errors import LMSError, Result, eprint
 
 type T = float | int
 
@@ -34,8 +33,6 @@ def input_num(
 
     :return: (Result[T]) - A result containing the validated and parsed number input by the user.
     :rtype: Result[T]
-
-    :raises InvalidInputError: If the user fails to input a valid number within the allowed number of trials.
     """
 
     converter = float if rtype == "float" else int
@@ -56,19 +53,17 @@ def input_num(
                 print()
                 return Result[T].ok(selection)
             elif diagnosis is None:
-                print(f"{selection} is a number but not a valid value\n")
+                eprint(f"{selection} is a number but not a valid value\n")
             else:
-                print(f"You have selected {selection}. {diagnosis}\n")
+                eprint(f"You have selected {selection}. {diagnosis}\n")
         except ValueError:
             # print warning message if the user input is not parsable to a number
-            print(f"{response} is not a valid number\n")
+            eprint(f"{response} is not a valid number\n")
 
     # Forcefully exit the program by raising an InvalidInputError if the loop is exhausted and no valid input has been entered
     return Result[T].err(
-        InvalidInputError(
+        LMSError(
             f"You've entered an invalid response {trials} times. Please restart the program.",
-            parsing_to="int",
-            validation_fn=test_fn,
         )
     )
 
@@ -103,7 +98,7 @@ def input_str(
     :rtype: Result[str]
 
     """
-    for trial in range(trials):
+    for _ in range(trials):
         # get input from the user
         result: Result[str] = input_fn(msg)
         if result.is_err():
@@ -122,13 +117,11 @@ def input_str(
             # print default message if `diagnosis` is None
             # else print `diagnosis`
             if diagnosis is None:
-                print("You have entered an invalid response\n")
+                eprint("You have entered an invalid response\n")
             else:
-                print(f"You have entered {response}. {diagnosis}\n")
+                eprint(f"You have entered {response}. {diagnosis}\n")
     return Result[str].err(
-        InvalidInputError(
+        LMSError(
             f"You've entered an invalid response {trials} times. Please restart the program.",
-            parsing_to="str",
-            validation_fn=test_fn,
         )
     )

@@ -27,7 +27,7 @@ def input_record(target_date: str, options: list[RecordStatus]) -> Result[Record
     # Prepare the prompt message for user input
     prompt: str = f"""
 From the options presented above listed {1} - {len(options)},
-Please Select which of the following Record Status should be set 
+Please Select which of the following Record Status should be set
 \nFor Class {class_num} held on {target_date} (only integers from 1 - {len(options)} are allowed):  """
 
     # Validation function to ensure input is within valid range
@@ -37,7 +37,7 @@ Please Select which of the following Record Status should be set
     validate_fn = cast(Callable[[float | int], bool], validate_input)
 
     # Prompt user for input with validation
-    result: Result = input_num(prompt, "int", test_fn=validate_fn)
+    result: Result[int | float] = input_num(prompt, "int", test_fn=validate_fn)
     if result.is_err():
         return Result[RecordStatus].err(result.unwrap_err())
     selection_temp = result.unwrap()

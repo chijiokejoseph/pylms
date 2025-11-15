@@ -64,14 +64,14 @@ def run_result_lms(ds: DataStore, history: History) -> None:
                 result = edit_result(ds)
                 if result.is_err():
                     continue
-                collate_merit(ds, history)
+                _ = collate_merit(ds, history)
                 print("\nResult edited successfully\n")
             case 4:
                 # app_ds = load()
                 # overwrite_result(app_ds)
                 # collate_merit(app_ds)
-                overwrite_result(ds)
-                collate_merit(ds, history)
+                _ = overwrite_result(ds)
+                _ = collate_merit(ds, history)
                 print("\nResult overwritten successfully\n")
             case 5:
                 break

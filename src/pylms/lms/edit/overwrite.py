@@ -6,7 +6,7 @@ import pandas as pd
 
 from pylms.cli import input_option, input_str, select_student
 from pylms.constants import ValidateDataFn
-from pylms.lms.collate.errors import NonExistentPathErr
+from pylms.errors import LMSError, Result, Unit
 from pylms.lms.collate.recollate import recollate
 from pylms.lms.utils import (
     det_assessment_req_col,
@@ -46,12 +46,12 @@ def _parse(
 
 def get_mutable_cols(data_stream: DataStream[pd.DataFrame]) -> list[str]:
     return [
-        find_col(data_stream, "Attendance", "Req"),
-        find_col(data_stream, "Assessment", "Req"),
-        find_col(data_stream, "Result", "Req"),
-        find_col(data_stream, "Assessment", "Score"),
-        find_col(data_stream, "Project", "Score"),
-        find_col(data_stream, "Result", "Score"),
+        find_col(data_stream, "Attendance", "Req").unwrap(),
+        find_col(data_stream, "Assessment", "Req").unwrap(),
+        find_col(data_stream, "Result", "Req").unwrap(),
+        find_col(data_stream, "Assessment", "Score").unwrap(),
+        find_col(data_stream, "Project", "Score").unwrap(),
+        find_col(data_stream, "Result", "Score").unwrap(),
     ]
 
 
@@ -60,8 +60,8 @@ def _preprocess(
 ) -> float | None:
     match str(col):
         case _ if col in [
-            find_col(data_stream, "Attendance", "Score"),
-            find_col(data_stream, "Attendance", "Count"),
+            find_col(data_stream, "Attendance", "Score").unwrap(),
+            find_col(data_stream, "Attendance", "Count").unwrap(),
         ]:
             return None
         case _ if col in get_mutable_cols(data_stream):
@@ -70,11 +70,13 @@ def _preprocess(
             return None
 
 
-def overwrite_result(ds: DataStore) -> None:
+def overwrite_result(ds: DataStore) -> Result[Unit]:
     result_path: Path = paths.get_paths_excel()["Result"]
     if not result_path.exists():
-        raise NonExistentPathErr(
-            "Results has not been generated yet. Please collate results before running this operation"
+        return Result[Unit].err(
+            LMSError(
+                "Results has not been generated yet. Please collate results before running this operation"
+            )
         )
 
     result_data: pd.DataFrame = read_data(result_path)
@@ -92,13 +94,15 @@ def overwrite_result(ds: DataStore) -> None:
         while proc_value is None:
             option_result = input_option(mutable_cols, "Result Cols to Edit")
             if option_result.is_err():
-                return
+                option_result.print_if_err()
+                return Result[Unit].err(option_result.unwrap_err())
             _, column = option_result.unwrap()
             value_result = input_str(
                 f"Enter the new value for {column}: ", lower_case=False
             )
             if value_result.is_err():
-                return
+                value_result.print_if_err()
+                return Result[Unit].err(value_result.unwrap_err())
             proc_value = _preprocess(result_stream, column, value_result.unwrap())
             print()
 
@@ -113,13 +117,13 @@ def overwrite_result(ds: DataStore) -> None:
             ]:
                 result_data.loc[:, column] = new_value
             case _ if column in [
-                find_col(result_stream, "Assessment", "Score"),
-                find_col(result_stream, "Project", "Score"),
-                find_col(result_stream, "Result", "Score"),
+                find_col(result_stream, "Assessment", "Score").unwrap(),
+                find_col(result_stream, "Project", "Score").unwrap(),
+                find_col(result_stream, "Result", "Score").unwrap(),
             ]:
                 result_data.loc[idx, column] = new_value
             case _:
                 pass
         print()
     recollate(DataStream(result_data)).to_excel(result_path)
-    return None
+    return Result[Unit].unit()

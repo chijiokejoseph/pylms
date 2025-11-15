@@ -1,8 +1,7 @@
-from typing import Literal, Optional
+from collections.abc import Generator
+from typing import Literal, Optional  # pyright: ignore[reportDeprecated]
 
 from pydantic import BaseModel
-
-from typing import Generator
 
 
 def counter_setup(start: int = 0) -> Generator[int, None, None]:
@@ -23,18 +22,18 @@ class OptionDict(BaseModel):
 class ChoiceQuestion(BaseModel):
     type: Literal["DROP_DOWN", "RADIO", "TEXT"]
     options: list[OptionDict]
-    shuffle: Optional[bool] = False
+    shuffle: Optional[bool] = False  # pyright: ignore[reportDeprecated]
 
 
 class TextQuestion(BaseModel):
-    paragraph: Optional[bool] = False
+    paragraph: Optional[bool] = False  # pyright: ignore[reportDeprecated]
 
 
 class Question(BaseModel):
     required: bool
-    choiceQuestion: Optional[ChoiceQuestion] = None
-    textQuestion: Optional[TextQuestion] = None
-    dateQuestion: Optional[DateQuestion] = None
+    choiceQuestion: Optional[ChoiceQuestion] = None  # pyright: ignore[reportDeprecated]
+    textQuestion: Optional[TextQuestion] = None  # pyright: ignore[reportDeprecated]
+    dateQuestion: Optional[DateQuestion] = None  # pyright: ignore[reportDeprecated]
 
 
 class QuestionItem(BaseModel):
@@ -43,7 +42,7 @@ class QuestionItem(BaseModel):
 
 class Item(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: Optional[str] = None  # pyright: ignore[reportDeprecated]
     questionItem: QuestionItem
 
 

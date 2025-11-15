@@ -17,7 +17,7 @@ def confirm_onboard_req() -> Result[Unit]:
     """
 
     warning: str = """
-Before going ahead, please confirm that the following requirements are met. 
+Before going ahead, please confirm that the following requirements are met.
 If these requirements are not met, your code will not run successfully.
 These requirements are:
     1. That in the `data` folder which is a subdirectory of the project folder, you have saved the following folder called `excel` inside it
@@ -26,14 +26,13 @@ These requirements are:
     4. That in the same `data` folder, you do not have any file called `dates.json` saved in
     either a sub-directory or `data` itself.
 If any of these requirements are not met for you
-Enter 'N' or 'No', then fix the issues and then rerun the program 
+Enter 'N' or 'No', then fix the issues and then rerun the program
 Are all these requirements met for you [y/N]? """
     # prompt the user with the warning message defined above
     result: Result[str] = input_fn(warning)
     if result.is_err():
-        error = result.unwrap_err()
-        print(error)
-        return Result[Unit].err(error)
+        result.print_if_err()
+        return Result[Unit].err(result.unwrap_err())
     response: str = result.unwrap()
     # get user input
     response = response.lower().strip()

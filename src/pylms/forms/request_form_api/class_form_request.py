@@ -1,11 +1,12 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from pylms.forms.request_form_api.class_form_init import init_class_form
 from pylms.forms.request_form_api.utils import ClassFormInfo
 from pylms.forms.request_form_api.utils.class_date_input import input_class_date
-from pylms.utils import DataStore, paths
 from pylms.history import History
+from pylms.utils import DataStore, paths
 
 
 def request_class_form(ds: DataStore, history: History) -> None:
@@ -25,7 +26,7 @@ def request_class_form(ds: DataStore, history: History) -> None:
                 f"\n{date} has already had attendance and excused lists generated for it.\n"
             )
             with metadata_path.open("r", encoding="utf-8") as file:
-                data: dict = json.load(file)
+                data: dict[Any, Any] = json.load(file)  # pyright: ignore[reportExplicitAny]
                 info: ClassFormInfo = ClassFormInfo(**data)
                 print(f"\nClass {class_num} held on Date: {date}")
                 print(f"Attendance Url: {info.present_url}")

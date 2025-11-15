@@ -1,5 +1,4 @@
-from pylms.cli.errors import ForcedExitError
-from pylms.errors import Result
+from pylms.errors import ForcedExitError, Result, eprint
 
 
 def input_fn(msg: str) -> Result[str]:
@@ -21,6 +20,7 @@ def input_fn(msg: str) -> Result[str]:
     # Check if user wants to forcefully exit
     if user_input in ["quit", "exit", "q"]:
         msg = "You quit the operation"
+        eprint(msg)
         return Result[str].err(ForcedExitError(msg))
     else:
         # Return the user input if not exiting

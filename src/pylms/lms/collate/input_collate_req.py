@@ -1,8 +1,7 @@
 from typing import NamedTuple
 
-from pylms.errors import Result
+from pylms.errors import LMSError, Result
 from pylms.lms.utils import input_marks_req, input_ratio_req
-from pylms.lms.collate.errors import GradingRatioErr
 
 
 class CollateReq(NamedTuple):
@@ -55,7 +54,7 @@ def input_collate_req() -> Result[CollateReq]:
     diff: float = abs(1 - (assessment_ratio + project_ratio))
     if diff >= 1e-2:
         return Result[CollateReq].err(
-            GradingRatioErr(
+            LMSError(
                 f"Assessment ratio {assessment_ratio} and Project Ratio {project_ratio} do not add up to 1."
             )
         )

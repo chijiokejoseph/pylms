@@ -1,6 +1,7 @@
 import re
-from pylms.constants import COMMA_DELIM, COMMA, HYPHEN
-from pylms.cli.errors import InvalidSelectionInputError
+
+from pylms.constants import COMMA, COMMA_DELIM, HYPHEN
+from pylms.errors import LMSError
 
 
 def _parse_int_str(entry: str) -> list[int]:
@@ -67,13 +68,13 @@ def _parse_int_str(entry: str) -> list[int]:
                         end = int(entries[1])
                         # error if start is greater than or equal to end
                         if start >= end:
-                            raise InvalidSelectionInputError(
+                            raise LMSError(
                                 f"input {entry} does not match any of the required formats because its start is greater than or equal to the end"
                             )
                         values.extend(list(range(start, end + 1)))
                     # no match
                     case _:
-                        raise InvalidSelectionInputError(
+                        raise LMSError(
                             f"input {entry} does not match any of the required formats"
                         )
 

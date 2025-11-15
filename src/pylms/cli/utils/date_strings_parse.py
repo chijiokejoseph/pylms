@@ -1,8 +1,8 @@
-from pylms.cli.errors import InvalidSelectionInputError
-from pylms.utils.date.retrieve_dates import retrieve_dates
-from pylms.cli.utils.int_str_parse import _parse_int_str
 from pylms.cli.utils.date_str_parse import _parse_date_str
 from pylms.cli.utils.date_strings_verify import val_date_str
+from pylms.cli.utils.int_str_parse import _parse_int_str
+from pylms.errors import LMSError
+from pylms.utils.date.retrieve_dates import retrieve_dates
 
 
 def match_date_by_index(num_input: int) -> str:
@@ -25,7 +25,7 @@ def match_date_by_index(num_input: int) -> str:
         return dates_list[num_input - 1]
     else:
         # If the input number is not a valid index, raise an `InvalidSelectionInputError`
-        raise InvalidSelectionInputError(
+        raise LMSError(
             f"Entered number {num_input} is not a valid option from the displayed menu. \nPlease restart the program and try again."
         )
 
@@ -56,7 +56,7 @@ def match_date_by_value(str_input: str) -> str:
         return str_input
     else:
         # If the input string is not a valid date, print a warning and exit the program
-        raise InvalidSelectionInputError(
+        raise LMSError(
             f"Entered date {str_input} is not a member of {dates_print}. \nPlease restart the program and try again"
         )
 
@@ -103,9 +103,7 @@ def parse_to_dates(entry: str) -> list[str]:
 
     # Validate the input format
     if not val_date_str(entry):
-        raise InvalidSelectionInputError(
-            f"input {entry} does not match any of the required formats"
-        )
+        raise LMSError(f"input {entry} does not match any of the required formats")
 
     # Parse input to get list of date numbers
     choice_nums: list[int] = _parse_int_str(entry)
@@ -128,6 +126,4 @@ def parse_to_dates(entry: str) -> list[str]:
 
         # If no match, raise error
         case _:
-            raise InvalidSelectionInputError(
-                f"input {entry} does not match any of the required formats"
-            )
+            raise LMSError(f"input {entry} does not match any of the required formats")

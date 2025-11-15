@@ -3,6 +3,7 @@ from typing import Callable, Self, cast, final
 
 
 def eprint(msg: str) -> None:
+    msg = f"\n ⚠️ Error {msg}\n"
     _ = sys.stderr.write(msg)
 
 
@@ -10,6 +11,21 @@ class LMSError(Exception):
     def __init__(self, message: str) -> None:
         self.message: str = message
         super().__init__(self.message)
+
+
+class ForcedExitError(LMSError):
+    """
+    Exception raised for forced exit errors in CLI inputs.
+
+    :param message: (str) - The error message describing the forced exit.
+    :type message: str
+
+    :return: (None) - returns None.
+    :rtype: None
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
 
 
 @final
@@ -77,6 +93,15 @@ class Result[T]:
             assert self._value is not None, "value is None"
             return self._value
         return func()
+
+    def print_if_err(self) -> None:
+        if not self.is_err():
+            return
+        err = self.unwrap_err()
+        if isinstance(err, LMSError):
+            eprint(err.message)
+        else:
+            eprint(err)
 
     @property
     def value(self) -> T | None:

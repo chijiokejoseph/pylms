@@ -9,9 +9,9 @@ from pylms.constants import (
     REMARK,
     ValidateDataFn,
 )
+from pylms.errors import LMSError, Result, Unit
 from pylms.history import History
 from pylms.lms.collate.awardees import collate_awardees
-from pylms.lms.collate.errors import SpreadSheetFmtErr
 from pylms.lms.utils import (
     det_assessment_req_col,
     det_attendance_req_col,
@@ -65,19 +65,38 @@ def remark(
     return remarks, reasons
 
 
-def collate_merit(ds: DataStore, history: History) -> None:
+def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
     result_data: pd.DataFrame = read_data(paths.get_paths_excel()["Result"])
     result_stream = DataStream(result_data, cast(ValidateDataFn, val_result_data))
     result_data = result_stream()
 
     attendance_score_col: str = det_attendance_score_col()
-    assessment_score_col: str = find_col(result_stream, "Assessment", "Score")
-    attendance_count_col: str = find_col(result_stream, "Attendance", "Count")
+    result = find_col(result_stream, "Assessment", "Score")
+    if result.is_err():
+        err = result.unwrap_err()
+        if isinstance(err, LMSError):
+            print(err.message)
+        else:
+            print(err)
+        return Result[Unit].err(err)
+    assessment_score_col: str = result.unwrap()
+
+    result = find_col(result_stream, "Attendance", "Count")
+    if result.is_err():
+        err = result.unwrap_err()
+        if isinstance(err, LMSError):
+            print(err.message)
+        else:
+            print(err)
+        return Result[Unit].err(err)
+    attendance_count_col: str = result.unwrap()
+
     attendance_count: int | None = find_count(attendance_count_col)
     if attendance_count is None:
-        raise SpreadSheetFmtErr(
-            f"Expected an integer count in col {attendance_count_col}"
+        return Result[Unit].err(
+            LMSError(f"Expected an integer count in col {attendance_count_col}")
         )
+
     excellent_attendance_count: int = attendance_count - 1
     attendance_req_col: str = det_attendance_req_col()
     assessment_req_col: str = det_assessment_req_col()
@@ -122,6 +141,7 @@ def collate_merit(ds: DataStore, history: History) -> None:
         | (poor_attendance_pass & brilliant_score_pass)
         | (attendance_pass & score_pass)
     )
+
     remarks, reasons = remark(
         assessment_pass.tolist(),
         (poor_attendance_pass & brilliant_score_pass).tolist(),
@@ -132,9 +152,13 @@ def collate_merit(ds: DataStore, history: History) -> None:
     result_data[REMARK] = remarks
     result_data[REASON] = reasons
     DataStream(result_data).to_excel(paths.get_paths_excel()["Result"])
+
     pass_logic_idx: pd.Series = attendance_score_pass & assessment_pass
     pretty_data: pd.DataFrame = ds.pretty()
     passed_data: pd.DataFrame = pretty_data.loc[pass_logic_idx, :]
     passed_stream: DataStream[pd.DataFrame] = DataStream(passed_data)
+
     collate_awardees(passed_stream)
     history.record_merit()
+
+    return Result[Unit].unit()

@@ -34,7 +34,7 @@ def input_option(
     print()
 
     # Prompt the user to input a number corresponding to their choice
-    result: Result = input_num(
+    result: Result[int | float] = input_num(
         f"{prompt}\nSelect an Option: ",
         "int",
         diagnosis=f"The number you have entered does not match the range 1 - {len(options)}, hence it is invalid",

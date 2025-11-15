@@ -1,14 +1,12 @@
-from typing import Any
+from typing import Any, cast
 
 from google.auth.exceptions import TransportError
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 
-from pylms.models import ContentBody
-from pylms.models import Form
 from pylms.forms.utils.service._resource import FormResource
 from pylms.forms.utils.service.service_init import run_service
-from typing import cast
+from pylms.models import ContentBody, Form
 
 
 def _setup_form(
@@ -35,7 +33,7 @@ def _setup_form(
     :return: (Form | None) - the `Form` object passed in is returned if the
              function completes successfully else None is returned.
     """
-    
+
     form_id: str = form.uuid
     form_resource: FormResource = service.forms()
     request_body: dict[str, Any] = form_content.model_dump(exclude_none=True)
@@ -43,7 +41,7 @@ def _setup_form(
         request: HttpRequest = form_resource.batchUpdate(
             formId=form_id, body=request_body
         )
-        request.execute()
+        request.execute()  # pyright: ignore [reportUnknownMemberType]
         print(
             f"\nForm with name={form.name}, title={form.title} and url={form.url} setup successfully.\n"
         )

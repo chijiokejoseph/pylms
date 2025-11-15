@@ -2,8 +2,7 @@ from pathlib import Path
 from typing import Callable
 
 from pylms.cli.custom_inputs import input_str
-from pylms.cli.errors import InvalidPathError
-from pylms.errors import Result
+from pylms.errors import LMSError, Result
 
 
 def input_path(
@@ -45,7 +44,7 @@ def input_path(
         err_msg: str = f"'{path_str}' does not meet input requirements. {diagnosis}"
         # Return Result with error if validation fails
         print(f"\n{err_msg}\n")
-        return Result[Path].err(InvalidPathError(err_msg))
+        return Result[Path].err(LMSError(err_msg))
     # Return the validated Path object
     return Result[Path].ok(path)
 

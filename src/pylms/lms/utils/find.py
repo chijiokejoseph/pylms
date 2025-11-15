@@ -1,10 +1,10 @@
 import re
-import pandas as pd
 from typing import Literal
 
+import pandas as pd
+
 from pylms.constants import REQ
-from pylms.lms.collate.errors import SpreadSheetFmtErr
-from pylms.lms.utils.errors import BadArgumentErr
+from pylms.errors import LMSError, Result
 from pylms.utils import DataStream
 
 
@@ -12,7 +12,7 @@ def find_col(
     stream: DataStream[pd.DataFrame],
     col_name: Literal["Assessment", "Attendance", "Project", "Result"],
     col_type: Literal["Score", "Count", "Req"],
-) -> str:
+) -> Result[str]:
     """
     locates an "Assessment", "Attendance" or "Project" column based on the `col_name` argument, which is either a "Score", "Count", or "Req" column. At the last modification of this API, Only "Attendance" has a "Count" column, and only "Project" does not have a "Req" column.
 
@@ -25,7 +25,7 @@ def find_col(
     :type col_name: (Literal["Assessment", "Attendance", "Project"])
 
     :param col_type: (Literal["Score", "Count", "Req"]) - "Score", "Count" or "Req" literals which indicate whether the columns to retrieve are score values like 75%, attendance counts, like 11 out of 12 or Cutoff / Requirement cols.
-    :return: (str) - a string containing the name of the column which is being searched for.
+    :return: (Result[str]) - a string result containing the name of the column which is being searched for.
     """
     result_data = stream()
     column: str = col_name
@@ -33,7 +33,7 @@ def find_col(
         col for col in result_data.columns.tolist() if col.startswith(column)
     ]
     if len(target_cols) == 0:
-        raise SpreadSheetFmtErr(f"Expected some cols with the name '{column}'")
+        return Result[str].err(LMSError(f"Expected some cols with the name '{column}'"))
 
     match col_type:
         case "Score":
@@ -44,8 +44,10 @@ def find_col(
             ]
         case "Count":
             if col_name != "Attendance":
-                raise BadArgumentErr(
-                    "Cannot call the function with `col_name` not set to 'Attendance' and `col_type` set to 'Count'."
+                return Result[str].err(
+                    LMSError(
+                        "Cannot call the function with `col_name` not set to 'Attendance' and `col_type` set to 'Count'."
+                    )
                 )
             target_cols = [
                 col
@@ -54,8 +56,10 @@ def find_col(
             ]
         case "Req":
             if col_name == "Project":
-                raise BadArgumentErr(
-                    "Cannot call the function with `col_name` set to 'Project' and `col_type` set to 'Req'."
+                return Result[str].err(
+                    LMSError(
+                        "Cannot call the function with `col_name` set to 'Project' and `col_type` set to 'Req'."
+                    )
                 )
             target_cols = [
                 col
@@ -64,10 +68,12 @@ def find_col(
             ]
 
     if len(target_cols) == 0:
-        raise SpreadSheetFmtErr(
-            f"Expected at least 1 col with name '{col_name}' but without the name '{REQ}'"
+        return Result[str].err(
+            LMSError(
+                f"Expected at least 1 col with name '{col_name}' but without the name '{REQ}'"
+            )
         )
-    return target_cols[0]
+    return Result[str].ok(target_cols[0])
 
 
 def find_count(col_name: str) -> int | None:

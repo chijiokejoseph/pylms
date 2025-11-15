@@ -1,17 +1,17 @@
 import json
+from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
 from typing import cast
-from datetime import datetime
 
 from pylms.cli import input_email
 from pylms.constants import TIMESTAMP_FMT
 from pylms.forms.request_form_api.excused_class_form import init_excused_form
 from pylms.forms.request_form_api.present_class_form import init_present_form
 from pylms.forms.request_form_api.utils import ClassFormInfo
+from pylms.history import History
 from pylms.models import Form
 from pylms.utils import DataStore, paths
-from pylms.history import History
 
 
 def init_class_form(ds: DataStore, history: History, form_dates: list[str]) -> None:
@@ -41,4 +41,4 @@ def init_class_form(ds: DataStore, history: History, form_dates: list[str]) -> N
         history.add_held_class(class_date=date)
         history.add_class_form(form_info)
         with metadata_path.open("w", encoding="utf-8") as file:
-            json.dump(form_info.model_dump(), cast(TextIOWrapper, file), indent=2)
+            json.dump(form_info.model_dump(), file, indent=2)

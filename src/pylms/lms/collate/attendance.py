@@ -5,21 +5,20 @@ import numpy as np
 import pandas as pd
 
 from pylms.constants import NAME, SERIAL
-from pylms.errors import Result, Unit
-from pylms.lms.collate.errors import CollateIncompleteErr
+from pylms.errors import LMSError, Result, Unit
+from pylms.history import History
 from pylms.lms.utils import (
     det_attendance_req_col,
     det_attendance_score_col,
     det_attendance_total_col,
-    list_print,
     input_marks_req,
+    list_print,
 )
 from pylms.record import RecordStatus
-from pylms.history import History
 from pylms.utils import DataStore, DataStream, date, paths
 
 
-def _val_all_classes_recorded() -> None:
+def _val_all_classes_recorded() -> Result[Unit]:
     dates_list: list[str] = date.retrieve_dates()
     class_paths: list[Path] = [
         paths.get_class_path(each_date, "class") for each_date in dates_list
@@ -30,7 +29,7 @@ def _val_all_classes_recorded() -> None:
 
     if len(class_paths) != len(record_paths):
         msg: str = f"The records of Classes with attendance generated have a length of {len(class_paths)} while the records of Classes with attendance marked have a length of {len(record_paths)}"
-        raise CollateIncompleteErr(msg)
+        return Result[Unit].err(LMSError(msg))
 
     def ret_exist_paths(paths_list: list[Path]) -> list[Path]:
         return [each_path for each_path in paths_list if each_path.exists()]
@@ -63,9 +62,9 @@ def _val_all_classes_recorded() -> None:
                 + f"Existing Class Paths -> {list_print(valid_class_path_names)} at dir -> {exist_class_dir}\n"
                 + f"Existing Record Paths -> {list_print(valid_record_path_names)} at dir -> {exist_record_dir}"
             )
-            raise CollateIncompleteErr(msg)
+            return Result[Unit].err(LMSError(msg))
 
-    return None
+    return Result[Unit].unit()
 
 
 def _extract_class_held_dates(ds: DataStore) -> list[str]:
@@ -106,14 +105,19 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     :param history: (History) - The state of the application
     :type history: History
 
-    :return: (None) - returns nothing
-    :rtype: None
-
-    :raises CollateIncompleteErr: If not all classes have been recorded
+    :return: (Result[Unit]) - returns a unit result
+    :rtype: Result[Unit]
     """
 
     # Validate that all classes have been recorded
-    _val_all_classes_recorded()
+    check_result = _val_all_classes_recorded()
+    if check_result.is_err():
+        err = check_result.unwrap_err()
+        if isinstance(err, LMSError):
+            print(err.message)
+        else:
+            print(err)
+        return Result[Unit].err(err)
 
     # Extract the dates of classes that were held
     class_held_dates = _extract_class_held_dates(ds)
@@ -137,7 +141,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
                 return 1
 
     # Map attendance data to integers and calculate the total count per student
-    count_data: pd.DataFrame = dates_data.map(map_to_int)
+    count_data: pd.DataFrame = dates_data.map(map_to_int)  # pyright: ignore[reportUnknownMemberType]
     count_arr: np.ndarray = count_data.to_numpy()
     count_arr = count_arr.sum(axis=1)
     count_arr = count_arr.flatten()
@@ -145,7 +149,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     # Check if all attendance records are complete
     max_len: int = max(count_arr.shape)
     if max_len != count_data.shape[0]:
-        error = CollateIncompleteErr("Incomplete class records detected.")
+        error = LMSError("Incomplete class records detected.")
         return Result[Unit].err(error)
 
     # Calculate attendance scores based on the number of classes held

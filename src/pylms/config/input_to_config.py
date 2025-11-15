@@ -1,17 +1,8 @@
 from pathlib import Path
-from pylms.errors import LMSError, Result, Unit
+
 from pylms.config.config import Config
-from pylms.constants import DEFAULT_DATA_PATH
-from pylms.constants import COURSES
-
-
-def input_fn(msg: str) -> Result[str]:
-    msg += "\n[To forcefully exit the operation enter 'quit', 'exit' or 'q']: "
-    user_input: str = input(msg)
-    if user_input in ["quit", "exit", "q"]:
-        return Result[str].err(LMSError("You quit the operation"))
-    else:
-        return Result[str].ok(user_input)
+from pylms.constants import COURSES, DEFAULT_DATA_PATH
+from pylms.errors import LMSError, Result, Unit
 
 
 def input_dir(config: Config) -> Result[Unit]:

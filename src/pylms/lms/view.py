@@ -5,7 +5,7 @@ import pandas as pd
 
 from pylms.cli import select_student
 from pylms.constants import ValidateDataFn
-from pylms.lms.collate.errors import NonExistentPathErr
+from pylms.errors import LMSError
 from pylms.lms.utils import val_result_data
 from pylms.utils import DataStore, DataStream, paths, print_stream, read_data
 
@@ -13,7 +13,7 @@ from pylms.utils import DataStore, DataStream, paths, print_stream, read_data
 def view_result(ds: DataStore) -> None:
     result_path: Path = paths.get_paths_excel()["Result"]
     if not result_path.exists():
-        raise NonExistentPathErr(
+        raise LMSError(
             "Results has not been generated yet. Please collate results before running this operation"
         )
 

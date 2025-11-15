@@ -1,5 +1,4 @@
 import re
-from multiprocessing.reduction import register
 from pathlib import Path
 from typing import Callable, cast
 
@@ -8,8 +7,8 @@ import pandas as pd
 
 from pylms.cli import input_path
 from pylms.constants import GROUP, NAME, ValidateDataFn
+from pylms.errors import LMSError
 from pylms.history import History
-from pylms.lms.collate.errors import NoProjectGroupsErr, SpreadSheetFmtErr
 from pylms.lms.utils import (
     det_project_score_col,
     val_assessment_data,
@@ -92,7 +91,7 @@ def collate_project(history: History) -> None:
     group_path: Path = paths.get_group_path()
     if not group_path.exists():
         err_msg: str = "No groups have been created for this cohort. First Group the students for the cohort, and grade their scores before performing this operation."
-        raise NoProjectGroupsErr(err_msg)
+        raise LMSError(err_msg)
 
     # Read the group data
     group_data: pd.DataFrame = read_data(group_path)
@@ -133,7 +132,7 @@ Enter the path: """
         case 3:
             score_col = project_cols[2]
         case _:
-            raise SpreadSheetFmtErr(
+            raise LMSError(
                 "Wrong spreadsheet provided, expected spreadsheet to have 2 or 3 columns but requirement was not met."
             )
 

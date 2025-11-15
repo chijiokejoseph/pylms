@@ -1,9 +1,9 @@
-from pylms.history import History
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
+from pylms.data_ops import save
+from pylms.history import History
 from pylms.lms.collate import collate_assessment, collate_attendance, collate_project
 from pylms.utils import DataStore
-from pylms.data_ops import save
 
 
 def run_collate_lms(ds: DataStore, history: History) -> None:
@@ -29,7 +29,7 @@ def run_collate_lms(ds: DataStore, history: History) -> None:
             case 1:
                 # app_ds: DataStore = load()
                 # collate_attendance(app_ds, history)
-                collate_attendance(ds, history)
+                _ = collate_attendance(ds, history)
             case 2:
                 # app_ds = load()
                 collate_assessment(history)

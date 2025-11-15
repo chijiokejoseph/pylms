@@ -46,6 +46,7 @@ def det_assessment_overall_col(assessment_ratio: float) -> str:
         assessment_ratio *= 100
     return _det_overall_col(ASSESSMENT, assessment_ratio)
 
+
 def det_project_score_col() -> str:
     return _det_score_col(PROJECT)
 
@@ -64,7 +65,7 @@ def det_passmark_col() -> str:
     return _det_req_col(RESULT)
 
 
-def list_print(input_list: list) -> str:
+def list_print(input_list: list[str]) -> str:
     output: str = "[\n"
     for item in input_list:
         output += f"\t{item}\n"
