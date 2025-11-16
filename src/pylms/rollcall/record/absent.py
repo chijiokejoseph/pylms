@@ -6,12 +6,14 @@ from pylms.rollcall.record.names_filter import filter_names
 from pylms.utils import DataStore, DataStream
 
 
-def record_absent(ds: DataStore, turnout_stream: DataStream[pd.DataFrame], turnout_date: str) -> DataStore:
+def record_absent(
+    ds: DataStore, turnout_stream: DataStream[pd.DataFrame], turnout_date: str
+) -> None:
     data_ref: pd.DataFrame = ds.as_ref()
     if turnout_stream.is_empty():
         data_ref[turnout_date] = RecordStatus.ABSENT
-        return ds
-        
+        return None
+
     turnout_stream = filter_names(turnout_stream)
     turnout_data: pd.DataFrame = turnout_stream()
     date_col: str = turnout_data[DATE].iloc[0]
@@ -31,4 +33,4 @@ def record_absent(ds: DataStore, turnout_stream: DataStream[pd.DataFrame], turno
     ]
 
     data_ref[date_col] = new_class_record
-    return ds
+    return None

@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+from typing import NamedTuple, final, override
 from unittest import TestCase
 from uuid import UUID
 
@@ -13,10 +14,15 @@ from pylms.forms.retrieve_form_api import retrieve_cds_form
 from pylms.history import History
 from pylms.models.form_info import CDSFormInfo
 from pylms.rollcall import record_cds
-from pylms.utils import paths, read_csv
+from pylms.utils import DataStore, paths, read_csv
 from pylms.utils.data.datastream import DataStream
 
 
+class TestClass(NamedTuple):
+    item: str
+
+
+@final
 class TestCopyData(TestCase):
     """
     Unit test class for testing the cache_for_cmd functionality.
@@ -25,6 +31,10 @@ class TestCopyData(TestCase):
     caches the command, and verifies that the snapshot path exists as expected.
     """
 
+    ds: DataStore | None = None
+    history: History | None = None
+
+    @override
     def setUp(self) -> None:
         """
         Set up test environment by loading data and history.
@@ -42,6 +52,8 @@ class TestCopyData(TestCase):
         :return: (None) - This test method does not return a value.
         :rtype: None
         """
+        assert self.ds is not None
+        assert self.history is not None
         result: Result[tuple[DataStream[pd.DataFrame] | None, CDSFormInfo]] = (
             retrieve_cds_form(self.history)
         )
@@ -71,4 +83,4 @@ class TestCopyData(TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

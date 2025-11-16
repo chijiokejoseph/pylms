@@ -36,6 +36,8 @@ class Unit:
 
 class Result[T]:
     def __init__(self, value: T | None, error: Exception | None) -> None:
+        # if value is not None and error is None, I have a good result
+        # if value is None or error is not None, I have a bad result
         self._value: T | None = value
         self._error: Exception | None = error
         self._preprocess()

@@ -4,8 +4,45 @@ A console based learning management system. It includes features such as preproc
 
 To run, use the following commands
 
-- pip install uv
-- uv run app.py
+1. install the package manager uv
+```bash
+pip install uv
+```
+
+2. create an empty virtual environment
+```bash
+uv venv
+```
+
+3. sync and update dependencies to the virtual environment from the pyproject.toml file
+```bash
+uv sync
+```
+
+4. activate your virtual environment
+```bash
+source .venv/Scripts/activate # for linux
+```
+```powershell
+.venv\Scripts\activate.ps1 # for powershell
+```
+```bash
+.venv\Scripts\activate # for commmand prompt
+```
+
+5. update the paths to the `src` folder on the virtual environment
+```bash
+python setup.py
+```
+
+6. Run the application
+```bash
+uv run app.py
+```
+OR
+```bash
+python app.py
+```
 
 
 DESCRIPTION

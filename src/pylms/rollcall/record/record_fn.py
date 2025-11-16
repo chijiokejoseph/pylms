@@ -8,7 +8,7 @@ from pylms.utils import DataStore, DataStream
 
 def record(
     ds: DataStore, turnout_stream: DataStream[pd.DataFrame], fill_value: RecordStatus
-) -> DataStore:
+) -> None:
     pretty_data: pd.DataFrame = ds.pretty()
     data_ref: pd.DataFrame = ds.as_ref()
     all_names: list[str] = pretty_data[NAME].tolist()
@@ -25,4 +25,4 @@ def record(
         for each_name, old_record in zip(all_names, class_record)
     ]
     data_ref[class_date] = new_class_record
-    return ds
+    return None

@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 
-import rust_utils
 from pylms.config import input_course_name, input_dir, load, write_config
 from pylms.constants import ENV_PATH
 from pylms.errors import ForcedExitError

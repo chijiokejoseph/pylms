@@ -37,3 +37,4 @@ reportUnknownVariableType = false
 reportAny = false
 reportExplicitAny = false
 reportUnknownArgumentType = false
+exclude = [".venv"]
