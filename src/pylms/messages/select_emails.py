@@ -1,16 +1,18 @@
-from pylms.messages.utils import MessageBuilder, TextBody
-from pylms.cli import provide_emails
-from pylms.utils import must_get_env
-from pylms.errors import Result, Unit
-from pylms.email import run_email, MailError
 from email.message import EmailMessage
 from smtplib import SMTP
+
+from pylms.cli import provide_emails
+from pylms.email import MailError, run_email
+from pylms.errors import Result, Unit
+from pylms.history import History
+from pylms.info import println, printpass
 from pylms.messages.message_record import MessageRecord
 from pylms.messages.select_msg_builders import (
     build_custom_select_msg,
     build_update_msg,
 )
-from pylms.history import History
+from pylms.messages.utils import MessageBuilder, TextBody
+from pylms.utils import must_get_env
 
 
 def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]]:
@@ -25,7 +27,7 @@ def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]
     # Retrieve the list of email addresses to send the message to
     result: Result[list[str]] = provide_emails()
     if result.is_err():
-        return Result[list[MessageRecord]].err(result.unwrap_err())
+        return result.propagate()
     emails: list[str] = result.unwrap()
 
     # Initialize an empty list to hold the MessageRecord objects
@@ -37,7 +39,7 @@ def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]
     # Construct the HTML body of the email with styling and content
     text_body_result: Result[TextBody] = builder()
     if text_body_result.is_err():
-        return Result[list[MessageRecord]].err(text_body_result.unwrap_err())
+        return text_body_result.propagate()
     title, body = text_body_result.unwrap()
 
     # Create the email message object
@@ -55,10 +57,10 @@ def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]
         messages.append(MessageRecord(name=None, email=email, message=message))
 
     # Return the list of MessageRecord objects
-    return Result[list[MessageRecord]].ok(messages)
+    return Result.ok(messages)
 
 
-def _message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]:
+def message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]:
     """
     Send emails to a list of recipients selected through various input formats.
 
@@ -89,7 +91,7 @@ def _message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit
     result = _build_select_message(builder)
     if result.is_err():
         # handle errors that occur during the building process
-        return Result[Unit].err(result.unwrap_err())
+        return result.propagate()
 
     # get the list of messages to be sent
     messages: list[MessageRecord] = result.unwrap()
@@ -111,11 +113,13 @@ def _message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit
                 )
                 continue
 
-            print(
-                f"\n✅ Mail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
+            printpass(
+                f"Mail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
             )
         except Exception as e:
-            print(f"\n❌ Mail not sent to {f'{name} with ' if name is not None else ''}{email}\n")
+            println(
+                f"Mail not sent to {f'{name} with ' if name is not None else ''}{email}\n"
+            )
             # Catch any exceptions during sending and record the error
             errors.append(
                 {
@@ -143,10 +147,10 @@ def _message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit
                 # Print the error message with recipient name and email address
                 print(err_print)
             print()
-        return Result[Unit].err(ValueError("Failed to send emails"))
+        return Result.err(ValueError("Failed to send emails"))
 
     # Return success result if all emails were sent without errors
-    return Result[Unit].unit()
+    return Result.unit()
 
 
 def custom_message_select() -> Result[Unit]:
@@ -163,7 +167,7 @@ def custom_message_select() -> Result[Unit]:
     """
     # Invoke the helper utility to send emails to user-provided email addresses
     return run_email(
-        lambda service: _message_select_emails(service, build_custom_select_msg)
+        lambda service: message_select_emails(service, build_custom_select_msg)
     )
 
 
@@ -172,5 +176,5 @@ def update_message_select(history: History) -> Result[Unit]:
         return build_update_msg(history)
 
     return run_email(
-        lambda server: _message_select_emails(server, _builder_intermediary)
+        lambda server: message_select_emails(server, _builder_intermediary)
     )

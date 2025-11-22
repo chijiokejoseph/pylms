@@ -1,6 +1,3 @@
-from typing import cast
-
-import numpy as np
 import pandas as pd
 
 from pylms.cli import input_num, input_option
@@ -14,21 +11,19 @@ def edit_all(result_data: pd.DataFrame) -> Result[list[float]]:
     options: list[str] = ["Add Marks", "Subtract Marks"]
     result = input_option(options)
     if result.is_err():
-        return Result[list[float]].err(result.unwrap_err())
+        return result.propagate()
     idx, choice = result.unwrap()
     print(f"You have selected {choice}")
     result = input_num(
         f"For {choice}, enter the number of marks: ",
-        "float",
+        1.0,
         lambda x: x > 0,
         "The value entered is not greater than zero.",
     )
     if result.is_err():
-        return Result[list[float]].err(result.unwrap_err())
+        return result.propagate()
 
-    marks_temp = result.unwrap()
-    marks: float = cast(float, marks_temp)
-    result_data[result_col] = result_data[result_col].astype(np.float64)
+    marks = result.unwrap()
     match idx:
         case 1:
             result_data[result_col] += marks
@@ -36,4 +31,4 @@ def edit_all(result_data: pd.DataFrame) -> Result[list[float]]:
         case _:
             result_data[result_col] -= marks
             updates_list = [-marks] * num_rows
-    return Result[list[float]].ok(updates_list)
+    return Result.ok(updates_list)

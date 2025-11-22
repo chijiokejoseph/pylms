@@ -7,9 +7,12 @@ from pylms.utils.paths.cache_path import get_metadata_path, get_snapshot_path
 from pylms.utils.paths.cds_form_path import get_cds_path
 from pylms.utils.paths.class_form_path import get_class_path
 from pylms.utils.paths.global_record_path import get_global_record_path
-from pylms.utils.paths.group_data_path import (
+from pylms.utils.paths.grade_path import (
     get_grade_dir,
     get_grade_path,
+    get_grading_leader,
+)
+from pylms.utils.paths.group_data_path import (
     get_group_dir,
     get_group_path,
 )
@@ -62,6 +65,7 @@ __all__ = [
     "get_history_path",
     "get_list_path",
     "get_leader_path",
+    "get_grading_leader",
     "get_merged_path",
     "get_metadata_path",
     "last_update_path",

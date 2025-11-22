@@ -1,6 +1,8 @@
 from pylms.cache import cache_for_cmd, rollback_to_cmd
 from pylms.cli import interact
-from pylms.data_ops import edit, list_ds, remove_students, save, view, load
+from pylms.data_ops import edit, list_ds, load, remove_students, save, view
+from pylms.errors import eprint
+from pylms.info import printpass
 from pylms.utils import DataStore
 
 
@@ -17,40 +19,29 @@ def handle_data(ds: DataStore) -> None:
     while True:
         selection_result = interact(menu)
         if selection_result.is_err():
-            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
             continue
         selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
 
-        match int(selection):
+        match selection:
             case 1:
-                # app_ds = load()
-                # view(app_ds)
-                ds.raise_for_status()
                 view(ds)
             case 2:
-                # app_ds = load()
-                # app_ds = edit(app_ds)
-                ds.raise_for_status()
-                edit(ds)
+                result = edit(ds)
+                if result.is_err():
+                    continue
+                printpass("Edited Datastore successfully")
             case 3:
-                # app_ds = load()
-                # list_ds(app_ds)
-                ds.raise_for_status()
                 list_ds(ds)
             case 4:
-                # app_ds = load()
-                # app_ds = remove_students(app_ds)
-                ds.raise_for_status()
                 remove_students(ds)
-                print("Students removed successfully\n")
+                printpass("Students removed successfully\n")
             case 5:
-                ds.raise_for_status()
                 rollback_to_cmd()
                 ds.copy_from(load())
-                # app_ds = load()
             case _:
                 break
 

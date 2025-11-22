@@ -36,12 +36,11 @@ def group(ds: DataStore, history: History) -> None:
     group_dir.mkdir(exist_ok=True)
     pretty_data: pd.DataFrame = ds.pretty()
     msg: str = "Please enter the number of groups [Must be between 3 - 100]: "
-    num_result = input_num(msg, "int", lambda x: 3 <= x <= 100)
+    num_result = input_num(msg, 1, lambda x: 3 <= x <= 100)
     if num_result.is_err():
         print(f"Error retrieving number of groups: {num_result.unwrap_err()}")
         return None
-    temp = num_result.unwrap()
-    num_groups: int = cast(int, temp)
+    num_groups = num_result.unwrap()
     groups: list[int] = [
         num_groups if serial % num_groups == 0 else serial % num_groups
         for serial in range(1, pretty_data.shape[0] + 1)

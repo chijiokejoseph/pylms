@@ -108,9 +108,7 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
             )
         group_data = read_data(group_path)
         serials: list[int] = group_data[SERIAL].tolist()
-        present_counts: list[int] = [
-            get_present_count(ds, serial) for serial in serials
-        ]
+
         genders: list[str] = [
             ds.as_ref()[GENDER].astype(str).iloc[serial - 1] for serial in serials
         ]
@@ -125,6 +123,9 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         leader_name: str = (
             group_data.loc[group_data[SERIAL] == leader, NAME].astype(str).iloc[0]
         )
+        present_counts: list[int] = [
+            get_present_count(ds, serial) for serial in serials
+        ]
         assistant_name: str = (
             group_data.loc[group_data[SERIAL] == assistant, NAME].astype(str).iloc[0]
         )
@@ -136,7 +137,6 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         assistant_serials.append(assistant)
         assistant_names.append(assistant_name)
 
-        # Test Print outs
         group_data["Count"] = present_counts
         group_data[GENDER] = genders
         group_data["Potential Leader"] = [
@@ -167,7 +167,11 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         }
     )
 
-    DataStream(leaders).to_excel(paths.get_leader_path("Leader"))
-    DataStream(assistants).to_excel(paths.get_leader_path("Assistant"))
+    leaders = DataStream(leaders)
+    leaders.to_excel(paths.get_leader_path("Leader"))
+    leaders.to_excel(paths.get_grading_leader("Leader"))
+    assistants = DataStream(assistants)
+    assistants.to_excel(paths.get_leader_path("Assistant"))
+    assistants.to_excel(paths.get_grading_leader("Assistant"))
 
     return Result[Unit].unit()

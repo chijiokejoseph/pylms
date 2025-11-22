@@ -56,15 +56,14 @@ def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     # get the marks to add or subtract
     result_num = input_num(
         f"For {choice}, enter the number of marks: ",
-        "float",
+        1.0,
         lambda x: x > 0,
         "The value entered is not greater than zero.",
     )
     if result.is_err():
         return Result[list[float]].err(result.unwrap_err())
 
-    marks_temp = result_num.unwrap()
-    marks: float = cast(float, marks_temp)
+    marks = result_num.unwrap()
     marks = marks if idx == 1 else -marks
     # apply the edit and record the updates
     for index in idxs:

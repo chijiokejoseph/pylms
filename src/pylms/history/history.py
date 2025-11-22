@@ -1,10 +1,12 @@
 import json
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Self, cast
 
 from pylms.constants import COHORT, DATE, DATE_FMT, HISTORY_PATH, WEEK_DAYS
-from pylms.errors import LMSError
+from pylms.errors import LMSError, eprint
+from pylms.info import println
 from pylms.models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from pylms.utils import DataStore, paths
 
@@ -931,12 +933,19 @@ class History:
     def set_group(self, num: int) -> None:
         group_path: Path = paths.get_excel_path() / "groups"
         if not group_path.exists():
-            print("Unable to set group field of History because no group path exists.")
+            eprint("Unable to set group field of History because no group path exists.")
             return
-        num_items: int = len(list(group_path.iterdir()))
-        num_groups: int = num_items - 1
+        items: list[Path] = list(group_path.iterdir())
+        num_groups: int = len(
+            [
+                group
+                for group in items
+                if re.match(r"^Group\d+.xlsx$", group.name) is not None
+            ]
+        )
+        println(f"Found {num_groups} groups\n")
         if num != num_groups:
-            print(
+            eprint(
                 "Unable to set group due to mismatch between the actual directory items in the path and the number specified"
             )
             return

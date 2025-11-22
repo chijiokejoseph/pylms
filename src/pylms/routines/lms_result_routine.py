@@ -1,7 +1,9 @@
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import save
+from pylms.errors import eprint
 from pylms.history import History
+from pylms.info import println, printpass
 from pylms.lms import (
     collate_merit,
     collate_result,
@@ -40,45 +42,44 @@ def run_result_lms(ds: DataStore, history: History) -> None:
     while True:
         selection_result = interact(menu)
         if selection_result.is_err():
-            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
             continue
         selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
 
-        match int(selection):
+        match selection:
             case 1:
-                # app_ds = load()
-                # collate_result(app_ds, history)
-                _ = collate_result(ds, history)
+                result = collate_result(ds, history)
+                if result.is_err():
+                    continue
+                printpass("Results collated successfully")
             case 2:
-                # app_ds = load()
-                # view_result(app_ds)
                 view_result(ds)
                 print()
             case 3:
-                # app_ds = load()
-                # edit_result(app_ds)
-                # collate_merit(app_ds)
                 result = edit_result(ds)
                 if result.is_err():
                     continue
-                _ = collate_merit(ds, history)
-                print("\nResult edited successfully\n")
+                result = collate_merit(ds, history)
+                if result.is_err():
+                    continue
+                printpass("Result edited successfully\n")
             case 4:
-                # app_ds = load()
-                # overwrite_result(app_ds)
-                # collate_merit(app_ds)
-                _ = overwrite_result(ds)
-                _ = collate_merit(ds, history)
-                print("\nResult overwritten successfully\n")
+                result = overwrite_result(ds)
+                if result.is_err():
+                    continue
+                println("Results overwritten, now recollating...")
+                result = collate_merit(ds, history)
+                if result.is_err():
+                    continue
+                printpass("Result overwritten successfully\n")
             case 5:
                 break
             case _:
                 pass
-                # app_ds = load()
-        # save(app_ds)
+
         save(ds)
         history.save()
 

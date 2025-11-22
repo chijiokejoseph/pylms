@@ -22,24 +22,23 @@ def edit_multiple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float
         print("\nTarget Record")
         print(f"\n{student_record}\n")
         options: list[str] = ["Add Marks", "Subtract Marks"]
-        result = input_option(
+        option_result = input_option(
             options, title="Edit Result", prompt="Choose how to edit this result"
         )
-        if result.is_err():
-            return Result[list[float]].err(result.unwrap_err())
-        idx, choice = result.unwrap()
+        if option_result.is_err():
+            return option_result.propagate()
+        idx, choice = option_result.unwrap()
         print(f"You have selected {choice}")
-        result = input_num(
+        result: Result[float] = input_num(
             f"For {choice}, enter the number of marks: ",
-            "float",
+            1.0,
             lambda x: x > 0,
             "The value entered is not greater than zero.",
         )
         if result.is_err():
-            return Result[list[float]].err(result.unwrap_err())
+            return result.propagate()
 
-        marks_temp = result.unwrap()
-        marks: float = cast(float, marks_temp)
+        marks = result.unwrap()
         match idx:
             case 1:
                 score: float = student_score + marks

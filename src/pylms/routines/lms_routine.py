@@ -1,15 +1,18 @@
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
+from pylms.data_ops import save
+from pylms.errors import eprint
+from pylms.forms import request_assessment_form
+from pylms.history import History
+from pylms.info import printpass
 from pylms.lms import (
     group,
+    prepare_grading,
     select_leaders,
 )
 from pylms.routines.lms_awardees_routine import run_awardees_lms
-from pylms.routines.lms_result_routine import run_result_lms
 from pylms.routines.lms_collate_routine import run_collate_lms
-from pylms.forms import request_assessment_form
-from pylms.data_ops import save
-from pylms.history import History
+from pylms.routines.lms_result_routine import run_result_lms
 from pylms.utils import DataStore
 
 
@@ -26,40 +29,38 @@ def run_lms(ds: DataStore, history: History) -> None:
     while True:
         selection_result = interact(menu)
         if selection_result.is_err():
-            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
             continue
         selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
 
-        match int(selection):
+        match selection:
             case 1:
-                # app_ds: DataStore = load()
-                # group(app_ds)
-                ds.raise_for_status()
                 group(ds, history)
-                _ = select_leaders(ds, history)
-                print("Students have been grouped successfully\n")
+                printpass("Students have been grouped successfully\n")
+                if history.has_group():
+                    num_groups: int = history.get_num_groups()
+                    result = prepare_grading(num_groups)
+                    if result.is_err():
+                        continue
+                    printpass("Grading sheets generated successfully")
+                    result = select_leaders(ds, history)
+                    if result.is_err():
+                        continue
+                    printpass("Leaders have been selected successfully\n")
             case 2:
-                ds.raise_for_status()
                 request_assessment_form(ds)
             case 3:
-                # app_ds = load()
-                ds.raise_for_status()
                 run_collate_lms(ds, history)
             case 4:
-                # app_ds = load()
-                ds.raise_for_status()
                 run_result_lms(ds, history)
             case 5:
-                # app_ds = load()
-                ds.raise_for_status()
                 run_awardees_lms(ds, history)
             case _:
                 break
-                # app_ds = load()
-        # save(app_ds)
+
         save(ds)
         history.save()
 

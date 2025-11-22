@@ -12,7 +12,7 @@ from pylms.utils import DataStream, paths, read_data
 def prepare_grading(num_groups: int) -> Result[Unit]:
     path: Path = paths.get_group_path()
     if not path.exists():
-        return Result[Unit].err(FileNotFoundError(f"path: {path} does not exist."))
+        return Result.err(FileNotFoundError(f"path: {path} does not exist."))
 
     group_data = read_data(path)
     groups_arr = group_data[GROUP].to_numpy()
@@ -56,6 +56,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
     )
 
     grading_path: Path = paths.get_grade_path()
+    group_path = paths.get_group_dir() / grading_path.name
 
     presentation_df: pd.DataFrame = pd.DataFrame(
         data={
@@ -78,9 +79,23 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         }
     )
 
-    with pd.ExcelWriter(grading_path) as file:
-        code_df.to_excel(file, index=False, sheet_name="Code")  # pyright: ignore[reportUnknownMemberType]
-        presentation_df.to_excel(file, index=False, sheet_name="Presentation")  # pyright: ignore[reportUnknownMemberType]
-        total_df.to_excel(file, index=False, sheet_name="Total")  # pyright: ignore[reportUnknownMemberType]
+    _write_sheets(
+        grading_path,
+        (code_df, "Code"),
+        (presentation_df, "Presentation"),
+        (total_df, "Total"),
+    )
+    _write_sheets(
+        group_path,
+        (code_df, "Code"),
+        (presentation_df, "Presentation"),
+        (total_df, "Total"),
+    )
 
-    return Result[Unit].unit()
+    return Result.unit()
+
+
+def _write_sheets(path: Path, *dfs: tuple[pd.DataFrame, str]) -> None:
+    with pd.ExcelWriter(path) as file:
+        for df, sheet_name in dfs:
+            df.to_excel(file, index=False, sheet_name=sheet_name)  # pyright: ignore[reportUnknownMemberType]

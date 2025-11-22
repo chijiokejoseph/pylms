@@ -12,7 +12,6 @@ from pylms.utils import DataStore
 from pylms.utils.env import must_get_env
 
 
-
 def init_assessment_form(ds: DataStore) -> None:
     options: list[str] = [
         "Midterm Assessment",
@@ -20,7 +19,7 @@ def init_assessment_form(ds: DataStore) -> None:
     ]
     option_result = input_option(options, prompt="Select the assessment type")
     if option_result.is_err():
-        return None
+        return
     _, assessment_type = option_result.unwrap()
     id_result = input_str("Enter the Assessment ID: ", lower_case=False)
     if id_result.is_err():
@@ -65,7 +64,7 @@ def init_assessment_form(ds: DataStore) -> None:
             f"{i}. {email}" for (i, email) in enumerate(failed_emails, start=1)
         ]
         msg = f"""[
-    {"\n".join(failed_emails_print)}        
+    {"\n".join(failed_emails_print)}
 ]"""
         raise FormServiceError(
             "share", f"Form sharing failed. for emails = {msg} \nPlease try again."

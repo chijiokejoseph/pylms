@@ -1,12 +1,14 @@
 import unittest
-from pylms.messages.select_emails import _message_select_emails
-from pylms.messages.select_msg_builders import build_update_msg
-from pylms.email import run_email
-from pylms.history import History
-from pylms.errors import Result, Unit
 from smtplib import SMTP
+from typing import override
+
 from dotenv import load_dotenv
 
+from pylms.email import run_email
+from pylms.errors import Result, Unit
+from pylms.history import History
+from pylms.messages.select_emails import message_select_emails
+from pylms.messages.select_msg_builders import build_update_msg
 from pylms.messages.utils import TextBody
 
 
@@ -18,6 +20,9 @@ class SelectEmailsTest(unittest.TestCase):
     message_select_emails function executes successfully and returns a successful result.
     """
 
+    history: History = History.load()
+
+    @override
     def setUp(self) -> None:
         """
         Set up the test environment by loading environment variables.
@@ -26,9 +31,9 @@ class SelectEmailsTest(unittest.TestCase):
         :rtype: None
         """
         # load environment
-        load_dotenv()
+        _ = load_dotenv()
 
-        self.history: History = History.load()
+        self.history = History.load()
 
     def test_update_message_select(self) -> None:
         """
@@ -76,17 +81,17 @@ class SelectEmailsTest(unittest.TestCase):
 
             for _ in range(4):
                 # Call the function under test for each input mode
-                result: Result[Unit] = _message_select_emails(server, builder)
+                result: Result[Unit] = message_select_emails(server, builder)
                 # Print any error encountered during sending
                 print(f"{result.error = }")
                 # Append the result to the list
                 results.append(result)
             # Return success only if all sends were successful
             if all(result.is_ok() for result in results):
-                return Result[Unit].unit()
+                return Result.unit()
             else:
                 # Aggregate errors if any send failed
-                return Result[Unit].err(
+                return Result.err(
                     ValueError(
                         "\n"
                         + "\n".join([str(result.error) for result in results])
@@ -102,4 +107,4 @@ class SelectEmailsTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

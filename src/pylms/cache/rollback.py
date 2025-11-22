@@ -8,7 +8,7 @@ import pandas as pd
 from pylms.cache.cache import copy_data
 from pylms.cli import input_num
 from pylms.constants import CACHE_CMD, CACHE_ID, CACHE_TIME
-from pylms.errors import eprint
+from pylms.errors import Result, eprint
 from pylms.utils import DataStream, paths
 
 type ValidatorFn = Callable[[pd.DataFrame | pd.Series], bool]
@@ -74,13 +74,15 @@ def rollback_to_cmd(test_path: Path | None = None) -> None:
     :rtype: None
     """
     # Read cache records from metadata path
-    cache_records: pd.DataFrame = pd.read_csv(str(paths.get_metadata_path()))
+    cache_records: pd.DataFrame = pd.read_csv(  # pyright: ignore[reportUnknownMemberType]
+        str(paths.get_metadata_path())
+    )
 
     # Cast the verify function to ValidatorFn type
     validate_fn = cast(ValidatorFn, verify_cache_records)
 
     # Create a DataStream with validation
-    cache_stream: DataStream = DataStream(cache_records, validate_fn)
+    cache_stream: DataStream[pd.DataFrame] = DataStream(cache_records, validate_fn)
 
     # Validate and get the cache records
     cache_records = cache_stream()
@@ -112,12 +114,14 @@ def rollback_to_cmd(test_path: Path | None = None) -> None:
         )
 
     # Prompt user to enter index for rollback
-    value_result = input_num("Enter the index of the state to roll back to: ", "int")
+    value_result: Result[int] = input_num(
+        "Enter the index of the state to roll back to: ",
+        1,
+    )
     if value_result.is_err():
         eprint(f"Error retrieving index: {value_result.unwrap_err()}")
         return None
-    value = value_result.unwrap()
-    idx: int = cast(int, value)
+    idx = value_result.unwrap()
 
     # Get the snapshot ID from the selected cache record
     snapshot_value = cache_records.loc[idx - 1, CACHE_ID]

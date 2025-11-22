@@ -3,12 +3,12 @@ from typing import cast
 
 import pandas as pd
 
-from pylms.constants import CDS, WORK_DAYS, NAME
+from pylms.constants import CDS, NAME, WORK_DAYS
 from pylms.record import RecordStatus
 from pylms.utils import DataStore, DataStream, date
 
 
-def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> DataStore:
+def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> None:
     pretty_data: pd.DataFrame = ds.pretty()
     data_ref: pd.DataFrame = ds.as_ref()
     cds_data: pd.DataFrame = cds_data_stream()
@@ -41,4 +41,4 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> Data
                 new_row.at[date_col] = RecordStatus.CDS
         data_ref.iloc[idx, :] = new_row
 
-    return ds
+    return None

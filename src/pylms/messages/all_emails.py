@@ -1,16 +1,17 @@
-from pylms.history.history import History
-from pylms.messages.utils import MessageBuilder, TextBody
-from pylms.utils import DataStore, must_get_env
-from pylms.errors import Result, Unit
-from smtplib import SMTP
 from email.message import EmailMessage
-from pylms.email import run_email, MailError
+from smtplib import SMTP
+
+from pylms.constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
+from pylms.email import MailError, run_email
+from pylms.errors import Result, Unit
+from pylms.history.history import History
 from pylms.messages.all_msg_builders import (
     build_assessment_all_msg,
     build_custom_all_msg,
 )
 from pylms.messages.message_record import MessageRecord
-from pylms.constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
+from pylms.messages.utils import MessageBuilder, TextBody
+from pylms.utils import DataStore, must_get_env
 
 
 def _construct_html_message(
@@ -57,7 +58,7 @@ def _build_all_message(
 
     result: Result[TextBody] = builder()
     if result.is_err():
-        return Result[list[MessageRecord]].err(result.unwrap_err())
+        return result.propagate()
 
     title, body = result.unwrap()
 
@@ -90,7 +91,7 @@ def _build_all_message(
         )
         message.set_content(html_body, subtype="html")
         messages.append(MessageRecord(name=name, email=email, message=message))
-    return Result[list[MessageRecord]].ok(messages)
+    return Result.ok(messages)
 
 
 def _message_all_emails(
@@ -121,7 +122,7 @@ def _message_all_emails(
     result: Result[list[MessageRecord]] = _build_all_message(ds, builder)
     if result.is_err():
         # Return error result if builder failed
-        return Result[Unit].err(result.unwrap_err())
+        return result.propagate()
 
     # Unwrap the result to get the list of MessageRecord objects
     messages: list[MessageRecord] = result.unwrap()
@@ -166,10 +167,10 @@ def _message_all_emails(
                 print(err_print)
             print()
         # Return an error result if there were failures
-        return Result[Unit].err(ValueError("Failed to send emails"))
+        return result.propagate()
 
     # Return a success result if all emails were sent
-    return Result[Unit].unit()
+    return Result.unit()
 
 
 def custom_message_all(ds: DataStore) -> Result[Unit]:

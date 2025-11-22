@@ -1,10 +1,10 @@
+import json
+from pathlib import Path
 from typing import NamedTuple
+
+from pylms.constants import GLOBAL_RECORD_PATH
 from pylms.errors import LMSError
 from pylms.record import RecordStatus, retrieve_record
-from pylms.constants import GLOBAL_RECORD_PATH
-from pathlib import Path
-import json
-
 from pylms.rollcall.errors import PathNotFoundError
 from pylms.utils import DataStore, paths
 
@@ -57,9 +57,9 @@ class GlobalRecord:
         save_data: dict[str, str] = {
             key: str(value) for key, value in self.dates.items()
         }
-        
+
         global_record_path: Path = paths.get_global_record_path()
-        
+
         with global_record_path.open("w") as file:
             json.dump(save_data, file)
 
@@ -69,13 +69,13 @@ class GlobalRecord:
     def unwrap(self, target_date: str, new_record: RecordStatus) -> RecordStatus:
         return self.date_record.unwrap(target_date, new_record)
 
-    def crosscheck(self, ds: DataStore) -> DataStore:
+    def crosscheck(self, ds: DataStore) -> None:
         data_ref = ds.as_ref()
         for target_date, value in self.dates.items():
             if value != RecordStatus.EMPTY:
                 data_ref.loc[:, target_date] = value
-        return ds
-    
+        return None
+
     def retrieve_unset_dates(self) -> list[str]:
         return [
             date for date, value in self.dates.items() if value == RecordStatus.EMPTY

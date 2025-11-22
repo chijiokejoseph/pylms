@@ -1,20 +1,22 @@
 import pandas as pd
+
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import append_update, new, save
 from pylms.errors import Result, eprint
-from pylms.forms.request_form_api import request_update_form, request_unregistered_form
+from pylms.forms.request_form_api import request_unregistered_form, request_update_form
 from pylms.forms.retrieve_form_api import (
     retrieve_update_form,
     save_retrieve,
 )
+from pylms.history import History
+from pylms.info import printpass
 from pylms.models.form_info import UpdateFormInfo
 from pylms.rollcall import (
     GlobalRecord,
     extract_cds,
     record_cds,
 )
-from pylms.history import History
 from pylms.utils import DataStore
 from pylms.utils.data.datastream import DataStream
 
@@ -31,28 +33,26 @@ def register(ds: DataStore, history: History) -> None:
     while True:
         selection_result = interact(menu)
         if selection_result.is_err():
-            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
             continue
         selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
-        match int(selection):
+
+        match selection:
             case 1:
                 app_ds_result = new(history)
                 if app_ds_result.is_err():
                     continue
                 app_ds: DataStore = app_ds_result.unwrap()
                 ds.copy_from(app_ds)
-                print("Onboarding of Registered Students completed successfully.\n")
+                printpass("Onboarding of Registered Students completed successfully.\n")
             case 2:
-                ds.raise_for_status()
                 request_update_form(ds, history)
-                print("Generated Update Form successfully\n")
+                printpass("Generated Update Form successfully\n")
             case 3:
-                ds.raise_for_status()
                 global_record: GlobalRecord = GlobalRecord()
-                # app_ds = load()
                 result: Result[
                     tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]
                 ] = retrieve_update_form(history)
@@ -69,9 +69,9 @@ def register(ds: DataStore, history: History) -> None:
                     global_record.crosscheck(ds)
                     save_retrieve(info)
                     history.add_recorded_update_form(info)
-                    print("CDS data marked successfully\n")
+                    printpass("CDS data marked successfully\n")
                 else:
-                    print(
+                    eprint(
                         "Couldn't mark CDS data. See the earlier prints for the reasons.\n"
                     )
             case 4:
@@ -79,7 +79,6 @@ def register(ds: DataStore, history: History) -> None:
             case _:
                 break
 
-        # save(app_ds)
         save(ds)
         history.save()
 

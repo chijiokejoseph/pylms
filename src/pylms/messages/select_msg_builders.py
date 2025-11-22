@@ -1,10 +1,10 @@
 from pylms.cli.custom_inputs import input_str
-from pylms.messages.construct import construct_msg
-from pylms.models.form_info import CDSFormInfo, UpdateFormInfo
+from pylms.errors import LMSError, Result
 from pylms.forms import select_form
-from pylms.errors import Result
 from pylms.history import History
+from pylms.messages.construct import construct_msg
 from pylms.messages.utils import TextBody
+from pylms.models.form_info import CDSFormInfo, UpdateFormInfo
 
 
 def build_custom_select_msg() -> Result[TextBody]:
@@ -17,15 +17,15 @@ def build_custom_select_msg() -> Result[TextBody]:
     """
 
     # Prompt for the title of the message for each recipient
-    title_result = input_str("Enter the title of the message: ", lower_case=False)
-    if title_result.is_err():
-        return Result[TextBody].err(title_result.unwrap_err())
-    title: str = title_result.unwrap()
+    result = input_str("Enter the title of the message: ", lower_case=False)
+    if result.is_err():
+        return result.propagate()
+    title: str = result.unwrap()
 
-    body_result = construct_msg("Enter the message to be included in each email")
-    if body_result.is_err():
-        return Result[TextBody].err(body_result.unwrap_err())
-    body: str = body_result.unwrap()
+    result = construct_msg("Enter the message to be included in each email")
+    if result.is_err():
+        return result.propagate()
+    body: str = result.unwrap()
 
     html_body: str = f"""
 <h2 style="padding-bottom: 8px; font-size: 18px; font-weight: bold">Dear Intern</h2>
@@ -39,22 +39,20 @@ def build_custom_select_msg() -> Result[TextBody]:
 </footer>
         """
 
-    return Result[TextBody].ok(TextBody(title, html_body))
+    return Result.ok(TextBody(title, html_body))
 
 
 def build_update_msg(history: History) -> Result[TextBody]:
     # Retrieve the URL for the update form from the history object
     result: Result[CDSFormInfo | UpdateFormInfo] = select_form(history, "update")
     if result.is_err():
-        return Result[TextBody].err(result.unwrap_err())
+        return result.propagate()
 
     url: str = result.unwrap().url
 
     # Check if the cohort attribute in history is None and return an error if so
     if history.cohort is None:
-        return Result[TextBody].err(
-            ValueError("history.cohort is None. Expected an int value.")
-        )
+        return Result.err(LMSError("history.cohort is None. Expected an int value."))
 
     # Extract the cohort number from the history object
     cohort: int = history.cohort
@@ -78,4 +76,4 @@ def build_update_msg(history: History) -> Result[TextBody]:
 </footer>
     """
 
-    return Result[TextBody].ok(TextBody(title, body))
+    return Result.ok(TextBody(title, body))

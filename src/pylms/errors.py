@@ -1,9 +1,9 @@
 import sys
-from typing import Callable, Self, cast, final
+from typing import Callable, final
 
 
 def eprint(msg: str) -> None:
-    msg = f"\n ⚠️ Error {msg}\n"
+    msg = f"\n⚠️ Error {msg}\n"
     _ = sys.stderr.write(msg)
 
 
@@ -28,6 +28,10 @@ class ForcedExitError(LMSError):
         super().__init__(message)
 
 
+type UnitResult = Result[Unit]
+type MapResult[K] = Result[K]
+
+
 @final
 class Unit:
     def __init__(self) -> None:
@@ -48,17 +52,28 @@ class Result[T]:
         if self._error is not None and self._value is not None:
             self._value = None
 
-    @classmethod
-    def ok(cls, value: T) -> Self:
-        return cls(value, None)
+    def propagate[K](self) -> MapResult[K]:
+        error = self._error
+        return Result(None, error)
+
+    def map[K](self, func: Callable[[T], K]) -> MapResult[K]:
+        if self.is_err():
+            return self.propagate()
+        value = self.unwrap()
+        value = func(value)
+        return Result(value, None)
 
     @classmethod
-    def err(cls, error: Exception) -> Self:
-        return cls(None, error)
+    def ok[K](cls, value: K) -> MapResult[K]:
+        return Result(value, None)
 
     @classmethod
-    def unit(cls) -> Self:
-        return cls.ok(cast(T, Unit()))
+    def err[K](cls, error: Exception) -> MapResult[K]:
+        return Result(None, error)
+
+    @classmethod
+    def unit(cls) -> UnitResult:
+        return Result.ok(Unit())
 
     def is_ok(self) -> bool:
         return self._error is None and self._value is not None
@@ -112,16 +127,3 @@ class Result[T]:
     @property
     def error(self) -> Exception | None:
         return self._error
-
-
-class ResultMap[T]:
-    def __init__(self, result: Result[T]) -> None:
-        self.result: Result[T] = result
-
-    def map[K](self, func: Callable[[T], K]) -> Result[K]:
-        item: Result[T] = self.result
-        if item.is_ok():
-            assert item.value is not None, "value is None"
-            return Result.ok(func(item.value))
-        assert item.error is not None, "error is None"
-        return Result.err(item.error)

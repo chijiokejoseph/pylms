@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from typing import NamedTuple, final, override
+from typing import override
 from unittest import TestCase
 from uuid import UUID
 
@@ -18,11 +18,6 @@ from pylms.utils import DataStore, paths, read_csv
 from pylms.utils.data.datastream import DataStream
 
 
-class TestClass(NamedTuple):
-    item: str
-
-
-@final
 class TestCopyData(TestCase):
     """
     Unit test class for testing the cache_for_cmd functionality.
@@ -63,7 +58,7 @@ class TestCopyData(TestCase):
         cds_form_stream, _ = result.unwrap()
         if cds_form_stream is not None:
             # Record CDS data into the dataset
-            self.ds = record_cds(self.ds, cds_form_stream)
+            record_cds(self.ds, cds_form_stream)
             print("Marked CDS Records")
 
         # Cache the command with a description

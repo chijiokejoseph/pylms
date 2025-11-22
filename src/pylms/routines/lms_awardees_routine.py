@@ -1,7 +1,9 @@
 from pylms.cache import cache_for_cmd
 from pylms.cli import interact
 from pylms.data_ops import save
+from pylms.errors import eprint
 from pylms.history import History
+from pylms.info import println, printpass
 from pylms.lms import collate_fast_track, collate_merge, collate_merit, send_result
 from pylms.utils import DataStore
 
@@ -15,46 +17,40 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
         "Return to Previous Menu",
     ]
 
-    ds.raise_for_status()
     while True:
         selection_result = interact(menu)
         if selection_result.is_err():
-            print(f"Error retrieving selection: {selection_result.unwrap_err()}")
+            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
             continue
         selection: int = selection_result.unwrap()
         cmd: str = menu[selection - 1]
         if selection < len(menu):
             cache_for_cmd(cmd)
 
-        match int(selection):
+        match selection:
             case 1:
-                # app_ds: DataStore = load()
-                # app_ds = collate_fast_track(app_ds)
                 collate_fast_track(ds)
-                print("Recorded Fast Track Awardees.\n")
+                printpass("Recorded Fast Track Awardees.\n")
             case 2:
-                # app_ds = load()
-                # collate_merit(app_ds)
-                _ = collate_merit(ds, history)
-                print("Recorded Merit Awardees.\n")
+                result = collate_merit(ds, history)
+                if result.is_err():
+                    continue
+                printpass("Recorded Merit Awardees.\n")
                 history.record_merit()
             case 3:
-                # app_ds = load()
-                # collate_merge(app_ds)
                 collate_merge(ds)
-                print("\nMerit and Fast Track Awardees merged successfully\n")
+                printpass("Merit and Fast Track Awardees merged successfully\n")
             case 4:
                 if history.has_collated_merit:
                     send_result(ds)
-                    print("\nEmail sent successfully\n")
+                    printpass("Email sent successfully\n")
                 else:
-                    print("\nCollate Merit Awardees first, before emailing results.\n")
+                    println("Collate Merit Awardees first, before emailing results.\n")
             case 5:
                 break
             case _:
                 pass
-                # app_ds = load()
-        # save(app_ds)
+
         save(ds)
         history.save()
 
