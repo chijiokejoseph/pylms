@@ -9,6 +9,7 @@ from pylms.cli import input_path
 from pylms.constants import GROUP, NAME, ValidateDataFn
 from pylms.errors import LMSError
 from pylms.history import History
+from pylms.info import printpass
 from pylms.lms.utils import (
     det_project_score_col,
     val_assessment_data,
@@ -167,7 +168,7 @@ Enter the path: """
     data[project_col] = np.array(assigned_scores, dtype=np.float64).round(2)
 
     # Save the collated data to an Excel file
-    print("\nProject Recorded Successfully\n")
+    printpass("Project Recorded Successfully\n")
     project_path: Path = paths.get_paths_excel()["Project"]
     DataStream(data).to_excel(project_path)
 

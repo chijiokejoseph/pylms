@@ -7,6 +7,7 @@ import pandas as pd
 from pylms.cli import input_path
 from pylms.constants import SERIAL, ValidateDataFn
 from pylms.history import History
+from pylms.info import printpass
 from pylms.lms.utils import (
     det_assessment_req_col,
     det_assessment_score_col,
@@ -166,7 +167,7 @@ Enter the path:  """
 
     # Set the assessment requirement of the attendance spreadsheet
     data[assessment_req_col] = req
-    print("\nAssessment recorded successfully\n")
+    printpass("Assessment recorded successfully\n")
 
     # Get the path to the assessment spreadsheet
     assessment_path: Path = paths.get_paths_excel()["Assessment"]

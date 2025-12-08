@@ -7,6 +7,7 @@ import pandas as pd
 from pylms.constants import NAME, SERIAL
 from pylms.errors import LMSError, Result, Unit
 from pylms.history import History
+from pylms.info import printpass
 from pylms.lms.utils import (
     det_attendance_req_col,
     det_attendance_score_col,
@@ -29,7 +30,7 @@ def _val_all_classes_recorded() -> Result[Unit]:
 
     if len(class_paths) != len(record_paths):
         msg: str = f"The records of Classes with attendance generated have a length of {len(class_paths)} while the records of Classes with attendance marked have a length of {len(record_paths)}"
-        return Result[Unit].err(LMSError(msg))
+        return Result.err(LMSError(msg))
 
     def ret_exist_paths(paths_list: list[Path]) -> list[Path]:
         return [each_path for each_path in paths_list if each_path.exists()]
@@ -62,9 +63,9 @@ def _val_all_classes_recorded() -> Result[Unit]:
                 + f"Existing Class Paths -> {list_print(valid_class_path_names)} at dir -> {exist_class_dir}\n"
                 + f"Existing Record Paths -> {list_print(valid_record_path_names)} at dir -> {exist_record_dir}"
             )
-            return Result[Unit].err(LMSError(msg))
+            return Result.err(LMSError(msg))
 
-    return Result[Unit].unit()
+    return Result.unit()
 
 
 def _extract_class_held_dates(ds: DataStore) -> list[str]:
@@ -117,7 +118,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
             print(err.message)
         else:
             print(err)
-        return Result[Unit].err(err)
+        return Result.err(err)
 
     # Extract the dates of classes that were held
     class_held_dates = _extract_class_held_dates(ds)
@@ -129,7 +130,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     # Prompt the user to enter attendance requirement
     req_result = input_marks_req("Enter the Attendance Requirement [1 - 100]: ")
     if req_result.is_err():
-        return Result[Unit].err(req_result.unwrap_err())
+        return Result.err(req_result.unwrap_err())
     req: int = req_result.unwrap()
 
     # Define a function to map attendance status to integer values
@@ -150,7 +151,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     max_len: int = max(count_arr.shape)
     if max_len != count_data.shape[0]:
         error = LMSError("Incomplete class records detected.")
-        return Result[Unit].err(error)
+        return Result.err(error)
 
     # Calculate attendance scores based on the number of classes held
     num_classes_held: int = len(class_held_dates)
@@ -174,7 +175,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     )
 
     # Notify user that attendance has been recorded successfully
-    print("\nAttendance recorded successfully\n")
+    printpass("Attendance recorded successfully\n")
 
     # Save the collated data to an Excel file
     path: Path = paths.get_paths_excel()["Attendance"]
@@ -183,4 +184,4 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     # Record attendance in the history
     history.record_attendance()
 
-    return Result[Unit].unit()
+    return Result.unit()

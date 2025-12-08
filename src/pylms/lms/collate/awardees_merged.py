@@ -47,9 +47,9 @@ def collate_merge(ds: DataStore) -> None:
     merit_data = DataStream(merit_data, validator)()
     fast_track_data = DataStream(fast_track_data, validator)()
     merged_data: pd.DataFrame = pd.concat((merit_data, fast_track_data))
-    merged_data.dropna(inplace=True, how="all")
+    merged_data.dropna(inplace=True, how="all")  # pyright:ignore[reportUnknownMemberType]
     merged_data = merged_data.astype("str")
-    merged_data = merged_data.replace("nan", "")
+    merged_data = merged_data.replace("nan", "")  # pyright:ignore[reportUnknownMemberType]
     merged_data.drop_duplicates(
         subset=[AWARDEES["Email"], AWARDEES["Phone"]], inplace=True
     )

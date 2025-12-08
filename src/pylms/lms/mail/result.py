@@ -51,7 +51,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     data: pd.DataFrame = ds.as_ref()
 
     # Find the relevant column names for each required field
-    assessment_score_col: str = find_col(result_stream, "Assessment", "Score")
+    assessment_score_col: str = find_col(result_stream, "Assessment", "Score").unwrap()
     assessment_max_match: re.Match[str] | None = re.search(
         r"(\d+)", assessment_score_col
     )
@@ -61,13 +61,13 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         return Result[Unit].err(Exception(err_msg))
     assessment_max: float = float(assessment_max_match.group(1))
 
-    assessment_req_col: str = find_col(result_stream, "Assessment", "Req")
+    assessment_req_col: str = find_col(result_stream, "Assessment", "Req").unwrap()
 
-    attendance_count_col: str = find_col(result_stream, "Attendance", "Count")
-    attendance_score_col: str = find_col(result_stream, "Attendance", "Score")
-    attendance_req_col: str = find_col(result_stream, "Attendance", "Req")
+    attendance_count_col: str = find_col(result_stream, "Attendance", "Count").unwrap()
+    attendance_score_col: str = find_col(result_stream, "Attendance", "Score").unwrap()
+    attendance_req_col: str = find_col(result_stream, "Attendance", "Req").unwrap()
 
-    project_score_col: str = find_col(result_stream, "Project", "Score")
+    project_score_col: str = find_col(result_stream, "Project", "Score").unwrap()
     project_max_match: re.Match[str] | None = re.search(r"(\d+)", project_score_col)
     if project_max_match is None:
         err_msg = "Error parsing project max score"
@@ -75,8 +75,8 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         return Result[Unit].err(Exception(err_msg))
     project_max: float = float(project_max_match.group(1))
 
-    result_col: str = find_col(result_stream, "Result", "Score")
-    result_req_col: str = find_col(result_stream, "Result", "Req")
+    result_col: str = find_col(result_stream, "Result", "Score").unwrap()
+    result_req_col: str = find_col(result_stream, "Result", "Req").unwrap()
 
     # extract all requirements
     assessment_req: float = result.loc[:, assessment_req_col].astype(float).iloc[0]
@@ -298,7 +298,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     return Result[Unit].unit()
 
 
-def send_result(ds: DataStore) -> None:
+def send_result(ds: DataStore) -> Result[Unit]:
     """
     Initiates the process of sending result emails to students.
 
@@ -317,4 +317,4 @@ def send_result(ds: DataStore) -> None:
 
     # Run the email sending process using the configured email utility.
     # The lambda ensures the DataStore is passed to the result-sending logic.
-    run_email(lambda server: _send_result(ds, server))
+    return run_email(lambda server: _send_result(ds, server))

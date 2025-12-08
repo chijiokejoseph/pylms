@@ -47,7 +47,7 @@ def collate_result(ds: DataStore, history: History) -> Result[Unit]:
     # Prompt for and validate the pass mark, assessment ratio, and project ratio
     req_result = input_collate_req()
     if req_result.is_err():
-        return Result[Unit].err(req_result.unwrap_err())
+        return Result.err(req_result.unwrap_err())
     req: CollateReq = req_result.unwrap()
     (pass_mark, assessment_ratio, project_ratio) = req
     # Retrieve column names for assessment and project scores
@@ -99,4 +99,4 @@ def collate_result(ds: DataStore, history: History) -> Result[Unit]:
     # Record the result in the history
     history.record_result()
 
-    return Result[Unit].ok(Unit())
+    return Result.unit()

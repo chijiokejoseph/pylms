@@ -39,14 +39,14 @@ def edit_result(ds: DataStore) -> Result[Unit]:
     if not result_path.exists():
         msg: str = "Results has not been generated yet. Please collate results before running this operation"
         print(msg)
-        return Result[Unit].err(FileNotFoundError(msg))
+        return Result.err(FileNotFoundError(msg))
 
     # Load the result data from the Excel file
     try:
         result_data: pd.DataFrame = read_data(result_path)
     except PermissionError as e:
         print(f"Error reading file at {result_path} as it is open in another program.")
-        return Result[Unit].err(e)
+        return Result.err(e)
     # Validate the result data
     result_stream: DataStream[pd.DataFrame] = DataStream(
         result_data, cast(ValidateDataFn, val_result_data)
@@ -56,7 +56,11 @@ def edit_result(ds: DataStore) -> Result[Unit]:
 
     # Determine the next result update column
     result_cols: list[str] = result_data.columns.tolist()
-    result_col: str = find_col(result_stream, "Result", "Score")
+    result = find_col(result_stream, "Result", "Score")
+    if result.is_err():
+        return result.propagate()
+    result_col: str = result.unwrap()
+
     result_col_idx: int = result_cols.index(result_col)
     last_col_idx: int = result_col_idx - 1
     last_col = result_cols[last_col_idx]
@@ -70,7 +74,7 @@ def edit_result(ds: DataStore) -> Result[Unit]:
             print(
                 "Error when getting the last result update number in the process of editing a student's result record"
             )
-            return Result[Unit].err(e)
+            return Result.err(e)
 
     # Get the type of edit to perform (all, multiple, or batch)
     select_result = input_select_type()
@@ -84,17 +88,17 @@ def edit_result(ds: DataStore) -> Result[Unit]:
         case Select.ALL:
             result = edit_all(result_data)
             if result.is_err():
-                return Result[Unit].err(result.unwrap_err())
+                return Result.err(result.unwrap_err())
             updates_list.extend(result.unwrap())
         case Select.MULTIPLE:
             result = edit_multiple(ds, result_data)
             if result.is_err():
-                return Result[Unit].err(result.unwrap_err())
+                return Result.err(result.unwrap_err())
             updates_list.extend(result.unwrap())
         case Select.BATCH:
             result = edit_batch(ds, result_data)
             if result.is_err():
-                return Result[Unit].err(result.unwrap_err())
+                return Result.err(result.unwrap_err())
             updates_list.extend(result.unwrap())
 
     # Reorder columns to place the new result update column correctly
@@ -107,4 +111,4 @@ def edit_result(ds: DataStore) -> Result[Unit]:
     result_data = result_data[unchanged_cols + [new_col] + remaining_cols]
     result_stream = DataStream(result_data)
     result_stream.to_excel(paths.get_paths_excel()["Result"])
-    return Result[Unit].unit()
+    return Result.unit()
