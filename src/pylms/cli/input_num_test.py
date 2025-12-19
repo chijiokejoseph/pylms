@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from pylms.cli.custom_inputs import input_num
-from pylms.errors import Result, eprint
-from pylms.info import println
+from ..errors import Result, eprint
+from ..info import print_info
+from .custom_inputs import input_num
 
 
 class TestInputs(TestCase):
@@ -15,4 +15,4 @@ class TestInputs(TestCase):
             eprint(f"{value.unwrap_err()}")
             return
         age = value.unwrap()
-        println(f"Your age is {age}")
+        print_info(f"Your age is {age}")

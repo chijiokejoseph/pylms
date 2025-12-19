@@ -1,5 +1,7 @@
 import unittest
-from pylms.messages.construct import construct_msg
+
+from .construct import construct_msg
+
 
 class TestConstructMsg(unittest.TestCase):
     """
@@ -22,5 +24,6 @@ class TestConstructMsg(unittest.TestCase):
         # Assert that the result is a string
         self.assertIsInstance(result, str)
 
+
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

@@ -1,5 +1,5 @@
-from pylms.cli import input_option, input_str
-from pylms.errors import Result
+from ..cli import input_option, input_str
+from ..errors import Result
 
 
 def construct_msg(prompt: str | None = None) -> Result[str]:

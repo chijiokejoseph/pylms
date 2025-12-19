@@ -1,11 +1,10 @@
-from pylms.cache import cache_for_cmd
-from pylms.cli import interact
-from pylms.data_ops import save
-from pylms.errors import eprint
-from pylms.history import History
-from pylms.info import printpass
-from pylms.lms.collate import collate_assessment, collate_attendance, collate_project
-from pylms.utils import DataStore
+from ..cache import cache_for_cmd
+from ..cli import interact
+from ..data import DataStore
+from ..data_service import save
+from ..history import History, save_history
+from ..info import print_info, printpass
+from ..result_collate import collate_assessment, collate_attendance, collate_project
 
 
 def run_collate_lms(ds: DataStore, history: History) -> None:
@@ -16,16 +15,19 @@ def run_collate_lms(ds: DataStore, history: History) -> None:
         "Return to Previous Menu",
     ]
 
-    ds.raise_for_status()
     while True:
-        selection_result = interact(menu)
-        if selection_result.is_err():
-            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
+        selection = interact(menu)
+        if selection.is_err():
             continue
-        selection: int = selection_result.unwrap()
+
+        selection = selection.unwrap()
+
         cmd: str = menu[selection - 1]
+
         if selection < len(menu):
-            cache_for_cmd(cmd)
+            result = cache_for_cmd(cmd)
+            if result.is_err():
+                continue
 
         match selection:
             case 1:
@@ -34,14 +36,31 @@ def run_collate_lms(ds: DataStore, history: History) -> None:
                     continue
                 printpass("Attendance collated successfully")
             case 2:
-                collate_assessment(history)
+                result = collate_assessment(history)
+                if result.is_err():
+                    continue
+
+                printpass("Assessment collated successfully")
             case 3:
-                collate_project(history)
+                result = collate_project(history)
+                if result.is_err():
+                    continue
+
+                printpass("Project collated successfully")
             case 4:
                 break
             case _:
                 pass
 
-        save(ds)
-        history.save()
+        result = save(ds)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
+
+        result = save_history(history)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
     return None

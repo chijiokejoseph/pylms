@@ -1,14 +1,13 @@
-from pylms.cache import cache_for_cmd
-from pylms.cli import interact
-from pylms.errors import Result, Unit, eprint
-from pylms.history import History
-from pylms.messages import (
+from ..cache import cache_for_cmd
+from ..cli import interact
+from ..data import DataStore
+from ..history import History
+from ..messages import (
     assessment_message_all,
     custom_message_all,
     custom_message_select,
     update_message_select,
 )
-from pylms.utils import DataStore
 
 
 def handle_message(ds: DataStore, history: History) -> None:
@@ -21,17 +20,22 @@ def handle_message(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection_result = interact(menu)
-        if selection_result.is_err():
-            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
+        selection = interact(menu)
+        if selection.is_err():
             continue
-        selection: int = selection_result.unwrap()
+
+        selection = selection.unwrap()
+
+        cmd: str = menu[selection - 1]
+
         if selection < len(menu):
-            cache_for_cmd(menu[selection - 1])
+            result = cache_for_cmd(cmd)
+            if result.is_err():
+                continue
 
         match selection:
             case 1:
-                result: Result[Unit] = custom_message_all(ds)
+                result = custom_message_all(ds)
                 if result.is_err():
                     continue
             case 2:

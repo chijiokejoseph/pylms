@@ -1,5 +1,7 @@
+# pyright: reportDeprecated=false
+
 from collections.abc import Generator
-from typing import Literal, Optional  # pyright: ignore[reportDeprecated]
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -20,20 +22,20 @@ class OptionDict(BaseModel):
 
 
 class ChoiceQuestion(BaseModel):
-    type: Literal["DROP_DOWN", "RADIO", "TEXT"]
+    type: Literal["DROP_DOWN", "RADIO", "CHECKBOX"]
     options: list[OptionDict]
-    shuffle: Optional[bool] = False  # pyright: ignore[reportDeprecated]
+    shuffle: Optional[bool] = False
 
 
 class TextQuestion(BaseModel):
-    paragraph: Optional[bool] = False  # pyright: ignore[reportDeprecated]
+    paragraph: Optional[bool] = False
 
 
 class Question(BaseModel):
     required: bool
-    choiceQuestion: Optional[ChoiceQuestion] = None  # pyright: ignore[reportDeprecated]
-    textQuestion: Optional[TextQuestion] = None  # pyright: ignore[reportDeprecated]
-    dateQuestion: Optional[DateQuestion] = None  # pyright: ignore[reportDeprecated]
+    choiceQuestion: Optional[ChoiceQuestion] = None
+    textQuestion: Optional[TextQuestion] = None
+    dateQuestion: Optional[DateQuestion] = None
 
 
 class QuestionItem(BaseModel):
@@ -42,7 +44,7 @@ class QuestionItem(BaseModel):
 
 class Item(BaseModel):
     title: str
-    description: Optional[str] = None  # pyright: ignore[reportDeprecated]
+    description: Optional[str] = None
     questionItem: QuestionItem
 
 
@@ -61,3 +63,27 @@ class Content(BaseModel):
 
 class ContentBody(BaseModel):
     requests: list[Content]
+
+
+class PublishState(BaseModel):
+    isPublished: bool
+    isAcceptingResponses: bool
+
+
+class PublishSettings(BaseModel):
+    publishState: PublishState
+
+
+class PublishRequest(BaseModel):
+    publishSettings: PublishSettings
+
+
+if __name__ == "__main__":
+    settings = PublishRequest(
+        publishSettings=PublishSettings(
+            publishState=PublishState(isPublished=True, isAcceptingResponses=True)
+        )
+    )
+    values = settings.model_dump(exclude_none=True)
+    for key, value in values.items():
+        print(f"{key}: {value}")

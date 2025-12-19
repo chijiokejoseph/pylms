@@ -1,6 +1,7 @@
-from pylms.config.config import Config
-from pylms.constants import STATE_PATH
 import tomlkit
+
+from ..constants import STATE_PATH
+from .config import Config
 
 
 def new_config() -> Config:
@@ -24,6 +25,6 @@ def read_config() -> Config:
 def write_config(config: Config) -> None:
     config_dict = config.to_dict()
     with STATE_PATH.open(mode="w", encoding="utf-8") as f:
-        toml_text: str = tomlkit.dumps(config_dict)
-        f.write(toml_text)
+        toml_text: str = tomlkit.dumps(config_dict)  # pyright: ignore [reportUnknownMemberType]
+        _ = f.write(toml_text)
         return None

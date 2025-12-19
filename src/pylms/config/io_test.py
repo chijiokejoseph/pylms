@@ -1,11 +1,12 @@
 from unittest import TestCase, main
-from pylms.config.io import read_config, new_config
-from pylms.constants import STATE_PATH
+
+from ..constants import STATE_PATH
+from .io import new_config, read_config
 
 
 class TestNew(TestCase):
     def test_new(self) -> None:
-        new_config()
+        _ = new_config()
         self.assertTrue(STATE_PATH.exists())
 
     def test_read(self) -> None:
@@ -16,4 +17,4 @@ class TestNew(TestCase):
 
 
 if __name__ == "__main__":
-    main()
+    _ = main()

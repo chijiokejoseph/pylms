@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional  # pyright: ignore[reportDeprecated]
 
 from pydantic import BaseModel
 
@@ -24,4 +24,4 @@ class Response(BaseModel):
 
 
 class ResponseModel(BaseModel):
-    responses: Optional[list[Response]] = []
+    responses: Optional[list[Response]] = []  # pyright: ignore[reportDeprecated]

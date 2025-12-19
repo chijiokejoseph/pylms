@@ -1,5 +1,5 @@
-from pylms.cli.option_input import input_option
-from pylms.errors import Result
+from ..errors import Result
+from .option_input import input_option
 
 
 def interact(menu: list[str]) -> Result[int]:

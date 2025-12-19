@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Self, final
 
-from pylms.constants import GLOBAL_RECORD_PATH
-from pylms.errors import LMSError
-from pylms.record import RecordStatus, retrieve_record
-from pylms.rollcall.errors import PathNotFoundError
-from pylms.utils import DataStore, paths
+from ..constants import GLOBAL_RECORD_PATH
+from ..data import DataStore
+from ..errors import Result, eprint
+from ..paths import get_global_record_path, get_paths_json
+from ..record import RecordStatus, retrieve_record
 
 
 class _DateRecord(NamedTuple):
@@ -18,35 +18,52 @@ class _DateRecord(NamedTuple):
         self.dates[target_date] = new_record
         return None
 
-    def unwrap(self, target_date: str, new_record: RecordStatus) -> RecordStatus:
+    def unwrap(
+        self, target_date: str, new_record: RecordStatus
+    ) -> Result[RecordStatus]:
         if self.dates.get(target_date) is None:
-            raise LMSError(f"Entry {target_date} not found among dates list")
+            msg = f"Entry {target_date} not found among dates list"
+            eprint(msg)
+            return Result.err(msg)
         if self.dates[target_date] != RecordStatus.EMPTY:
-            return self.dates[target_date]
-        return new_record
+            value = self.dates[target_date]
+            return Result.ok(value)
+        return Result.ok(new_record)
 
 
+@final
 class GlobalRecord:
+    date_record: _DateRecord
+
     def __init__(self) -> None:
-        global_record_path: Path = paths.get_global_record_path()
+        self.date_record = _DateRecord({})
+        pass
+
+    @classmethod
+    def new(cls) -> Result[Self]:
+        instance = cls()
+        global_record_path: Path = get_global_record_path()
         if global_record_path.exists():
             with global_record_path.open("r") as file_record:
                 data = json.load(file_record)
                 record: dict[str, RecordStatus] = {
                     key: retrieve_record(value) for key, value in data.items()
                 }
-                self.date_record: _DateRecord = _DateRecord(record)
-                return
+                instance.date_record = _DateRecord(record)
+                return Result.ok(instance)
 
-        if not paths.get_paths_json()["Date"].exists():
-            raise PathNotFoundError(
-                f"The save path for dates: {paths.get_paths_json()['Date'].absolute()} does not exist"
-            )
-        with paths.get_paths_json()["Date"].open("r") as file_record:
+        if not get_paths_json()["Date"].exists():
+            msg = f"The save path for dates: {get_paths_json()['Date'].absolute()} does not exist"
+            eprint(msg)
+            return Result.err(msg)
+
+        with get_paths_json()["Date"].open("r") as file_record:
             dates_list: list[str] = json.load(file_record)
-            self.date_record = _DateRecord(
+            instance.date_record = _DateRecord(
                 {date: RecordStatus.EMPTY for date in dates_list}
             )
+
+        return Result.ok(instance)
 
     @property
     def dates(self) -> dict[str, RecordStatus]:
@@ -58,7 +75,7 @@ class GlobalRecord:
             key: str(value) for key, value in self.dates.items()
         }
 
-        global_record_path: Path = paths.get_global_record_path()
+        global_record_path: Path = get_global_record_path()
 
         with global_record_path.open("w") as file:
             json.dump(save_data, file)
@@ -66,7 +83,9 @@ class GlobalRecord:
         with GLOBAL_RECORD_PATH.open("w") as file:
             json.dump(save_data, file)
 
-    def unwrap(self, target_date: str, new_record: RecordStatus) -> RecordStatus:
+    def unwrap(
+        self, target_date: str, new_record: RecordStatus
+    ) -> Result[RecordStatus]:
         return self.date_record.unwrap(target_date, new_record)
 
     def crosscheck(self, ds: DataStore) -> None:

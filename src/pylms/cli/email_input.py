@@ -1,6 +1,6 @@
-from pylms.cli.custom_inputs import input_str
-from pylms.cli.utils import validate_email
-from pylms.errors import Result
+from ..cli_utils import validate_email
+from ..errors import Result
+from .custom_inputs import input_str
 
 
 def input_email(
@@ -19,7 +19,7 @@ def input_email(
     """
     result: Result[str] = input_str(msg, validate_email, diagnosis)
     if result.is_err():
-        return Result[str].err(result.unwrap_err())
+        return result.propagate()
     chosen_email: str = result.unwrap()
     print(f"Email entered: {chosen_email} has been validated. You may proceed\n")
-    return Result[str].ok(chosen_email)
+    return Result.ok(chosen_email)

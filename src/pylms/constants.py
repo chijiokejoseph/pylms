@@ -1,18 +1,18 @@
 from datetime import datetime
 from pathlib import Path
-from typing import TypedDict, Callable
-import pandas as pd
+from typing import Callable, TypedDict
 
+import pandas as pd
 
 PARENT_PATH: Path = Path(__file__).resolve().parents[2]
 ENV_PATH: Path = PARENT_PATH / ".env"
 DEFAULT_DATA_PATH: Path = PARENT_PATH / "data"
-STATE_PATH: Path = PARENT_PATH / "state.toml"
+STATE_PATH: Path = DEFAULT_DATA_PATH / "state.toml"
 SECRETS_PATH: Path = PARENT_PATH / "secrets.json"
-HISTORY_PATH: Path = PARENT_PATH / "history.json"
+HISTORY_PATH: Path = DEFAULT_DATA_PATH / "history.json"
 HISTORY_JSON: str = "history.json"
 # RollCall Global Data
-GLOBAL_RECORD_PATH: Path = PARENT_PATH / "global_record.json"
+GLOBAL_RECORD_PATH: Path = DEFAULT_DATA_PATH / "global_record.json"
 GLOBAL_RECORD_JSON: str = "global_record.json"
 DISCOVERY_DOC = "https://forms.googleapis.com/$discovery/rest?version=v1"
 SCOPES = "https://www.googleapis.com/auth/forms.body"
@@ -138,14 +138,14 @@ NA_COLUMNS_FILL: dict[str, object] = {
 }
 
 # Delimiters / Separators
-COMMA: str = ","
-COMMA_DELIM: str = ", "
-SPACE_DELIM: str = " "
-SEMI: str = ";"
-SEMI_DELIM: str = "; "
-FRONT_SLASH: str = "/"
-BACK_SLASH: str = "\\"
-HYPHEN: str = "-"
+COMMA = ","
+COMMA_DELIM = ", "
+SPACE_DELIM = " "
+SEMI = ";"
+SEMI_DELIM = "; "
+FRONT_SLASH = "/"
+BACK_SLASH = "\\"
+HYPHEN = "-"
 
 # Column Names for Cache CSV
 CACHE_TIME: str = "Timestamp"
@@ -201,7 +201,41 @@ COURSES: list[str] = [
     "Embedded Systems",
 ]
 
+PROGRAM = "Program"
+
+PROGRAMS: list[str] = [
+    "NYSC",
+    "1 MONTH SIWES",
+    "2 MONTHS SIWES",
+    "3 MONTHS SIWES",
+    "4 MONTHS SIWES",
+    "5 MONTHS SIWES",
+    "6 MONTHS SIWES",
+]
+
+ISSUE = "Issue"
+
+ISSUES: list[str] = [
+    "I missed registration",
+    "I registered late",
+    "I registered for the wrong course",
+    "I want to register for Embedded Systems",
+    "I was supposed to register for two courses, but I registered one",
+    "I registered for the wrong course, I registered late",
+    "None of this best describes my issue",
+]
+EXPLANATION = "Explain Your Issue"
+EXPLANATION_STMT = "Write a detailed explanation of your issue"
+EVIDENCE = "Attach evidence if applicable"
+COURSES_COMPLETE = "Courses Completed"
+COURSES_COMPLETE_STMT = "Select the Courses you have completed"
+CONFIRM_REG = "Registered"
+CONFIRM_REG_STMT = "Did you register before 5pm on Orientation Day"
+COURSES_REGISTERED = "Select the course(s) you registered for"
+
+
 WEEK_DAY_FMT: str = "%A"
+MONTH_STR_FMT: str = "%B"
 
 
 ############################################################################

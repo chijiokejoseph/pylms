@@ -1,17 +1,16 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any
 from uuid import UUID
 
 import pandas as pd
 
-from pylms.cache.cache import copy_data
-from pylms.cli import input_num
-from pylms.constants import CACHE_CMD, CACHE_ID, CACHE_TIME
-from pylms.errors import Result, eprint
-from pylms.utils import DataStream, paths
-
-type ValidatorFn = Callable[[pd.DataFrame | pd.Series], bool]
+from ..cli import input_num
+from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME
+from ..data import DataStream, read
+from ..errors import Result, Unit, eprint
+from ..paths import get_data_path, get_metadata_path, get_snapshot_path
+from .cache import copy_data
 
 
 def verify_cache_records(test_data: pd.DataFrame) -> bool:
@@ -63,26 +62,25 @@ def len_str(item: Any) -> int:
     return len(str(item))
 
 
-def rollback_to_cmd(test_path: Path | None = None) -> None:
+def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
     """
     Display cache records, prompt user to select a rollback state, and perform rollback.
 
     :param test_path: (Path | None) - Optional path to rollback data to.
     :type test_path: Path or None
 
-    :return: (None) - returns None.
-    :rtype: None
+    :return: (Result[Unit]) - returns result.
+    :rtype: Result[Unit]
     """
     # Read cache records from metadata path
-    cache_records: pd.DataFrame = pd.read_csv(  # pyright: ignore[reportUnknownMemberType]
-        str(paths.get_metadata_path())
-    )
+    cache_records = read(get_metadata_path())
+    if cache_records.is_err():
+        return cache_records.propagate()
 
-    # Cast the verify function to ValidatorFn type
-    validate_fn = cast(ValidatorFn, verify_cache_records)
+    cache_records = cache_records.unwrap()
 
     # Create a DataStream with validation
-    cache_stream: DataStream[pd.DataFrame] = DataStream(cache_records, validate_fn)
+    cache_stream = DataStream(cache_records, verify_cache_records)
 
     # Validate and get the cache records
     cache_records = cache_stream()
@@ -120,19 +118,19 @@ def rollback_to_cmd(test_path: Path | None = None) -> None:
     )
     if value_result.is_err():
         eprint(f"Error retrieving index: {value_result.unwrap_err()}")
-        return None
+        return value_result.propagate()
     idx = value_result.unwrap()
 
     # Get the snapshot ID from the selected cache record
-    snapshot_value = cache_records.loc[idx - 1, CACHE_ID]
-    snapshot_id = UUID(cast(str, snapshot_value))
+    snapshot_value = cache_records[CACHE_ID].astype(str).iloc[idx - 1]
+    snapshot_id = UUID(snapshot_value)
 
     # Get the snapshot path for the rollback
-    snapshot_path = paths.get_snapshot_path(snapshot_id)
+    snapshot_path = get_snapshot_path(snapshot_id)
 
     # Use provided test_path or default data path
     if test_path is None:
-        test_path = paths.get_data_path()
+        test_path = get_data_path()
 
     # Perform the rollback by copying data from snapshot to test_path
-    copy_data(snapshot_id, snapshot_path, test_path)
+    return copy_data(snapshot_id, snapshot_path, test_path)

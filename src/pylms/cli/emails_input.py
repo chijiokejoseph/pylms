@@ -1,14 +1,15 @@
 from pathlib import Path
+
 import pandas as pd
 
-from pylms.cli.custom_inputs import input_str
-from pylms.cli.option_input import input_option
-from pylms.cli.path_input import input_path
-from pylms.cli.utils.email_test import validate_email
-from pylms.constants import COMMA, SEMI
-from pylms.errors import Result, eprint
-from pylms.utils.data.data_read import read_data
-from pylms.utils.data.datastream import DataStream
+from ..cli_utils import validate_email
+from ..constants import COMMA, SEMI
+from ..data.data_read import read
+from ..data.datastream import DataStream
+from ..errors import Result, eprint
+from .custom_inputs import input_str
+from .option_input import input_option
+from .path_input import input_path
 
 
 def verify_excel(data: pd.DataFrame) -> bool:
@@ -50,7 +51,7 @@ def provide_emails() -> Result[list[str]]:
         provide_emails_formats, prompt="Select the format to provide the email in"
     )
     if option_result.is_err():
-        return Result[list[str]].err(option_result.unwrap_err())
+        return option_result.propagate()
     pos, format_msg = option_result.unwrap()
 
     # Read emails based on the selected input format
@@ -59,7 +60,7 @@ def provide_emails() -> Result[list[str]]:
             # Get the file path or input string based on the selected format
             path_result: Result[Path] = input_path(f"{format_msg}: ")
             if path_result.is_err():
-                return Result[list[str]].err(path_result.unwrap_err())
+                return path_result.propagate()
             filepath: Path = path_result.unwrap()
 
             match pos:
@@ -70,21 +71,22 @@ def provide_emails() -> Result[list[str]]:
                     ) and not filepath.suffix.endswith("csv"):
                         msg: str = f"Error: Invalid file type. {filepath} is not a txt or csv file. Please select a .txt or .csv file."
                         eprint(msg)
-                        return Result[list[str]].err(ValueError(msg))
+                        return Result.err(ValueError(msg))
                     with filepath.open() as file:
                         emails: list[str] = file.readlines()
                         emails = [email.strip() for email in emails]
                 case _:
                     # Read emails from an Excel file with a single column
-                    data: pd.DataFrame = read_data(filepath)
-                    stream: DataStream[pd.DataFrame] = DataStream[pd.DataFrame](
-                        data, verify_excel
-                    )
+                    data = read(filepath)
+                    if data.is_err():
+                        return data.propagate()
+                    data = data.unwrap()
+                    stream: DataStream[pd.DataFrame] = DataStream(data, verify_excel)
                     emails = stream.as_ref().iloc[:, 0].tolist()
         case _:
             email_result: Result[str] = input_str(f"{format_msg}: ")
             if not email_result.is_ok():
-                return Result[list[str]].err(ValueError("Invalid emails passed in"))
+                return Result.err(ValueError("Invalid emails passed in"))
             # Read emails from a delimited input string
             response: str = email_result.unwrap()
             emails = (
@@ -99,5 +101,5 @@ def provide_emails() -> Result[list[str]]:
     if len(emails) == 0:
         msg = "Error: No valid emails found in the file."
         eprint(msg)
-        return Result[list[str]].err(ValueError(msg))
-    return Result[list[str]].ok(emails)
+        return Result.err(ValueError(msg))
+    return Result.ok(emails)

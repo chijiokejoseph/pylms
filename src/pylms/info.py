@@ -1,4 +1,4 @@
-def println(msg: str) -> None:
+def print_info(msg: str) -> None:
     print(f"\nℹ️ {msg}")
 
 

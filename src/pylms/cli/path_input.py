@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Callable
 
-from pylms.cli.custom_inputs import input_str
-from pylms.errors import LMSError, Result
+from ..errors import Result
+from .custom_inputs import input_str
 
 
 def input_path(
@@ -23,11 +23,10 @@ def input_path(
     :rtype: Result[Path]
     """
     # Prompt user for input string with validation
-    result: Result[str] = input_str(
-        msg, str_test_fn, str_test_diagnosis, trials, lower_case=False
-    )
+    result = input_str(msg, str_test_fn, str_test_diagnosis, trials, lower_case=False)
     if result.is_err():
-        return Result[Path].err(result.unwrap_err())
+        return result.propagate()
+
     path_str: str = result.unwrap()
     # Strip whitespace and remove surrounding quotes
     path_str = path_str.strip()
@@ -44,9 +43,9 @@ def input_path(
         err_msg: str = f"'{path_str}' does not meet input requirements. {diagnosis}"
         # Return Result with error if validation fails
         print(f"\n{err_msg}\n")
-        return Result[Path].err(LMSError(err_msg))
+        return Result.err(err_msg)
     # Return the validated Path object
-    return Result[Path].ok(path)
+    return Result.ok(path)
 
 
 def test_path_in(path_input: Path) -> tuple[bool, str]:

@@ -1,7 +1,7 @@
 from typing import Callable, cast, overload
 
-from pylms.cli.input_with_quit import input_fn
-from pylms.errors import LMSError, Result, eprint
+from ..errors import Result, eprint
+from .input_with_quit import input_fn
 
 
 @overload
@@ -90,9 +90,7 @@ def input_num(
 
     # Forcefully exit the program by raising an InvalidInputError if the loop is exhausted and no valid input has been entered
     return Result.err(
-        LMSError(
-            f"You've entered an invalid response {trials} times. Please restart the program.",
-        )
+        f"You've entered an invalid response {trials} times. Please restart the program.",
     )
 
 
@@ -133,16 +131,18 @@ def input_str(
         # get input from the user
         result: Result[str] = input_fn(msg)
         if result.is_err():
-            error = result.unwrap_err()
-            return Result[str].err(error)
+            return result.propagate()
+
         response: str = result.unwrap().strip()
+
         if lower_case:
             response = response.lower()
+
         # validate input with `test_fn`
         if test_fn(response):
             # return early if input is valid
             print()
-            return Result[str].ok(response)
+            return Result.ok(response)
         else:
             # print message on invalid input from the user
             # print default message if `diagnosis` is None
@@ -151,8 +151,7 @@ def input_str(
                 eprint("You have entered an invalid response\n")
             else:
                 eprint(f"You have entered {response}. {diagnosis}\n")
-    return Result[str].err(
-        LMSError(
-            f"You've entered an invalid response {trials} times. Please restart the program.",
-        )
+
+    return Result.err(
+        f"You've entered an invalid response {trials} times. Please restart the program.",
     )

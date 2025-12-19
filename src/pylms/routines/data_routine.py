@@ -1,9 +1,8 @@
-from pylms.cache import cache_for_cmd, rollback_to_cmd
-from pylms.cli import interact
-from pylms.data_ops import edit, list_ds, load, remove_students, save, view
-from pylms.errors import eprint
-from pylms.info import printpass
-from pylms.utils import DataStore
+from ..cache import cache_for_cmd, rollback_to_cmd
+from ..cli import interact
+from ..data import DataStore
+from ..data_service import edit, list_ds, load, remove_students, save, view
+from ..info import print_info, printpass
 
 
 def handle_data(ds: DataStore) -> None:
@@ -17,18 +16,24 @@ def handle_data(ds: DataStore) -> None:
     ]
 
     while True:
-        selection_result = interact(menu)
-        if selection_result.is_err():
-            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
+        selection = interact(menu)
+        if selection.is_err():
             continue
-        selection: int = selection_result.unwrap()
+
+        selection = selection.unwrap()
+
         cmd: str = menu[selection - 1]
+
         if selection < len(menu):
-            cache_for_cmd(cmd)
+            result = cache_for_cmd(cmd)
+            if result.is_err():
+                continue
 
         match selection:
             case 1:
-                view(ds)
+                result = view(ds)
+                if result.is_err():
+                    continue
             case 2:
                 result = edit(ds)
                 if result.is_err():
@@ -37,14 +42,28 @@ def handle_data(ds: DataStore) -> None:
             case 3:
                 list_ds(ds)
             case 4:
-                remove_students(ds)
+                result = remove_students(ds)
+                if result.is_err():
+                    continue
                 printpass("Students removed successfully\n")
             case 5:
-                rollback_to_cmd()
-                ds.copy_from(load())
+                result = rollback_to_cmd()
+                if result.is_err():
+                    continue
+
+                app_ds = load()
+                if app_ds.is_err():
+                    continue
+
+                app_ds = app_ds.unwrap()
+                ds.copy_from(app_ds)
             case _:
                 break
 
-        save(ds)
+        result = save(ds)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
 
     return None

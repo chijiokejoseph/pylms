@@ -1,9 +1,8 @@
-from pylms.cli import input_option, interact
-from pylms.config import Config, new_config, write_config
-from pylms.constants import GLOBAL_RECORD_PATH, HISTORY_PATH
-from pylms.errors import eprint
-from pylms.info import println, printpass
-from pylms.utils import paths, rm_path
+from ..cli import input_option, interact
+from ..config import Config, new_config, write_config
+from ..constants import GLOBAL_RECORD_PATH, HISTORY_PATH
+from ..info import print_info, printpass
+from ..paths import get_cache_path, rm_path
 
 
 def handle_cohort(config: Config) -> None:
@@ -15,16 +14,16 @@ def handle_cohort(config: Config) -> None:
     ]
 
     while True:
-        selection_result = interact(menu)
-        if selection_result.is_err():
-            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
+        selection = interact(menu)
+        if selection.is_err():
             continue
-        selection: int = selection_result.unwrap()
+
+        selection = selection.unwrap()
 
         match selection:
             case 1:
                 if not config.is_open():
-                    println("Cohort is already closed.\n")
+                    print_info("Cohort is already closed.\n")
                     continue
                 result = input_option(
                     ["Yes", "No"],
@@ -41,7 +40,7 @@ def handle_cohort(config: Config) -> None:
                     )
             case 2:
                 if config.is_open():
-                    println("Cohort is already open.\n")
+                    print_info("Cohort is already open.\n")
                     continue
                 result = input_option(
                     ["Yes", "No"],
@@ -56,11 +55,20 @@ def handle_cohort(config: Config) -> None:
                     printpass("The Cohort, which was previously closed, is now open.\n")
             case 3:
                 if config.is_open():
-                    println("Close the Cohort First before creating a new cohort.\n")
+                    print_info("Close the Cohort First before creating a new cohort.\n")
                     continue
-                rm_path(paths.get_cache_path())
-                rm_path(HISTORY_PATH)
-                rm_path(GLOBAL_RECORD_PATH)
+                result = rm_path(get_cache_path())
+                if result.is_err():
+                    continue
+
+                result = rm_path(HISTORY_PATH)
+                if result.is_err():
+                    continue
+
+                result = rm_path(GLOBAL_RECORD_PATH)
+                if result.is_err():
+                    continue
+
                 config.from_self(new_config())
                 printpass("You have a new open cohort\n")
             case _:

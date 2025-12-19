@@ -1,5 +1,6 @@
 from typing import Callable, NamedTuple
-from pylms.errors import Result
+
+from ..errors import Result
 
 
 class TextBody(NamedTuple):

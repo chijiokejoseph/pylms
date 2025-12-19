@@ -1,6 +1,7 @@
-from typing import Any, Self, cast
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any, Self, cast, override
 
 
 class TomlProtocol(ABC):
@@ -40,7 +41,7 @@ class TomlProtocol(ABC):
         pass
 
     @abstractmethod
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Mapping[str, object]:
         """
         Convert the instance into a dictionary representation.
 
@@ -73,6 +74,7 @@ class TomlSettings(TomlProtocol):
         self.course_name: str = course_name
 
     @classmethod
+    @override
     def default(cls) -> Self:
         """
         Create a default TomlSettings instance with empty data_dir and course_name.
@@ -83,6 +85,7 @@ class TomlSettings(TomlProtocol):
         return cls(data_dir="", course_name="")
 
     @classmethod
+    @override
     def from_value(cls, value_in: Any) -> Self:
         """
         Create a TomlSettings instance from a generic input value.
@@ -113,6 +116,7 @@ class TomlSettings(TomlProtocol):
                 obj.course_name = value if isinstance(value, str) else ""
         return obj
 
+    @override
     def to_dict(self) -> dict[str, str]:
         """
         Convert the TomlSettings instance into a dictionary representation.
@@ -146,6 +150,7 @@ class TomlState(TomlProtocol):
         self.open = open_in
 
     @classmethod
+    @override
     def default(cls) -> Self:
         """
         Create a default TomlState instance with an empty open list.
@@ -157,6 +162,7 @@ class TomlState(TomlProtocol):
         return cls(open_in=[])
 
     @classmethod
+    @override
     def from_value(cls, value_in: Any) -> Self:
         """
         Create a TomlState instance from a generic input value.
@@ -178,14 +184,17 @@ class TomlState(TomlProtocol):
             if not isinstance(value, list):
                 continue
             # Skip if list is empty or first element is not a bool
-            if len(value) == 0 or not all(isinstance(each_value, bool) for each_value in value):
+            if len(value) == 0 or not all(
+                isinstance(each_value, bool) for each_value in value
+            ):
                 continue
             # Cast the list to list of bool and return new instance
             return cls(open_in=cast(list[bool], value))
         # Return default if no valid 'open' key found
         return default
 
-    def to_dict(self) -> dict[str, list[bool]]:
+    @override
+    def to_dict(self) -> Mapping[str, list[bool]]:
         """
         Convert the TomlState instance into a dictionary representation.
 
@@ -232,6 +241,7 @@ class Config(TomlProtocol):
         self.state = state
 
     @classmethod
+    @override
     def default(cls) -> Self:
         """
         Create a default Config instance with default settings and state.
@@ -243,6 +253,7 @@ class Config(TomlProtocol):
         return cls(settings=TomlSettings.default(), state=TomlState.default())
 
     @classmethod
+    @override
     def from_value(cls, value_in: Any) -> Self:
         """
         Create a Config instance from a generic input value.
@@ -283,7 +294,8 @@ class Config(TomlProtocol):
         self.settings = other.settings
         self.state = other.state
 
-    def to_dict(self) -> dict:
+    @override
+    def to_dict(self) -> dict[str, object]:
         """
         Convert the Config instance into a dictionary representation.
 

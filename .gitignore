@@ -208,10 +208,9 @@ __marimo__/
 
 # Secrets
 secrets.json
-history.json
-global_record.json
-state.toml
+
+# local
+/data/
 
 # Test Html files
-src/pylms/html/
-rust_utils/
+src/html/

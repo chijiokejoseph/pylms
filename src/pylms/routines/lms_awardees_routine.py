@@ -1,11 +1,11 @@
-from pylms.cache import cache_for_cmd
-from pylms.cli import interact
-from pylms.data_ops import save
-from pylms.errors import eprint
-from pylms.history import History
-from pylms.info import println, printpass
-from pylms.lms import collate_fast_track, collate_merge, collate_merit, send_result
-from pylms.utils import DataStore
+from ..cache import cache_for_cmd
+from ..cli import interact
+from ..data import DataStore
+from ..data_service import save
+from ..history import History, record_merit, save_history
+from ..info import print_info, printpass
+from ..result_collate import collate_fast_track, collate_merge, collate_merit
+from ..result_utils import mail_result
 
 
 def run_awardees_lms(ds: DataStore, history: History) -> None:
@@ -18,40 +18,68 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection_result = interact(menu)
-        if selection_result.is_err():
-            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
+        selection = interact(menu)
+        if selection.is_err():
             continue
-        selection: int = selection_result.unwrap()
+
+        selection = selection.unwrap()
+
         cmd: str = menu[selection - 1]
+
         if selection < len(menu):
-            cache_for_cmd(cmd)
+            result = cache_for_cmd(cmd)
+            if result.is_err():
+                continue
 
         match selection:
             case 1:
-                collate_fast_track(ds)
+                result = collate_fast_track(ds)
+                if result.is_err():
+                    continue
+
                 printpass("Recorded Fast Track Awardees.\n")
             case 2:
                 result = collate_merit(ds, history)
                 if result.is_err():
                     continue
+
                 printpass("Recorded Merit Awardees.\n")
-                history.record_merit()
+                result = record_merit(history)
+                if result.is_err():
+                    continue
+
             case 3:
-                collate_merge(ds)
+                result = collate_merge(ds)
+                if result.is_err():
+                    continue
+
                 printpass("Merit and Fast Track Awardees merged successfully\n")
             case 4:
                 if history.has_collated_merit:
-                    send_result(ds)
+                    result = mail_result(ds)
+                    if result.is_err():
+                        continue
+
                     printpass("Email sent successfully\n")
                 else:
-                    println("Collate Merit Awardees first, before emailing results.\n")
+                    print_info(
+                        "Collate Merit Awardees first, before emailing results.\n"
+                    )
             case 5:
                 break
             case _:
                 pass
 
-        save(ds)
-        history.save()
+        result = save(ds)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
+
+        result = save_history(history)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
 
     return None

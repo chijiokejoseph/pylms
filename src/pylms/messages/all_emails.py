@@ -1,17 +1,18 @@
 from email.message import EmailMessage
 from smtplib import SMTP
 
-from pylms.constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
-from pylms.email import MailError, run_email
-from pylms.errors import Result, Unit
-from pylms.history.history import History
-from pylms.messages.all_msg_builders import (
+from ..constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
+from ..data import DataStore
+from ..email import MailError, run_email
+from ..errors import Result, Unit
+from ..history import History
+from ..paths import must_get_env
+from .all_msg_builders import (
     build_assessment_all_msg,
     build_custom_all_msg,
 )
-from pylms.messages.message_record import MessageRecord
-from pylms.messages.utils import MessageBuilder, TextBody
-from pylms.utils import DataStore, must_get_env
+from .message_record import MessageRecord
+from .utils import MessageBuilder, TextBody
 
 
 def _construct_html_message(

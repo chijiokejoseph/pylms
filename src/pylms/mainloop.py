@@ -1,22 +1,23 @@
 import traceback
 from typing import Callable
-from pylms.cache import cache_for_cmd
-from pylms.cli import interact, input_option
-from pylms.errors import LMSError, Result
-from pylms.data_ops import load, view
-from pylms.lms.collate import view_result
-from pylms.routines import (
+
+from .cache import cache_for_cmd
+from .cli import input_option, interact
+from .config import Config
+from .data_service import load, view
+from .errors import LMSError, Result, eprint
+from .history import load_history
+from .info import print_info
+from .result_utils import view_result
+from .routines import (
     handle_cds,
     handle_cohort,
     handle_data,
-    handle_rollcall,
     handle_message,
+    handle_rollcall,
     register,
     run_lms,
 )
-from pylms.history import History
-from pylms.utils import DataStore
-from pylms.config import Config
 
 
 def handle_err(func: Callable[[], Result[bool]]) -> bool | None:
@@ -30,13 +31,12 @@ def handle_err(func: Callable[[], Result[bool]]) -> bool | None:
             ["Yes", "No"], prompt="Do you wish to view error trace"
         )
         if option_result.is_err():
-            print(f"Error retrieving option: {option_result.unwrap_err()}")
             return None
         idx, choice = option_result.unwrap()
         choice = choice.lower()
         if idx == 1:
             traceback.print_exc()
-        print(e.message)
+        eprint(e.message)
     print("\n")
     return None
 
@@ -52,15 +52,31 @@ def mainloop(config: Config) -> Result[bool]:
         "Message",
         "Quit",
     ]
-    history: History = History.load()
-    ds: DataStore = load()
-    selection_result = interact(menu)
-    if selection_result.is_err():
-        return Result[bool].err(selection_result.unwrap_err())
-    selection: int = selection_result.unwrap()
+    history = load_history()
+    if history.is_err():
+        return history.propagate()
+    history = history.unwrap()
+
+    ds = load()
+    if ds.is_err():
+        return ds.propagate()
+    ds = ds.unwrap()
+
+    selection = interact(menu)
+
+    if selection.is_err():
+        return selection.propagate()
+
+    selection = selection.unwrap()
+
     cmd: str = menu[selection - 1]
+
     if selection < len(menu):
-        cache_for_cmd(cmd)
+        result = cache_for_cmd(cmd)
+
+        if result.is_err():
+            return result.propagate()
+
     match int(selection):
         case 1:
             handle_rollcall(ds, history)
@@ -77,37 +93,54 @@ def mainloop(config: Config) -> Result[bool]:
         case 7:
             handle_message(ds, history)
         case _:
-            print(
+            print_info(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"
             )
-            return Result[bool].ok(False)
-    return Result[bool].ok(True)
+            return Result.ok(False)
+    return Result.ok(True)
 
 
 def closed_loop(config: Config) -> Result[bool]:
-    print("\nCohort is closed.\n")
+    print_info("Cohort is closed.\n")
     menu: list[str] = [
         "View Data Records",
         "View Results",
         "Cohort",
         "Quit",
     ]
-    selection_result = interact(menu)
-    if selection_result.is_err():
-        return Result[bool].err(selection_result.unwrap_err())
-    selection: int = selection_result.unwrap()
+    selection = interact(menu)
+
+    if selection.is_err():
+        return selection.propagate()
+
+    selection = selection.unwrap()
+
     match int(selection):
         case 1:
             app_ds = load()
-            view(app_ds)
+            if app_ds.is_err():
+                return app_ds.propagate()
+            app_ds = app_ds.unwrap()
+
+            result = view(app_ds)
+            if result.is_err():
+                return result.propagate()
         case 2:
             app_ds = load()
-            view_result(app_ds)
+
+            if app_ds.is_err():
+                return app_ds.propagate()
+            app_ds = app_ds.unwrap()
+
+            result = view_result(app_ds)
+            if result.is_err():
+                return result.propagate()
+
         case 3:
             handle_cohort(config)
         case _:
-            print(
+            print_info(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"
             )
-            return Result[bool].ok(False)
-    return Result[bool].ok(True)
+            return Result.ok(False)
+    return Result.ok(True)

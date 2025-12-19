@@ -4,22 +4,22 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from pylms.cli import input_num
-from pylms.cli.option_input import input_option
-from pylms.constants import GROUP, NAME, SERIAL
-from pylms.history.history import History
-from pylms.utils import DataStore, DataStream, paths
+from ..cli import input_num, input_option
+from ..constants import GROUP, NAME, SERIAL
+from ..data import DataStore, DataStream
+from ..errors import Result, Unit, eprint
+from ..history import History, set_group
+from ..paths import get_group_dir, get_group_path
 
 
-def group(ds: DataStore, history: History) -> None:
+def group(ds: DataStore, history: History) -> Result[Unit]:
     if len(history.recorded_update_forms) == 0 and len(history.update_forms) > 0:
-        print(
-            "\nYou need to record at least one of the update forms you created for the cohort before grouping students\n"
-        )
-        return None
+        msg = "\nYou need to record at least one of the update forms you created for the cohort before grouping students\n"
+        eprint(msg)
+        return Result.err(msg)
 
-    group_data_path: Path = paths.get_group_path()
-    group_dir: Path = paths.get_group_dir()
+    group_data_path: Path = get_group_path()
+    group_dir: Path = get_group_dir()
     if group_data_path.exists():
         print(
             f"You have already grouped students. \nPlease check the path {group_data_path.resolve()} for the previous grouping operation you performed."
@@ -28,18 +28,20 @@ def group(ds: DataStore, history: History) -> None:
         options: list[str] = ["Yes", "No"]
         option_result = input_option(options, prompt=prompt)
         if option_result.is_err():
-            return None
+            return option_result.propagate()
         idx, _ = option_result.unwrap()
         if idx == 2:
-            return None
+            return Result.unit()
 
     group_dir.mkdir(exist_ok=True)
     pretty_data: pd.DataFrame = ds.pretty()
+
     msg: str = "Please enter the number of groups [Must be between 3 - 100]: "
     num_result = input_num(msg, 1, lambda x: 3 <= x <= 100)
+
     if num_result.is_err():
-        print(f"Error retrieving number of groups: {num_result.unwrap_err()}")
-        return None
+        return num_result.propagate()
+
     num_groups = num_result.unwrap()
     groups: list[int] = [
         num_groups if serial % num_groups == 0 else serial % num_groups
@@ -55,8 +57,7 @@ def group(ds: DataStore, history: History) -> None:
         mask: np.ndarray = cast(np.ndarray, groups_arr == grp_num)
         grp_num_data: pd.DataFrame = group_data.loc[mask, :]
         grp_num_stream: DataStream[pd.DataFrame] = DataStream(grp_num_data)
-        grp_num_path: Path = paths.get_group_path(grp_num)
+        grp_num_path: Path = get_group_path(grp_num)
         grp_num_stream.to_excel(grp_num_path)
 
-    history.set_group(num_groups)
-    return None
+    return set_group(history, num_groups)

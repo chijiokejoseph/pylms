@@ -4,9 +4,9 @@ from typing import override
 
 from dotenv import load_dotenv
 
-from pylms.email.run import run_email
-from pylms.errors import Result, Unit
-from pylms.utils import must_get_env
+from ..errors import Result, Unit
+from ..paths import must_get_env
+from .run import run_email
 
 
 class RunEmailTest(unittest.TestCase):

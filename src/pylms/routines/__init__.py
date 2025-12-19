@@ -1,11 +1,10 @@
-from pylms.routines.cds_routine import handle_cds
-from pylms.routines.data_routine import handle_data
-from pylms.routines.lms_routine import run_lms
-from pylms.routines.register_routine import register
-from pylms.routines.rollcall_routine import handle_rollcall
-from pylms.routines.cohort_routine import handle_cohort
-from pylms.routines.message_routine import handle_message
-
+from .cds_routine import handle_cds
+from .cohort_routine import handle_cohort
+from .data_routine import handle_data
+from .lms_routine import run_lms
+from .message_routine import handle_message
+from .register_routine import register
+from .rollcall_routine import handle_rollcall
 
 __all__ = [
     "handle_cds",

@@ -1,9 +1,8 @@
-from pylms.cli.custom_inputs import input_str
-from pylms.cli.option_input import input_option
-from pylms.errors import Result
-from pylms.history.history import History
-from pylms.messages.construct import construct_msg
-from pylms.messages.utils import TextBody
+from ..cli import input_option, input_str
+from ..errors import Result
+from ..history.history import History
+from .construct import construct_msg
+from .utils import TextBody
 
 
 # Define a builder function to create the list of messages to send

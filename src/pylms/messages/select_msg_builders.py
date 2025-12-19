@@ -1,10 +1,10 @@
-from pylms.cli.custom_inputs import input_str
-from pylms.errors import LMSError, Result
-from pylms.forms import select_form
-from pylms.history import History
-from pylms.messages.construct import construct_msg
-from pylms.messages.utils import TextBody
-from pylms.models.form_info import CDSFormInfo, UpdateFormInfo
+from ..cli import input_str
+from ..errors import LMSError, Result
+from ..form_utils import select_form
+from ..history import History
+from ..models import CDSFormInfo, UpdateFormInfo
+from .construct import construct_msg
+from .utils import TextBody
 
 
 def build_custom_select_msg() -> Result[TextBody]:

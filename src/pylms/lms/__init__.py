@@ -1,26 +1,7 @@
-from pylms.lms.collate.awardees_fast_track import collate_fast_track
-from pylms.lms.collate.awardees_merged import collate_merge
-from pylms.lms.collate.awardees_merit import collate_merit
-from pylms.lms.collate.result import collate_result
-from pylms.lms.edit import edit_result, overwrite_result
-from pylms.lms.grade import prepare_grading
-from pylms.lms.group import group
-from pylms.lms.leaders import select_leaders
-from pylms.lms.view import view_result
-from pylms.lms.mail import send_result
+from .group import group
+from .leaders import select_leaders
 
 __all__ = [
-    "collate_fast_track",
-    "collate_merit",
-    "collate_merge",
-    "collate_result",
-    "edit_result",
-    "overwrite_result",
-    "view_result",
     "group",
-    "edit_result",
-    "overwrite_result",
-    "prepare_grading",
-    "send_result",
     "select_leaders",
 ]

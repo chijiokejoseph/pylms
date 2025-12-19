@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, final
+from typing import Callable, final, overload
 
 
 def eprint(msg: str) -> None:
@@ -68,7 +68,20 @@ class Result[T]:
         return Result(value, None)
 
     @classmethod
+    @overload
     def err[K](cls, error: Exception) -> MapResult[K]:
+        pass
+
+    @classmethod
+    @overload
+    def err[K](cls, error: str) -> MapResult[K]:
+        pass
+
+    @classmethod
+    def err[K](cls, error: Exception | str) -> MapResult[K]:
+        if isinstance(error, str):
+            error = LMSError(error)
+
         return Result(None, error)
 
     @classmethod
@@ -118,7 +131,7 @@ class Result[T]:
         if isinstance(err, LMSError):
             eprint(err.message)
         else:
-            eprint(err)
+            eprint(str(err))
 
     @property
     def value(self) -> T | None:

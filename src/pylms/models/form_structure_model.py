@@ -1,8 +1,10 @@
+# pyright: reportDeprecated=false
+
 from typing import Optional
 
 from pydantic import BaseModel
 
-from pylms.models.setup_form_data import ChoiceQuestion, TextQuestion
+from .setup_form_data import ChoiceQuestion, TextQuestion
 
 
 class QuestionDetails(BaseModel):

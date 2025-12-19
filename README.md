@@ -35,13 +35,13 @@ source .venv/Scripts/activate # for linux
 python setup.py
 ```
 
-6. Run the application
+5. Run the application
 ```bash
-uv run app.py
+uv run main.py
 ```
 OR
 ```bash
-python app.py
+python main.py
 ```
 
 
@@ -182,7 +182,7 @@ PROJECT STRUCTURE
 -----------------
 pylms/
 - ├── app.py                  # Main application entry point
-- ├── src/pylms/
+- ├── src/
 - │   ├── cache/             # Transaction caching and rollback system
 - │   ├── cli/               # Command-line interface components
 - │   ├── config/            # Configuration management

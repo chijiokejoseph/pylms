@@ -1,20 +1,17 @@
-from pylms.cache import cache_for_cmd
-from pylms.cli import interact
-from pylms.data_ops import save
-from pylms.errors import eprint
-from pylms.forms.request_form_api import (
-    request_cds_form,
-)
-from pylms.forms.retrieve_form_api import (
+from ..cache import cache_for_cmd
+from ..cli import interact
+from ..data import DataStore
+from ..data_service import save
+from ..form_request import request_cds_form
+from ..form_retrieve import (
     retrieve_cds_form,
     save_retrieve,
 )
-from pylms.history import History
-from pylms.info import printpass
-from pylms.rollcall import (
+from ..history import History, add_recorded_cds_form, save_history
+from ..info import print_info, printpass
+from ..rollcall import (
     record_cds,
 )
-from pylms.utils.data import DataStore
 
 
 def handle_cds(ds: DataStore, history: History) -> None:
@@ -25,14 +22,18 @@ def handle_cds(ds: DataStore, history: History) -> None:
     ]
 
     while True:
-        selection_result = interact(menu)
-        if selection_result.is_err():
-            eprint(f"Error retrieving selection: {selection_result.unwrap_err()}")
+        selection = interact(menu)
+        if selection.is_err():
             continue
-        selection: int = selection_result.unwrap()
+
+        selection = selection.unwrap()
+
         cmd: str = menu[selection - 1]
+
         if selection < len(menu):
-            cache_for_cmd(cmd)
+            result = cache_for_cmd(cmd)
+            if result.is_err():
+                continue
 
         match selection:
             case 1:
@@ -41,24 +42,34 @@ def handle_cds(ds: DataStore, history: History) -> None:
             case 2:
                 result = retrieve_cds_form(history)
                 if result.is_err():
-                    eprint(
-                        f"\nFailed to retrieve cds forms due to error: {result.unwrap_err()}\n"
-                    )
                     continue
 
                 cds_form_stream, info = result.unwrap()
 
-                if cds_form_stream is not None:
-                    result = record_cds(ds, cds_form_stream)
-                    if result.is_err():
-                        continue
-                    history.add_recorded_cds_form(info)
-                    save_retrieve(info)
-                    printpass("Marked CDS Records")
+                result = record_cds(ds, cds_form_stream)
+                if result.is_err():
+                    continue
+
+                add_recorded_cds_form(history, info)
+
+                result = save_retrieve(info)
+                if result.is_err():
+                    continue
+
+                printpass("Marked CDS Records")
             case _:
                 break
 
-        save(ds)
-        history.save()
+        result = save(ds)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
+
+        result = save_history(history)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
 
     return None

@@ -1,8 +1,8 @@
 from smtplib import SMTP, SMTP_SSL, SMTPException
 from typing import Callable
-from pylms.errors import Result, Unit
-from pylms.utils import must_get_env
 
+from ..errors import Result, Unit
+from ..paths import must_get_env
 
 # Define the type for a mail error
 type MailError = dict[str, tuple[int, bytes]]
@@ -33,13 +33,13 @@ def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
         server.set_debuglevel(False)
 
         # Start TLS encryption
-        server.starttls()
+        _ = server.starttls()
 
         # Log in to the SMTP server using the provided credentials
-        server.login(email, password)
+        _ = server.login(email, password)
 
         # Execute the provided mail function, passing the authenticated SMTP server object
-        mail_fn(server)
+        _ = mail_fn(server)
         return Result[Unit].unit()
     except (TimeoutError, SMTPException):
         # Create an SMTP connection to Gmail's SMTP server on port 465 using SSL
@@ -49,10 +49,10 @@ def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
         server.set_debuglevel(False)
 
         # Log in to the SMTP server using the provided credentials
-        server.login(email, password)
+        _ = server.login(email, password)
 
         # Execute the provided mail function, passing the authenticated SMTP server object
-        mail_fn(server)
+        _ = mail_fn(server)
         return Result[Unit].unit()
     except Exception as e:
         # Raise a custom error if any SMTP-related exception occurs
@@ -60,4 +60,4 @@ def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
     finally:
         # Close the SMTP connection to free resources
         if server is not None and server.sock is not None:
-            server.quit()
+            _ = server.quit()

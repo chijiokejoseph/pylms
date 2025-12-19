@@ -1,18 +1,18 @@
 from email.message import EmailMessage
 from smtplib import SMTP
 
-from pylms.cli import provide_emails
-from pylms.email import MailError, run_email
-from pylms.errors import Result, Unit
-from pylms.history import History
-from pylms.info import println, printpass
-from pylms.messages.message_record import MessageRecord
-from pylms.messages.select_msg_builders import (
+from ..cli import provide_emails
+from ..email import MailError, run_email
+from ..errors import Result, Unit
+from ..history import History
+from ..info import print_info, printpass
+from ..paths import must_get_env
+from .message_record import MessageRecord
+from .select_msg_builders import (
     build_custom_select_msg,
     build_update_msg,
 )
-from pylms.messages.utils import MessageBuilder, TextBody
-from pylms.utils import must_get_env
+from .utils import MessageBuilder, TextBody
 
 
 def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]]:
@@ -117,7 +117,7 @@ def message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]
                 f"Mail sent successfully to {f'{name} with ' if name is not None else ''}{email}\n"
             )
         except Exception as e:
-            println(
+            print_info(
                 f"Mail not sent to {f'{name} with ' if name is not None else ''}{email}\n"
             )
             # Catch any exceptions during sending and record the error

@@ -1,7 +1,5 @@
-
-
 """
-CLI package for pylms project.
+CLI package for src project.
 
 This package contains modules and functions related to command-line interface
 interactions, including input handling, user interaction, onboarding requests,
@@ -22,30 +20,31 @@ Exports:
 - select_student: Function to select students.
 """
 
-from pylms.cli.custom_inputs import (
+from .custom_inputs import (
     input_num,
     input_str,
 )
-from pylms.cli.email_input import input_email
-from pylms.cli.interact import interact
-from pylms.cli.onboard_req import confirm_onboard_req
-from pylms.cli.option_input import input_option
-from pylms.cli.path_input import input_path, test_path_in
-from pylms.cli.record_input import input_record
-from pylms.cli.select_class_date import select_class_date
-from pylms.cli.select_student import select_student
-from pylms.cli.emails_input import provide_emails
-from pylms.cli.serials_input import provide_serials
+from .email_input import input_email
+from .emails_input import provide_emails
+from .input_to_config import input_course_name, input_dir
+from .input_with_quit import input_fn
+from .interact import interact
+from .option_input import input_option
+from .path_input import input_path, test_path_in
+from .select_class_date import select_class_date
+from .select_student import select_student
+from .serials_input import provide_serials
 
 __all__ = [
     "interact",
+    "input_course_name",
+    "input_dir",
     "input_num",
-    "input_record",
     "input_option",
     "input_path",
     "test_path_in",
     "input_str",
-    "confirm_onboard_req",
+    "input_fn",
     "input_email",
     "select_class_date",
     "select_student",
