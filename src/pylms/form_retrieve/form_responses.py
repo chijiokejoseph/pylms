@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import cast
 
 import pandas as pd
 from dateutil.parser import parse
@@ -15,7 +14,7 @@ from ..models import (
     ResponseModel,
     UpdateFormInfo,
 )
-from ..service import FormResource, ResponseResource, run_service
+from ..service import FormsService, ResponseResource, run_service
 from .enums import ClassType
 
 
@@ -25,7 +24,7 @@ def _retrieve_form_responses(
     cls: type,
     class_type: ClassType | None = None,
     *,
-    service: FormResource,
+    service: FormsService,
 ) -> Result[DataStream[pd.DataFrame]]:
     """
     Retrieves form responses from a form whose details are stored at the specified form path.
@@ -52,11 +51,8 @@ def _retrieve_form_responses(
         # create an instance of the form class from the data
         form_info: CDSFormInfo | ClassFormInfo | UpdateFormInfo = cls(**data)
 
-        # get the form resource
-        resource: FormResource = service.forms()
-
         # get the response resource
-        response_resource: ResponseResource = resource.responses()
+        response_resource: ResponseResource = service.responses()
 
         # determine which form to retrieve responses from based on the class type
         match form_info:
@@ -158,14 +154,18 @@ def retrieve_form_responses(
     :return: (DataStream[pd.DataFrame]) - A DataStream that yields a DataFrame with the form responses.
     :rtype: DataStream[pd.DataFrame]
     """
-    return run_service(
-        "forms",
-        "v1",
-        lambda service: _retrieve_form_responses(
+
+    def _run_service(service: FormsService) -> Result[DataStream[pd.DataFrame]]:
+        return _retrieve_form_responses(
             question_id_map,
             form_path,
             cls,
             class_type,
-            service=cast(FormResource, service),
-        ),
+            service=service,
+        )
+
+    return run_service(
+        "forms",
+        "v1",
+        _run_service,
     )

@@ -1,6 +1,7 @@
 from ._resource import (
     DriveResource,
     FormResource,
+    FormsService,
     ResponseResource,
 )
 from .form_create import run_create_form
@@ -16,6 +17,7 @@ __all__ = [
     "run_setup_form",
     "run_share_form",
     "FormResource",
+    "FormsService",
     "DriveResource",
     "ResponseResource",
 ]

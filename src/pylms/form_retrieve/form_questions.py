@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from ..errors import Result, eprint
 from ..models import CDSFormInfo, ClassFormInfo, FormModel, UpdateFormInfo
-from ..service import FormResource, run_service
+from ..service import FormResource, FormsService, run_service
 from .enums import ClassType
 
 
@@ -13,7 +13,7 @@ def _retrieve_form_questions(
     cls: type,
     class_type: ClassType | None = None,
     *,
-    service: FormResource,
+    service: FormsService,
 ) -> Result[dict[str, str]]:
     """
     Retrieves form questions from a form whose details are stored at the specified form path.
@@ -24,8 +24,8 @@ def _retrieve_form_questions(
     :type cls: type
     :param class_type: (ClassType | None) - The class type indicating the form type.
     :type class_type: ClassType | None
-    :param service: (FormResource) - The FormResource object used to make API calls.
-    :type service: FormResource
+    :param service: (FormsService) - The FormResource object used to make API calls.
+    :type service: FormsService
 
     :return: (dict[str, str]) - A dictionary mapping question IDs to their titles.
     :rtype: dict[str, str]
@@ -88,10 +88,8 @@ def retrieve_form_questions(
     :return: (dict[str, str]) - A dictionary mapping question IDs to their titles.
     :rtype: dict[str, str]
     """
-    return run_service(
-        "forms",
-        "v1",
-        lambda service: _retrieve_form_questions(
-            form_path, cls, class_type, service=cast(FormResource, service)
-        ),
-    )
+
+    def _run_service(service: FormsService) -> Result[dict[str, str]]:
+        return _retrieve_form_questions(form_path, cls, class_type, service=service)
+
+    return run_service("forms", "v1", _run_service)

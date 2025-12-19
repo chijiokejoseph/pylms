@@ -2,6 +2,8 @@
 
 A console based learning management system. It includes features such as preprocessing student data from spreadsheets, marking student attendance using forms generated using GCP, and so much more. It is a fledgling project.
 
+___
+## Run
 To run, use the following commands
 
 1. install the package manager uv
@@ -30,23 +32,33 @@ source .venv/Scripts/activate # for linux
 .venv\Scripts\activate # for commmand prompt
 ```
 
-5. update the paths to the `src` folder on the virtual environment
-```bash
-python setup.py
-```
-
 5. Run the application
 ```bash
 uv run main.py
 ```
-OR
+
+___
+## Type Check Project
+
+- Activate the virtual environment
+- Run the command below
+
 ```bash
-python main.py
+basedpyright --outputjson > data/typing.json
 ```
 
+___
+## View Project Dependencies
 
-DESCRIPTION
------------
+- Activate the virtual environment
+- Run the command below
+
+```bash
+pydeps --show-cycles --cluster --max-module-depth 2 -o data/pylms.pdf -T pdf src/pylms
+```
+
+___
+## DESCRIPTION
 PyLMS is a comprehensive console-based learning management system designed for
 educational institutions and training programs. The system streamlines the
 administration of student cohorts, providing robust tools for managing student
@@ -77,7 +89,7 @@ a safety net rarely found in educational software, creating a bridge between
 cloud-based data collection and robust local record management with full audit
 trail capabilities.
 
-
+___
 FEATURES
 --------
 1. Student Data Management
@@ -131,7 +143,7 @@ FEATURES
    - Student and date selection interfaces
    - Option-based interactions with user-friendly prompts
 
-
+___
 TECH STACK
 ----------
 Core Language:
@@ -155,7 +167,7 @@ Configuration & Serialization:
 
 Development & Testing:
 - Pytest - Unit and integration testing framework
-- MyPy - Static type checking
+- Basedpyright - Type Checking analysis
 - Jupyter/Notebook - Interactive development and data analysis
 
 Data Visualization:
@@ -164,7 +176,7 @@ Data Visualization:
 Additional Libraries:
 - python-dateutil - Advanced date parsing and manipulation
 - Streamlit - Web-based UI components (future integration)
-- importgraph - Dependency analysis
+- pydeps - Dependency analysis
 
 Project Management:
 - UV - Modern Python package management and virtual environment handling
@@ -177,29 +189,47 @@ Architecture:
 - Separation of concerns: CLI, data operations, business logic, and API
   integration
 
-
+___
 PROJECT STRUCTURE
 -----------------
 pylms/
-- ├── app.py                  # Main application entry point
-- ├── src/
+- ├── main.py                # Main application entry point
+- ├── src/pylms/
 - │   ├── cache/             # Transaction caching and rollback system
+- │   ├── clean/             # Transaction caching and rollback system
 - │   ├── cli/               # Command-line interface components
+- │   ├── cli_utils/         # Command-line interface utilities
 - │   ├── config/            # Configuration management
-- │   ├── data_ops/          # Data loading, viewing, and operations
+- │   ├── data/              # Data read function and model classes
+- │   ├── data_service/      # Data loading, viewing, and operations
 - │   ├── email/             # Email sending functionality
-- │   ├── forms/             # Google Forms API integration
+- │   ├── form_request/      # API for generating specific forms through GCP
+- │   ├── form_retrieve/     # API for retrieving generated form data 
+- │   ├── form_utils/        # Utilities for building Form content 
 - │   ├── history/           # Operation history tracking
 - │   ├── html/              # HTML template generation
 - │   ├── lms/               # Core learning management features
 - │   ├── messages/          # Message handling system
 - │   ├── models/            # Data models and schemas
+- │   ├── paths/             # Path management for almost all project data
+- │   ├── paths_class/       # Path management for class metadata
 - │   ├── preprocess/        # Data preprocessing pipelines
+- │   ├── re_phone/          # Phone preprocessing pipelines
+- │   ├── result_collate/    # Result collation recording system
+- │   ├── result_edit/       # Result update and overwrite system
+- │   ├── result_utils/      # Utilities for managing results
 - │   ├── rollcall/          # Attendance recording system
+- │   ├── rollcall_edit/     # Attendance edit (post-record) system
 - │   ├── routines/          # Main workflow routines
+- │   ├── service/           # Google Forms Wrapper to simplify functionality
 - │   ├── ui/                # User interface components
-- │   └── utils/             # Utility functions and helpers
+- │   ├── constants.py/      # Constants and reusables
+- │   ├── errors.py/         # Error Handling System
+- │   ├── info.py/           # Special Prints (Display) System
+- │   ├── mainloop.py/       # Main project loops for Open/Closed cohorts
+- │   └── record.py/         # RecordStatus class file
+- ├── tests/                 # Integrated tests
+- ├── LICENSE                # MIT License
 - ├── pyproject.toml         # Project dependencies and metadata
-- ├── state.toml             # Application state persistence
-- ├── history.json           # Operation history log
-- └── global_record.json     # Global attendance records
+- ├── pyrightconfig.json     # Basedpyright configuration
+- └── Readme.md              # Project Overview

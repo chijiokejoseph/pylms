@@ -62,7 +62,9 @@ def run_lms(ds: DataStore, history: History) -> None:
 
                     printpass("Leaders have been selected successfully\n")
             case 2:
-                request_assessment_form(ds)
+                result = request_assessment_form(ds)
+                if result.is_err():
+                    continue
             case 3:
                 run_collate_lms(ds, history)
             case 4:

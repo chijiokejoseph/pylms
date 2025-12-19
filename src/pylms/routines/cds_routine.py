@@ -37,7 +37,10 @@ def handle_cds(ds: DataStore, history: History) -> None:
 
         match selection:
             case 1:
-                request_cds_form(ds, history)
+                result = request_cds_form(ds, history)
+                if result.is_err():
+                    continue
+
                 printpass("Generated CDS Form Successfully\n")
             case 2:
                 result = retrieve_cds_form(history)
