@@ -2,10 +2,10 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from ..date import parse_dates, to_date
 from ..errors import Result, eprint
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from ..paths import get_history_path
-from .dateutil import parse_datetimes, to_datetime
 from .days_cohort import update_dates
 from .history import History
 
@@ -66,15 +66,31 @@ def load_history() -> Result[History]:
             msg = "Dates must have more than one element"
             eprint(msg)
             return Result.err(msg)
-        dates = parse_datetimes(data["dates"])
+        dates = parse_dates(data["dates"])
         if dates.is_err():
             return dates.propagate()
 
         history.dates = dates.unwrap()
 
     # Check and set attribute `orientation_date`
-    if "orientation_date" in data and data["orientation_date"] is not None:
-        history.orientation_date = to_datetime(data["orientation_date"])
+    if "orientation_date" in data:
+        orientation_date = data["orientation_date"]
+        if orientation_date is None:
+            msg = "orientation_date is not set"
+            eprint(msg)
+            return Result.err(msg)
+
+        if not isinstance(orientation_date, str):
+            msg = "orientation_date is expected to be a `str`."
+            eprint(msg)
+            return Result.err(msg)
+
+        date = to_date(orientation_date)
+        if date.is_err():
+            return date.propagate()
+        date = date.unwrap()
+
+        history.orientation_date = date
 
     # Check and set attribute `weeks`
     if "weeks" in data:
@@ -90,7 +106,7 @@ def load_history() -> Result[History]:
             msg = "Held classes must be a list of date strings."
             eprint(msg)
             return Result.err(msg)
-        dates = parse_datetimes(data["held_classes"])
+        dates = parse_dates(data["held_classes"])
         if dates.is_err():
             return dates.propagate()
 
@@ -104,13 +120,15 @@ def load_history() -> Result[History]:
             return Result.err(msg)
 
         datetimes: list[datetime] = []
-        for date_str in data["marked_classes"]:
-            value = to_datetime(date_str)
-            if value is None:
-                return Result.err("")
+        raw_dates: list[str] = data["marked_classes"]
+        for date_str in raw_dates:
+            value = to_date(date_str)
+            if value.is_err():
+                return value.propagate()
+            value = value.unwrap()
             datetimes.append(value)
 
-        dates = parse_datetimes(data["marked_classes"])
+        dates = parse_dates(raw_dates)
         if dates.is_err():
             return dates.propagate()
 

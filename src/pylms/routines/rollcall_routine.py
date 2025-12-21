@@ -160,7 +160,7 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
 
                 record_path = record_path.unwrap()
                 printpass(
-                    f"Generated half cohort data successfully at path '{record_path.resolve()}'\n"
+                    f"Generated half cohort data successfully.\nPath: '{record_path.resolve()}'\n"
                 )
             case _:
                 break

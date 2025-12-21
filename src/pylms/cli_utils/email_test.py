@@ -6,7 +6,7 @@ def validate_email(email_text: str) -> bool:
 
     Checks whether the provided string is a valid Gmail address according to a
     simple project validation: it must match the pattern
-    r'^[a-zA-Z.\d]+@gmail\.com$' and must not be composed solely of digits
+    r"^[a-zA-Z.\\d]+@gmail\\.com$" and must not be composed solely of digits
     before the @ sign.
 
     Args:

@@ -11,10 +11,10 @@ from ..form_retrieve import (
 from ..history import History, add_recorded_update_form, save_history
 from ..info import print_info, printpass
 from ..rollcall import (
-    GlobalRecord,
     extract_cds,
     record_cds,
 )
+from ..rollcall_edit import GlobalRecord
 
 
 def register(ds: DataStore, history: History) -> None:

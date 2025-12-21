@@ -1,13 +1,13 @@
 import unittest
 from datetime import datetime
 
-from ..constants import DATE_FMT
-from ..history import retrieve_dates
-from .det_date_features import (
+from pylms.constants import DATE_FMT
+from pylms.date import (
     to_unique_week_nums,
     to_week_num,
     to_week_nums,
 )
+from pylms.history import retrieve_dates
 
 
 class DetDateTest(unittest.TestCase):

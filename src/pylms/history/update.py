@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Literal, overload
 
+from ..date import parse_dates
 from ..errors import Result, Unit, eprint
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from .dateutil import all_dates
@@ -78,10 +79,22 @@ def add_prop_class(
 
     # Get the date corresponding to the class number and add it to held classes
     target_date: datetime = history.dates[class_num - 1]
+    target_date_str: str = all_dates(history, "")[class_num - 1]
 
     if prop == "held":
         history.held_classes.append(target_date)
     else:
+        held_classes = parse_dates(history.held_classes)
+        if held_classes.is_err():
+            return held_classes.propagate()
+        held_classes = held_classes.unwrap()
+
+        if target_date_str not in held_classes:
+            msg = f"Specified class date: {target_date_str} has not been held yet and cannot be marked if not held."
+            eprint(msg)
+            return Result.err(msg)
+
+        history.held_classes.append(target_date)
         history.marked_classes.append(target_date)
 
     return Result.unit()

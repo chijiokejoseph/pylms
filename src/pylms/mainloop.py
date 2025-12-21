@@ -2,7 +2,7 @@ import traceback
 from typing import Callable
 
 from .cache import cache_for_cmd
-from .cli import input_option, interact
+from .cli import input_bool, interact
 from .config import Config
 from .data_service import load, view
 from .errors import LMSError, Result, eprint
@@ -27,14 +27,11 @@ def handle_err(func: Callable[[], Result[bool]]) -> bool | None:
             return None
         return result.unwrap()
     except LMSError as e:
-        option_result = input_option(
-            ["Yes", "No"], prompt="Do you wish to view error trace"
-        )
-        if option_result.is_err():
+        result = input_bool(prompt="Do you wish to view error trace")
+        if result.is_err():
             return None
-        idx, choice = option_result.unwrap()
-        choice = choice.lower()
-        if idx == 1:
+        choice = result.unwrap()
+        if choice:
             traceback.print_exc()
         eprint(e.message)
     print("\n")
@@ -42,7 +39,7 @@ def handle_err(func: Callable[[], Result[bool]]) -> bool | None:
 
 
 def mainloop(config: Config) -> Result[bool]:
-    menu: list[str] = [
+    menu = [
         "Attendance",
         "CDS",
         "Cohort",
@@ -52,6 +49,7 @@ def mainloop(config: Config) -> Result[bool]:
         "Message",
         "Quit",
     ]
+
     history = load_history()
     if history.is_err():
         return history.propagate()
@@ -69,7 +67,7 @@ def mainloop(config: Config) -> Result[bool]:
 
     selection = selection.unwrap()
 
-    cmd: str = menu[selection - 1]
+    cmd = menu[selection - 1]
 
     if selection < len(menu):
         result = cache_for_cmd(cmd)
@@ -77,7 +75,7 @@ def mainloop(config: Config) -> Result[bool]:
         if result.is_err():
             return result.propagate()
 
-    match int(selection):
+    match selection:
         case 1:
             handle_rollcall(ds, history)
         case 2:
@@ -102,7 +100,7 @@ def mainloop(config: Config) -> Result[bool]:
 
 def closed_loop(config: Config) -> Result[bool]:
     print_info("Cohort is closed.\n")
-    menu: list[str] = [
+    menu = [
         "View Data Records",
         "View Results",
         "Cohort",

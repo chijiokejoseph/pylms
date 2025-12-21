@@ -2,8 +2,7 @@ from datetime import datetime
 
 from dateutil.parser import parse
 
-from .det_date_features import (
-    det_class_num,
+from .features import (
     det_week_num,
     det_year,
     to_day_num,
@@ -11,6 +10,7 @@ from .det_date_features import (
     to_week_num,
     to_week_nums,
 )
+from .parser import parse_dates, to_date
 
 
 def format_date(
@@ -28,7 +28,6 @@ def format_form_timestamp(date_var: str | datetime, str_format: str) -> str:
 
 __all__ = [
     "det_week_num",
-    "det_class_num",
     "det_year",
     "to_week_num",
     "to_week_nums",
@@ -36,4 +35,6 @@ __all__ = [
     "to_day_num",
     "format_date",
     "format_form_timestamp",
+    "parse_dates",
+    "to_date",
 ]

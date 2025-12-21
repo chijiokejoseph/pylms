@@ -5,9 +5,9 @@ from pylms.info import print_info
 
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
-from ..history import History
+from ..history import History, add_marked_class, get_marked_classes
 from ..record import RecordStatus, retrieve_record
-from ..rollcall import GlobalRecord
+from .global_record import GlobalRecord
 from .record_input import input_record
 
 
@@ -79,6 +79,14 @@ def edit_all_records(
         result = _edit_record(ds, history, first_date)
         if result.is_err():
             return result.propagate()
+
+        marked_dates = get_marked_classes(history, "")
+        unmarked_dates = [date for date in dates_to_mark if date not in marked_dates]
+
+        for date in unmarked_dates:
+            result = add_marked_class(history, date)
+            if result.is_err():
+                return result.propagate()
 
         return Result.unit()
 

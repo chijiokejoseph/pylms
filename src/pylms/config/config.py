@@ -13,7 +13,6 @@ class TomlProtocol(ABC):
     - Creating an instance from a generic value
     - Converting the instance to a dictionary representation
 
-    :cvar cls: The class itself.
     """
 
     @classmethod
@@ -22,8 +21,8 @@ class TomlProtocol(ABC):
         """
         Create and return a default instance of the implementing class.
 
-        :return: (Self) - A default instance of the class.
-        :rtype: Self
+        Returns:
+             Self: A default instance of the class.
         """
         pass
 
@@ -33,10 +32,11 @@ class TomlProtocol(ABC):
         """
         Create an instance of the class from a generic input value.
 
-        :param value_in: (Any) - The input value to convert from.
+        Args:
+            value_in (Any): The input value to convert from
 
-        :return: (Self) - An instance of the class created from the input value.
-        :rtype: Self
+        Returns:
+            Self: An instance of the class created from the input value
         """
         pass
 
@@ -45,8 +45,8 @@ class TomlProtocol(ABC):
         """
         Convert the instance into a dictionary representation.
 
-        :return: (dict) - A dictionary representing the instance.
-        :rtype: dict
+        Return:
+            dict[str, object]: A dictionary representing the instance
         """
         pass
 
@@ -59,16 +59,18 @@ class TomlSettings(TomlProtocol):
     and the course name. It provides methods to create default settings,
     instantiate from a generic value, and convert the settings to a dictionary.
 
-    :ivar data_dir: (str) - The directory path for data storage.
-    :ivar course_name: (str) - The name of the course.
+    Vars:
+        data_dir (str): The directory path for data storage.
+        course_name (str): The name of the course.
     """
 
     def __init__(self, data_dir: str, course_name: str) -> None:
         """
-        Initialize TomlSettings with data directory and course name.
+        Initialize `TomlSettings` with data directory and course name.
 
-        :param data_dir: (str) - The directory path for data storage.
-        :param course_name: (str) - The name of the course.
+        Args:
+            data_dir (str): The directory path for data storage.
+            course_name (str): The name of the course.
         """
         self.data_dir: str = data_dir
         self.course_name: str = course_name
@@ -77,10 +79,10 @@ class TomlSettings(TomlProtocol):
     @override
     def default(cls) -> Self:
         """
-        Create a default TomlSettings instance with empty data_dir and course_name.
+        Create a default `TomlSettings` instance with empty `data_dir` and `course_name`.
 
-        :return: (Self) - A default instance of TomlSettings.
-        :rtype: Self
+        Returns:
+            Self: A default instance of `TomlSettings`
         """
         return cls(data_dir="", course_name="")
 

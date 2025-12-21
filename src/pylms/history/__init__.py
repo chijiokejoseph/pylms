@@ -2,7 +2,7 @@
 It includes methods for adding held and marked classes and updating class dates."""
 
 from .dates import retrieve_dates
-from .dateutil import all_dates, parse_datetimes, to_datetime
+from .dateutil import all_dates
 from .days_cohort import extend_weeks, replan_weeks, set_class_days, update_dates
 from .group_cohort import get_num_groups, set_group
 from .history import History
@@ -51,8 +51,6 @@ __all__ = [
     "add_recorded_update_form",
     "add_update_form",
     "all_dates",
-    "parse_datetimes",
-    "to_datetime",
     "extend_weeks",
     "replan_weeks",
     "set_class_days",

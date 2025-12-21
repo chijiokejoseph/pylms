@@ -18,7 +18,7 @@ from ..models import (
     UpdateFormInfo,
 )
 from ..paths import get_update_path
-from ..rollcall import GlobalRecord
+from ..rollcall_edit import GlobalRecord
 from ..service import (
     run_create_form,
     run_setup_form,

@@ -3,27 +3,11 @@ from datetime import datetime
 from dateutil.parser import parse
 
 from ..constants import DATE_FMT
-from ..history import retrieve_dates
 
 
 def det_week_num() -> int:
     today: datetime = datetime.now()
     return today.isocalendar().week
-
-
-def det_class_num(class_date: str) -> int | None:
-    dates_list = retrieve_dates("")
-    if dates_list.is_err():
-        return None
-
-    dates_list = dates_list.unwrap()
-
-    if class_date in dates_list:
-        index: int = dates_list.index(class_date)
-        class_num: int = index + 1
-        return class_num
-
-    return None
 
 
 def to_week_num(date_string: str) -> int:
