@@ -11,16 +11,25 @@ def input_path(
     str_test_diagnosis: str | None = None,
     trials: int = 3,
 ) -> Result[Path]:
-    """
-    Prompt the user to input a path string, validate it, and return a Path object.
+    """Prompt for a filesystem path string and validate it, returning a Path.
 
-    :param msg: (str) - The prompt message to display to the user.
-    :param str_test_fn: (Callable[[str], bool]) - Function to validate the input string.
-    :param str_test_diagnosis: (str | None) - Optional diagnosis message for string validation failure.
-    :param trials: (int) - Number of allowed input attempts.
+    Prompts the user with `msg` and validates the raw input string using
+    `input_str` with the provided `str_test_fn` and `str_test_diagnosis`. The
+    entered string is stripped of surrounding whitespace and quotes, converted
+    to a `Path`, and further validated by `test_path_in`. If validation fails,
+    an error `Result` is returned describing the failure.
 
-    :return: (Result[Path]) - A result containing the validated Path object.
-    :rtype: Result[Path]
+    Args:
+        msg (str): Prompt message shown to the user.
+        str_test_fn (Callable[[str], bool]): Callable used to validate the raw
+            input string. Defaults to a function accepting any string.
+        str_test_diagnosis (str | None): Optional message to display when the
+            `str_test_fn` validation fails.
+        trials (int): Number of allowed input attempts.
+
+    Returns:
+        Result[Path]: `Result.ok` with a validated `Path` on success, or
+            `Result.err` with a diagnostic message when validation fails.
     """
     # Prompt user for input string with validation
     result = input_str(msg, str_test_fn, str_test_diagnosis, trials, lower_case=False)
@@ -49,14 +58,19 @@ def input_path(
 
 
 def test_path_in(path_input: Path) -> tuple[bool, str]:
-    """
-    Validate that the given path is an absolute path pointing to an Excel file that exists.
+    """Validate that a Path is absolute and exists.
 
-    :param path_input: (Path) - The path to validate.
-    :type path_input: Path
+    Performs basic checks that `path_input` is absolute and that the path
+    exists on the filesystem. Returns a tuple where the boolean indicates
+    whether the path is valid and the string provides a diagnostic message
+    when the check fails.
 
-    :return: (bool) - True if the path is absolute, points to an Excel file, and exists; False otherwise.
-    :rtype: bool
+    Args:
+        path_input (Path): The path to validate.
+
+    Returns:
+        tuple[bool, str]: `(True, "")` when the path is valid; otherwise
+            `(False, <diagnostic message>)`.
     """
     # Check if the path is absolute
     if not path_input.is_absolute():

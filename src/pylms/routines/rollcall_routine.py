@@ -155,12 +155,13 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                         )
             case 4:
                 record_path = record_cohort(ds, history)
-                if record_path is not None:
-                    printpass(
-                        f"Generated half cohort data successfully at path '{record_path.resolve()}'\n"
-                    )
-                else:
-                    eprint("Could not generate half cohort data\n")
+                if record_path.is_err():
+                    continue
+
+                record_path = record_path.unwrap()
+                printpass(
+                    f"Generated half cohort data successfully at path '{record_path.resolve()}'\n"
+                )
             case _:
                 break
 

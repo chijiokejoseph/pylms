@@ -13,14 +13,19 @@ from .path_input import input_path
 
 
 def verify_excel(data: pd.DataFrame) -> bool:
-    """
-    Verify that the provided Excel data is valid.
+    """Validate that an Excel-read DataFrame is a single non-empty column.
 
-    :param data: (pd.DataFrame) - The Excel data to verify.
-    :type data: pd.DataFrame
+    This function checks that the provided DataFrame is not empty and that it
+    contains exactly one column. It is typically used to validate Excel files
+    that are expected to contain a single column of values (for example, a
+    single-column list of email addresses).
 
-    :return: (bool) - True if the data is valid, False otherwise.
-    :rtype: bool
+    Args:
+        data (pd.DataFrame): The DataFrame to validate.
+
+    Returns:
+        bool: True if the DataFrame is non-empty and has exactly one column,
+            False otherwise.
     """
     # Check if the data is empty
     if data.empty:

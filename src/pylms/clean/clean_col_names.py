@@ -6,16 +6,25 @@ from ..data import DataStream
 
 
 def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
-    """
-    Carries out formatting operations on the names of the columns contained in the underlying data of the input DataStream `data`. This cleaning operation involves several things
-        - Renaming substrings matching "nysc" or "siwes" in the column names to upper case "NYSC" or "SIWES" as the case maybe
-        - Removing trailing and leading whitespaces from the columns
+    """Clean and normalize column names in a DataStream.
 
-    :param data_stream: (DataStream[pd.DataFrame]): DataStream object containing the data to be formatted
-    :type: DataStream[pd.DataFrame]
+    This function formats the column names of the DataFrame contained in the
+    provided `DataStream`. The following transformations are applied to each
+    column name:
 
-    :rtype: DataStream [pd.DataFrame]
-    :return: A DataStream object containing the formatted data
+    - Strip leading and trailing whitespace and convert to title case.
+    - Replace occurrences of "nysc" or "siwes" (case-insensitive) with their
+      uppercase equivalents "NYSC" and "SIWES".
+    - Rename columns in the DataFrame to the cleaned names while preserving
+      column data.
+
+    Args:
+        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+            DataFrame whose column names should be cleaned.
+
+    Returns:
+        DataStream[pd.DataFrame]: A new DataStream containing the DataFrame
+            with cleaned column names.
     """
     data: pd.DataFrame = data_stream().copy()
     for old_column in data.columns:

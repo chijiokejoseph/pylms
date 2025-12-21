@@ -18,14 +18,18 @@ from ..paths import (
 
 
 def new_cache_record(command: str) -> tuple[pd.DataFrame, UUID]:
-    """
-    Create a new cache record with the given command and generate a unique snapshot ID.
+    """Create a new cache record and generate a snapshot UUID.
 
-    :param command: (str) - The command description to be cached.
-    :type command: str
+    Create a one-row DataFrame containing cache metadata (timestamp, command,
+    snapshot UUID) and return that DataFrame together with the generated
+    UUID. The timestamp is formatted as "%Y-%m-%d %H:%M:%S".
 
-    :return: (tuple[pd.DataFrame, UUID]) - A tuple containing the cache record DataFrame and the snapshot UUID.
-    :rtype: tuple[pd.DataFrame, UUID]
+    Args:
+        command (str): Description of the command or operation to cache.
+
+    Returns:
+        tuple[pd.DataFrame, UUID]: A DataFrame containing the new cache record
+            and the generated snapshot UUID.
     """
     # Get the current datetime
     now: datetime = datetime.now()
@@ -44,14 +48,18 @@ def new_cache_record(command: str) -> tuple[pd.DataFrame, UUID]:
 
 
 def copy_dir(src_dir: Path, dst_dir: Path) -> Result[Unit]:
-    """
-    Recursively copy the contents of the source directory to the destination directory.
+    """Recursively copy the contents of a source directory to a destination.
 
-    :param src_dir: (Path) - The source directory path.
-    :param dst_dir: (Path) - The destination directory path.
+    Recursively copy all files and subdirectories from `src_dir` into
+    `dst_dir`. If `src_dir` does not exist a `Result.err` is returned. The
+    function preserves the directory tree by recursing into subdirectories.
 
-    :return: a result object
-    :rtype: Result[Unit]
+    Args:
+        src_dir (Path): Source directory path.
+        dst_dir (Path): Destination directory path.
+
+    Returns:
+        Result[Unit]: Ok on success or Err with the underlying error.
     """
     # Return early if source directory does not exist
     if not src_dir.is_dir():
@@ -77,15 +85,23 @@ def copy_data(
     src: Path | None = None,
     dst: Path | None = None,
 ) -> Result[Unit]:
-    """
-    Copy data from source to destination paths with error handling for permissions and shutil errors. It copies from source to destination paths, excluding cache directory.
+    """Copy project data into a snapshot or restore from a snapshot.
 
-    :param snapshot_id: (UUID) - The unique snapshot identifier.
-    :param src_path: (Path | None) - Optional source path to copy from.
-    :param dst_path: (Path | None) - Optional destination path to copy to.
+    Copies files from `src` to `dst`, excluding the configured cache
+    directory. If `src` or `dst` are not provided, a snapshot path derived
+    from `snapshot_id` is used for the destination and the current data path
+    is used for the source. Filesystem errors (permission errors or shutil
+    errors) are returned as `Result.err`.
 
-    :return: (Result[Unit]) - returns a result object
-    :rtype: Result[Unit]
+    Args:
+        snapshot_id (UUID): Identifier for the snapshot.
+        src (Path | None): Optional source path. When None, the current data
+            path is used.
+        dst (Path | None): Optional destination path. When None, a snapshot
+            directory for `snapshot_id` is created and used.
+
+    Returns:
+        Result[Unit]: Ok on success or Err containing the encountered error.
     """
     # Determine source and destination paths if not provided
     if src is None or dst is None:
@@ -136,13 +152,18 @@ def copy_data(
 
 
 def cache_for_cmd(cmd: str) -> Result[Unit]:
-    """
-    Cache the given command by creating a new cache record and copying data.
+    """Create a cache snapshot for a command and update metadata.
 
-    :param cmd: (str) - The command description to cache.
+    Generate a cache metadata record for `cmd`, copy the current project data
+    into a snapshot directory, and update the metadata file. If metadata
+    already exists it is appended (with trimming to limit size); otherwise a
+    new metadata file is created.
 
-    :return: (Result[Unit]) - returns result
-    :rtype: Result[Unit]
+    Args:
+        cmd (str): Description of the command being cached.
+
+    Returns:
+        Result[Unit]: Ok on success or Err containing the error encountered.
     """
     # Create a new cache record and get the snapshot ID
     record, snapshot_id = new_cache_record(cmd)

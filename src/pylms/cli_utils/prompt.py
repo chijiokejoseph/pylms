@@ -2,14 +2,17 @@ from ..info import print_info
 
 
 def run_prompt(menu: list[str]) -> str:
-    """
-    main prompt function that interacts with the user. It prints out a series of options gotten from the argument passed to the `menu` parameter of the function. For each string in the list `menu` an option num which counts from 1 is printed alongside the option itself. The function returns the response entered by the user.
+    """Display a menu prompt and return the user's response.
 
-    :param menu: (list[str]): A list of options that make up the main menu of the program.
-    :type menu: List[str]
+    Prints an introductory message, enumerates the provided `menu` options
+    (numbered starting at 1), and prompts the user to select an option.
+    The returned string is lower-cased and trimmed of surrounding whitespace.
 
-    :return: (str): The response entered by the user. The response is trimmed of whitespaces and lowercased before being returned.
-    :rtype: Str
+    Args:
+        menu (list[str]): The list of option strings to present to the user.
+
+    Returns:
+        str: The user's response, lower-cased and stripped of surrounding whitespace.
     """
     intro: str = "Hello I'm the LMS Bot Jayce 🎓. \nI have printed out below a list of menu options select one and I'll provide assistance right away\n"
     print_info(intro)

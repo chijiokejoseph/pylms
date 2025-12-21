@@ -1,7 +1,6 @@
-"""
-src.cache module
+"""Cache Package
 
-This module provides caching and rollback command functionalities.
+This package provides caching and rollback command functionalities.
 
 Modules:
 - cache_for_cmd: Provides caching command utilities.

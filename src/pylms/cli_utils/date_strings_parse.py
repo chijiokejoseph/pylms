@@ -6,17 +6,18 @@ from .int_str_parse import parse_int_str
 
 
 def match_date_by_index(num_input: int) -> Result[str]:
-    """
-    This function takes in an integer `num_input` and returns the date string corresponding to that number from the list of class dates.
-    If the number is not a valid index (i.e., less than 1 or greater than the length of the list), it raises an `InvalidSelectionInputError`.
+    """Return the class date string for a 1-based index.
 
-    :param num_input: An integer representing the index of the date to retrieve.
-    :type num_input: int
+    Retrieves the list of class dates and returns the date string at the
+    provided 1-based index. If the index is out of range this function
+    returns an error `Result` describing the invalid selection.
 
-    :return: The date string corresponding to the given index.
-    :rtype: str
+    Args:
+        num_input (int): 1-based index of the desired date.
 
-    :raises InvalidSelectionInputError: If the input number is not a valid index for the list of class dates.
+    Returns:
+        Result[str]: Ok containing the date string when the index is valid,
+            or Err with a diagnostic message when the index is invalid.
     """
     # Retrieve the list of class dates
     dates_list = retrieve_dates("")
@@ -37,16 +38,19 @@ def match_date_by_index(num_input: int) -> Result[str]:
 
 
 def match_date_by_value(str_input: str) -> Result[str]:
-    """
-    this function takes in a string as argument to `str_input`. The string passed to this function is obtained directly from the user and is validated using regular expressions to match the format **dd/mm/yyyy** which is used in the class dates stored in the variable from outer scope `dates_list`.
+    """Validate that the input date string is one of the class dates.
 
-    This function's main role is to check if this validated string passed in as input to the function is actually a member of the available date strings in `dates_list`. If true, the string is returned else the program is forced to exit with a warning.
+    Checks whether `str_input` (expected in the format 'dd/mm/yyyy') is
+    present in the list of available class dates. If present the same date
+    string is returned inside `Result.ok`; otherwise an error `Result` with
+    a diagnostic message is returned.
 
-    :param str_input: A string that has been validated with regular expressions to match the form **dd/mm/yyyy**
-    :type str_input: str
+    Args:
+        str_input (str): Date string to validate (format 'dd/mm/yyyy').
 
-    :return: a valid date that is a member of the class dates stored in `dates_list`
-    :rtype: str
+    Returns:
+        Result[str]: Ok containing the validated date string, or Err with a
+            diagnostic message when the date is not available.
     """
 
     # get class dates
@@ -72,38 +76,25 @@ def match_date_by_value(str_input: str) -> Result[str]:
 
 
 def parse_to_dates(entry: str) -> Result[list[str]]:
-    """
-    A helper function that parses a string entered by a user and returns a list of corresponding date strings.
-    The string entered by the user is designed to match one of the following formats:
+    """Parse user input into a list of class date strings.
 
-    - case `entry` = "d" / "dd" e.g., "1" or "12":
-        The `entry` is converted to an int and then converted to an index for the list of class dates.
-        Upon indexing this list, the obtained date is returned as a list containing a single date string.
-        If the indexing conditions are not met, the program is forcefully exited.
+    Accepts several input formats:
+    - One or more 1-based indices (numbers) separated by commas, which are
+      mapped to class dates.
+    - One or more date strings in 'dd/mm/yyyy' format separated by commas.
+    - The special token 'all' is handled by callers of this function.
 
-    - case `entry` = "d, dd" e.g., "1, 12" or "12, 1":
-        The `entry` is split into substrings using "," after which each substring is trimmed of its whitespaces,
-        converted to an int and parsed using the same formula for the previous case.
-        If each individual substring is parsed successfully, their corresponding dates are returned as a `list[str]`.
+    The function validates the input format, resolves numeric selections to
+    date strings, and returns the selected date strings wrapped in a
+    `Result.ok`. If the input is invalid or references unavailable dates, a
+    `Result.err` with a diagnostic message is returned.
 
-    - case `entry` = "dd/mm/yyyy" e.g., "12/01/2025":
-        The `entry` is just checked to be a member of the list of class dates before being returned.
-        If it is not, the program is forcefully exited.
+    Args:
+        entry (str): User input representing date selections.
 
-    - case `entry` = "dd/mm/yyyy, dd/mm/yyyy" e.g., "12/01/2025, 13/01/2025":
-        The `entry` is split into substrings using "," after which each substring is trimmed of its whitespaces,
-        and then parsed individually using the same formula for the previous case.
-        If each individual substring is parsed successfully, their corresponding dates are returned as a `list[str]`.
-
-    Should no case be matched, the program is forcefully exited.
-
-    :param entry: (str) - A user input string representing class date selections.
-    :type entry: str
-
-    :return: (list[str]) - List of valid class dates as strings.
-    :rtype: list[str]
-
-    :raises InvalidSelectionInputError: If the input does not match any required formats or valid dates.
+    Returns:
+        Result[list[str]]: Ok with the list of selected date strings, or Err
+            with a diagnostic message on failure.
     """
     # Remove leading/trailing whitespace and convert to lowercase
     entry = entry.strip().lower()

@@ -1,59 +1,67 @@
+"""Unit tests for date string parsing helpers in ``cli_utils``.
+
+This module exercises ``parse_date_str`` from :mod:`pylms.cli_utils.date_str_parse`.
+The tests verify correct behavior for single-date input, multiple comma-
+separated dates, invalid formats, and empty input. These tests are designed
+to be simple, deterministic unit tests that validate the parsing logic.
+"""
+
 import unittest
 
 from .date_str_parse import parse_date_str
 
 
-# all tests pass
 class TestDateStringParse(unittest.TestCase):
-    """
-    Test suite for the _parse_date_str function in src.cli.utils.date_str_parse.
+    """Unit tests for :func:`pylms.cli_utils.date_str_parse.parse_date_str`.
 
-    This class contains unit tests to verify the correct parsing of date strings
-    into lists of date strings, including handling of single dates, multiple dates,
-    invalid formats, and empty strings.
+    The test methods below each cover a focused parsing scenario and assert the
+    expected list of date strings is returned.
     """
 
     def test_single_date(self) -> None:
-        """
-        Test parsing a single date string.
+        """Parse a single date string.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Verifies that a single date in DD/MM/YYYY format is returned as a
+        one-element list.
+
+        Returns:
+            None
         """
-        # Assert that a single date string returns a list with that date
         self.assertEqual(parse_date_str("12/11/2023"), ["12/11/2023"])
 
     def test_multiple_dates(self) -> None:
-        """
-        Test parsing a string containing multiple comma-separated dates.
+        """Parse multiple comma-separated date strings.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Verifies that two dates separated by a comma (with optional whitespace)
+        are returned in the same order as a list.
+
+        Returns:
+            None
         """
-        # Assert that multiple dates separated by commas are parsed into a list of dates
         self.assertEqual(
             parse_date_str("12/11/2023, 01/05/2024"),
             ["12/11/2023", "01/05/2024"],
         )
 
     def test_invalid_date_format(self) -> None:
-        """
-        Test parsing an invalid date string.
+        """Handle invalid date format.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Ensures that a non-date input yields an empty list rather than raising
+        an exception.
+
+        Returns:
+            None
         """
-        # Assert that an invalid date string returns an empty list
         self.assertEqual(parse_date_str("invalid date"), [])
 
     def test_empty_string(self) -> None:
-        """
-        Test parsing an empty string.
+        """Handle empty input.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        An empty input string should produce an empty list.
+
+        Returns:
+            None
         """
-        # Assert that an empty string returns an empty list
         self.assertEqual(parse_date_str(""), [])
 
 

@@ -4,14 +4,20 @@ from ..constants import COMMA_DELIM
 
 
 def parse_date_str(entry: str) -> list[str]:
-    """
-    Parse a date string or a comma-separated list of date strings into a list of date strings.
+    """Parse a date string or comma-separated date strings into a list.
 
-    :param entry: (str) - A date string or comma-separated date strings in the format dd/mm/yyyy.
-    :type entry: str
+    Accepts a single date string in the form 'dd/mm/yyyy' or a comma-separated
+    list of such date strings and returns a list of cleaned date strings.
+    Leading or trailing commas are tolerated and whitespace around entries is
+    trimmed.
 
-    :return: (list[str]) - List of date strings parsed from the input.
-    :rtype: list[str]
+    Args:
+        entry (str): A date string or comma-separated date strings in the
+            format 'dd/mm/yyyy'.
+
+    Returns:
+        list[str]: Parsed date strings. Returns an empty list when the input
+            does not match the supported formats.
     """
     match str(entry):
         # matches a single date string like "12/11/2030" or "09/03/2004"

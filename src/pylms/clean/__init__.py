@@ -1,3 +1,22 @@
+"""Data cleaning utilities package.
+
+This package provides focused helpers to normalize and clean tabular data used
+throughout the project. Functions address common data hygiene tasks such as
+normalizing column names, cleaning email and phone fields, trimming and
+standardizing string fields, parsing and normalizing dates and times, removing
+or marking missing values, de-duplicating rows, and preparing training-related
+fields for downstream processing.
+
+The exported functions are small and composable so they can be used together
+in cleaning pipelines applied to pandas DataFrames.
+
+Exports (selected):
+- clean_col_names, clean_columns, clean_na, clean_duplicates,
+- clean_duplicates_with_cols, clean_str, clean_email, clean_name, clean_phone,
+- clean_cohort, clean_date, clean_time, clean_internship, clean_training,
+- clean_completion_date, clean_sort, clean_order, normalize
+"""
+
 from .clean_col_names import clean_col_names
 from .clean_columns import clean_columns
 from .clean_completion_date import clean_completion_date

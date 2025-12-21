@@ -14,14 +14,16 @@ from .cache import copy_data
 
 
 def verify_cache_records(test_data: pd.DataFrame) -> bool:
-    """
-    Verify that the cache records DataFrame contains the required columns.
+    """Verify that the cache records DataFrame contains the required columns.
 
-    :param test_data: (pd.DataFrame) - The DataFrame to verify.
-    :type test_data: pd.DataFrame
+    Checks that the provided DataFrame contains the expected cache metadata
+    columns: `CACHE_TIME`, `CACHE_CMD` and `CACHE_ID`.
 
-    :return: (bool) - True if all required columns are present, False otherwise.
-    :rtype: bool
+    Args:
+        test_data (pd.DataFrame): The DataFrame to verify.
+
+    Returns:
+        bool: True if all required columns are present, False otherwise.
     """
     # Check if the required columns are present in the DataFrame
     cols: list[str] = test_data.columns.tolist()
@@ -30,14 +32,17 @@ def verify_cache_records(test_data: pd.DataFrame) -> bool:
 
 
 def fmt_time(timestamp: str | datetime) -> str:
-    """
-    Format a timestamp string or datetime object into a readable string format.
+    """Format a timestamp into a readable string.
 
-    :param timestamp: (str | datetime) - The timestamp to format.
-    :type timestamp: str or datetime
+    Accepts either a timestamp string in the format '%Y-%m-%d %H:%M:%S' or a
+    `datetime` object and returns a human-readable formatted string such as
+    'Mon, 01 Jan, 2020 01:23PM'.
 
-    :return: (str) - The formatted timestamp string.
-    :rtype: str
+    Args:
+        timestamp (str | datetime): The timestamp to format.
+
+    Returns:
+        str: The formatted timestamp string.
     """
     # If the timestamp is a string, parse it into a datetime object
     if isinstance(timestamp, str):
@@ -50,27 +55,31 @@ def fmt_time(timestamp: str | datetime) -> str:
 
 
 def len_str(item: Any) -> int:
-    """
-    Get the length of the string representation of an item.
+    """Return the length of the string representation of an item.
 
-    :param item: (Any) - The item to measure.
-    :type item: Any
+    Args:
+        item (Any): The object whose string representation length is required.
 
-    :return: (int) - The length of the string representation.
-    :rtype: int
+    Returns:
+        int: Length of str(item).
     """
     return len(str(item))
 
 
 def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
-    """
-    Display cache records, prompt user to select a rollback state, and perform rollback.
+    """Display cache records, prompt for a rollback selection, and perform the
+    rollback operation by copying snapshot data to the target path.
 
-    :param test_path: (Path | None) - Optional path to rollback data to.
-    :type test_path: Path or None
+    This function reads cache metadata, prints a formatted list of available
+    snapshots, prompts the user to choose an index to restore, and then copies
+    the selected snapshot into `test_path` (or the default data path). The
+    function returns the `Result` produced by the copy operation.
 
-    :return: (Result[Unit]) - returns result.
-    :rtype: Result[Unit]
+    Args:
+        test_path (Path | None): Optional destination path to restore data to.
+
+    Returns:
+        Result[Unit]: Result object indicating success or a propagated error.
     """
     # Read cache records from metadata path
     cache_records = read(get_metadata_path())

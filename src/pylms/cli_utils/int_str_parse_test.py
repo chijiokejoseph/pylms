@@ -1,69 +1,79 @@
+"""Unit tests for integer-string parsing helpers in ``cli_utils``.
+
+This module contains tests for :func:`pylms.cli_utils.int_str_parse.parse_int_str`.
+The test cases verify parsing of single integers, comma-separated lists,
+ranges, invalid input, and malformed input. Tests assert that the parser
+returns the expected lists (wrapped in the project's Result type) and do not
+depend on external state.
+"""
+
 import unittest
 
 from .int_str_parse import parse_int_str
 
 
-# all tests pass
 class TestIntStringParse(unittest.TestCase):
-    """
-    Test suite for the _parse_int_str function in src.cli.utils.int_str_parse.
+    """Unit tests for :func:`pylms.cli_utils.int_str_parse.parse_int_str`.
 
-    This class contains unit tests to verify the correct parsing of integer strings
-    into lists of integers, including handling of single integers, multiple integers,
-    ranges, invalid formats, and empty strings.
+    Each test covers a focused parsing scenario and asserts the expected list
+    of integers is returned (via the `Result` wrapper).
     """
 
     def test_single_int(self) -> None:
-        """
-        Test parsing a single integer string.
+        """Parse a single integer string.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Verifies that a single integer input like "12" produces a one-element
+        list [12].
+
+        Returns:
+            None
         """
-        # Assert that a single integer string returns a list with that integer
         self.assertEqual(parse_int_str("12").unwrap(), [12])
 
     def test_multiple_ints(self) -> None:
-        """
-        Test parsing a string containing multiple comma-separated integers.
+        """Parse multiple comma-separated integers.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Verifies that inputs such as "1, 3, 5" are parsed into [1, 3, 5].
+
+        Returns:
+            None
         """
-        # Assert that multiple integers separated by commas are parsed into a list of integers
         self.assertEqual(
             parse_int_str("1, 3, 5").unwrap(),
             [1, 3, 5],
         )
 
     def test_int_range(self) -> None:
-        """
-        Test parsing a string containing integer ranges and individual integers.
+        """Parse integer ranges and individual integers.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Verifies that ranges like "1 - 6" are expanded and combined with single
+        integers (e.g. "1 - 6, 8") to produce the full list in ascending order.
+
+        Returns:
+            None
         """
-        # Assert that integer ranges and individual integers are parsed correctly into a list of integers
         self.assertEqual(parse_int_str("1 - 6, 8").unwrap(), [1, 2, 3, 4, 5, 6, 8])
 
-    def test_invalid_date_format(self) -> None:
-        """
-        Test parsing an invalid integer string.
+    def test_invalid_input(self) -> None:
+        """Handle completely invalid input gracefully.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        An input that cannot be parsed (for example "invalid date") should
+        result in an empty list rather than raising an exception.
+
+        Returns:
+            None
         """
-        # Assert that an invalid integer string returns an empty list
         self.assertEqual(parse_int_str("invalid date").unwrap(), [])
 
-    def test_empty_string(self) -> None:
-        """
-        Test parsing an empty or malformed integer string.
+    def test_malformed_string(self) -> None:
+        """Handle malformed numeric strings.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Inputs with malformed range syntax or unexpected characters should be
+        handled gracefully and yield an empty result list.
+
+        Returns:
+            None
         """
-        # Assert that an empty or malformed integer string returns an empty list
         self.assertEqual(parse_int_str("1 -* 52").unwrap(), [])
 
 

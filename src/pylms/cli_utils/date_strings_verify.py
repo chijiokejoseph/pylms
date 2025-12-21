@@ -2,17 +2,23 @@ import re
 
 
 def val_date_str(entry: str) -> bool:
-    """Validate the date string format. The date string can be a single date,
-    a comma-separated list of dates, or a range of dates.
-    e.g., "1", "1, 2", "12/11/2023", "12/11/2023, 01/05/2024", "1-5", "1, 2-5".
+    """Validate a user's date-selection input string.
 
-    :param entry: (str) - The input string to validate.
-    :type entry: str
+    Accepts several input forms commonly used to select class dates:
+    - a single 1- or 2-digit index (e.g. "1")
+    - a comma-separated list of indices (e.g. "1, 2")
+    - a single date in "dd/mm/yyyy" form
+    - a comma-separated list of dates in "dd/mm/yyyy" form
+    - ranges of indices (e.g. "1-5")
+    - the token "all"
+    The function returns True when `entry` matches one of the accepted formats.
 
-    :return: (bool) - True if the input string matches the expected date formats, False otherwise.
-    :rtype: bool
+    Args:
+        entry (str): The input string to validate.
 
-    :raises InvalidSelectionInputError: If the input string does not match any of the required formats.
+    Returns:
+        bool: True if `entry` matches an accepted date-selection format,
+            False otherwise.
     """
 
     # normalize the entry by stripping and lowercasing it
@@ -33,10 +39,13 @@ def val_date_str(entry: str) -> bool:
         ):
             return True
         # matches "1-5", "1, 2-5"
-        case _ if re.fullmatch(
-            r"^\s*((\d+\s*-\s*\d+\s*)|(\d+\s*))((,\s*\d+\s*-\s*\d+\s*)|(,\s*\d+\s*))*(?:,|\b)$",
-            entry,
-        ) is not None:
+        case _ if (
+            re.fullmatch(
+                r"^\s*((\d+\s*-\s*\d+\s*)|(\d+\s*))((,\s*\d+\s*-\s*\d+\s*)|(,\s*\d+\s*))*(?:,|\b)$",
+                entry,
+            )
+            is not None
+        ):
             return True
         # matches valid date input "all"
         case "all":

@@ -7,16 +7,21 @@ from ..data import DataStream
 def clean_duplicates_with_cols(
     data_stream: DataStream[pd.DataFrame], identifier_columns: list[str]
 ) -> DataStream[pd.DataFrame]:
-    """removes duplicate rows from the underlying dataframe of the input parameter `data`
+    """Remove duplicate rows from a DataStream using specified columns.
 
-    :param data_stream: ( DataStream [pd.DataFrame] ): A DataStream object passed into the function
-    :type data_stream: DataStream[pd.DataFrame]
+    This function removes duplicate rows from the DataFrame contained in the
+    provided `DataStream` by using the supplied `identifier_columns` to
+    determine row uniqueness. The resulting DataFrame has its index reset and
+    is returned wrapped in a `DataStream`.
 
-    :param identifier_columns: ( list[str] ): A list of column names that will be used to determine duplicates in the `DataStream` object.
-    :type identifier_columns: list[str]
+    Args:
+        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+            DataFrame to deduplicate.
+        identifier_columns (list[str]): Column names used to identify duplicate
+            rows.
 
-    :return: DataStream instance with its underlying data formatted such that all duplicate rows have been removed.
-    :rtype: DataStream[pd.DataFrame]
+    Returns:
+        DataStream[pd.DataFrame]: A DataStream wrapping the deduplicated DataFrame.
     """
     data: pd.DataFrame = data_stream()
     data.drop_duplicates(subset=identifier_columns, inplace=True)
@@ -26,13 +31,19 @@ def clean_duplicates_with_cols(
 
 
 def clean_duplicates(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
-    """removes duplicate rows from the underlying dataframe of the input parameter `data`
+    """Remove duplicate rows from a DataStream using the default schema.
 
-    :param data_stream: ( DataStream [pd.DataFrame] ): A DataStream object passed into the function
-    :type data_stream: DataStream[pd.DataFrame]
+    Removes duplicate rows from the DataFrame contained in `data_stream`
+    using the module-level `UNIQUE_COLUMNS` list to determine uniqueness.
+    The deduplicated DataFrame has its index reset and is returned wrapped in
+    a `DataStream`.
 
-    :return: DataStream instance with its underlying data formatted such that all duplicate rows have been removed.
-    :rtype: DataStream[pd.DataFrame]
+    Args:
+        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+            DataFrame to deduplicate.
+
+    Returns:
+        DataStream[pd.DataFrame]: A DataStream wrapping the deduplicated DataFrame.
     """
     data: pd.DataFrame = data_stream().copy()
     data.drop_duplicates(subset=UNIQUE_COLUMNS, inplace=True)

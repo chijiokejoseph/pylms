@@ -12,18 +12,25 @@ type Validator = Callable[[pd.DataFrame], bool]
 def clean_na(
     data_stream: DataStream[pd.DataFrame], validate_na_removal: Validator | None = None
 ) -> DataStream[pd.DataFrame]:
-    """
-    Removes missing or N/A values in the underlying data of the input DataStream.
+    """Fill missing values and return a DataStream with a validator.
 
-        type Validator = Callable[[pd.DataFrame], bool]
+    Fill missing or N/A entries in the DataFrame contained in `data_stream`
+    using the module-level `NA_COLUMNS_FILL` mapping. The function returns a
+    `DataStream` that carries a validator which ensures the processed DataFrame
+    contains no missing values and only the expected columns defined in
+    `DATA_COLUMNS`. A custom `validate_na_removal` function may be supplied to
+    override the default validator.
 
-    :param data_stream: ( DataStream[pd.DataFrame] ) : Input DataStream containing the data to be cleaned
-    :type: DataStream[pd.DataFrame]
-    :param validate_na_removal: ( Validator | None, optional ): A function that implements a custom validation function to check that the processed data does not have any missing values. It Defaults to None
-    :type validate_na_removal: Validator | None
+    Args:
+        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+            DataFrame to be processed.
+        validate_na_removal (Validator | None): Optional custom validator that
+            accepts the processed DataFrame and returns True if validation
+            succeeds. If None, a default validator is attached.
 
-    :rtype: DataStream[pd.DataFrame]
-    :return: cleaned data as DataStream
+    Returns:
+        DataStream[pd.DataFrame]: A DataStream wrapping the filled DataFrame and
+            the validator used to assert the cleaning operation was successful.
     """
 
     data: pd.DataFrame = data_stream()

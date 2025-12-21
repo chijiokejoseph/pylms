@@ -54,7 +54,13 @@ ___
 - Run the command below
 
 ```bash
-pydeps --show-cycles --cluster --max-module-depth 2 -o data/pylms.pdf -T pdf src/pylms
+pydeps --show-cycles --cluster --max-module-depth 2 -o data/pylms.dot -T dot src/pylms
+```
+
+Generated dot file can be viewed using the `yED` live tool by `yworks` at this URL
+
+```bash
+https://www.yworks.com/yed-live/
 ```
 
 ___

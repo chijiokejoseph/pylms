@@ -12,12 +12,11 @@ from .input_with_quit import input_fn
 
 
 class PrintSize(NamedTuple):
-    """
-    Named tuple to hold maximum sizes for printing student numbers and names.
+    """Named tuple holding maximum sizes for printing student numbers and names.
 
-    :cvar max_num_size: (int) - Maximum width for student number display.
-    :cvar max_name_size: (int) - Maximum width for student name display.
-
+    Attributes:
+        max_num_size (int): Maximum width for student number display.
+        max_name_size (int): Maximum width for student name display.
     """
 
     max_num_size: int
@@ -25,11 +24,16 @@ class PrintSize(NamedTuple):
 
 
 def det_max_printout_sizes(possible_names: list[str]) -> PrintSize:
-    """
-    Determine the maximum print sizes for student numbers and names.
+    """Determine maximum print widths for numbers and names.
 
-    :param possible_names: (list[str]) - List of student names.
-    :return: (PrintSize) - Named tuple with max sizes.
+    Calculates the width required to display student serial numbers and names
+    based on the provided list of names.
+
+    Args:
+        possible_names (list[str]): List of student names.
+
+    Returns:
+        PrintSize: Named tuple containing `max_num_size` and `max_name_size`.
     """
     # Initialize minimum width for student number display
     max_num_size: int = 2
@@ -53,14 +57,15 @@ def det_max_printout_sizes(possible_names: list[str]) -> PrintSize:
 
 
 def add_name_printout(num: int, name: str, size: PrintSize) -> str:
-    """
-    Format a single student's number and name for printing.
+    """Format a single student's serial number and name into a printable string.
 
-    :param num: (int) - Student's serial number.
-    :param name: (str) - Student's name.
-    :param size: (PrintSize) - Maximum sizes for formatting.
+    Args:
+        num (int): Student's serial number (1-based).
+        name (str): Student's name.
+        size (PrintSize): Formatting widths (max_num_size, max_name_size).
 
-    :return: (str) - Formatted string for the student.
+    Returns:
+        str: Formatted string with aligned number and name.
     """
     # Format the student number with a closing parenthesis
     num_format: str = f"{num}.)"
@@ -71,13 +76,14 @@ def add_name_printout(num: int, name: str, size: PrintSize) -> str:
 
 
 def add_names_printout(all_names: list[str], names_serials: list[int]) -> str:
-    """
-    Format multiple students' numbers and names for printing.
+    """Format multiple students into a multi-column printable string.
 
-    :param all_names: (list[str]) - List of all student names.
-    :param names_serials: (list[int]) - List of student serial numbers to print.
+    Args:
+        all_names (list[str]): List of all student names.
+        names_serials (list[int]): List of 1-based student serial numbers to include.
 
-    :return: (str) - Formatted string for the students.
+    Returns:
+        str: Multi-line formatted string for the selected students.
     """
     # Determine the print size based on all names
     size: PrintSize = det_max_printout_sizes(all_names)
@@ -98,12 +104,13 @@ def add_names_printout(all_names: list[str], names_serials: list[int]) -> str:
 
 
 def printout_names(names_list: list[str]) -> None:
-    """
-    Print the list of student names in formatted columns.
+    """Print a formatted multi-column list of student names.
 
-    :param names_list: (list[str]) - List of student names to print.
+    Args:
+        names_list (list[str]): List of student names to print.
 
-    :return: None
+    Returns:
+        None
     """
     # Get the total number of names
     names_len: int = len(names_list)
@@ -134,12 +141,18 @@ def printout_names(names_list: list[str]) -> None:
 
 
 def select_student(ds: DataStore) -> Result[list[int]]:
-    """
-    Prompt the user to select one or more students by their serial numbers.
+    """Prompt user to select students by serial numbers and return selection.
 
-    :param ds: (DataStore) - The data store containing student information.
+    Presents instructions and a formatted list of student names, prompts the
+    user to enter serial numbers (single, comma-separated, or ranges), parses
+    the input and returns the selected serial numbers.
 
-    :return: (Result[list[int]]) - a result object.
+    Args:
+        ds (DataStore): The data store containing student information.
+
+    Returns:
+        Result[list[int]]: Ok containing a list of selected 1-based serial numbers,
+            or an Err propagated from input/validation helpers.
     """
     # Get a pretty formatted DataFrame of the data store
     pretty_data: pd.DataFrame = ds.pretty()

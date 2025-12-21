@@ -1,3 +1,21 @@
+"""CLI helper to collect student serial numbers from various input formats.
+
+This module provides interactive support to obtain a list of student serial
+numbers. The primary function, `provide_serials`, prompts the user to choose a
+format (plain text, CSV, Excel, delimited input, or interactive selection),
+reads and validates the serials, and finally asks for confirmation before
+returning the validated list.
+
+The function returns a `Result[list[int]]` where the Ok variant contains the
+sorted, de-duplicated serial numbers and the Err variant contains a
+descriptive error message suitable for display to the user.
+
+Note:
+- Serial validation ensures serials are positive integers within the range of
+  rows available in the provided `DataStore` instance.
+- File-reading errors and parsing errors are returned as `Result.err`.
+"""
+
 import pandas as pd
 
 from ..constants import NAME
@@ -10,6 +28,26 @@ from .select_student import select_student
 
 
 def provide_serials(ds: DataStore) -> Result[list[int]]:
+    """Prompt user to provide serial numbers in a supported format.
+
+    The user is presented with a menu of input formats (plain text, CSV,
+    Excel, manual delimited input or interactive selection). The chosen format
+    determines how serials are read. After reading and parsing serials the
+    function validates each serial to ensure it is within the valid range of
+    student rows in `ds`. Duplicates are removed and the list is sorted. The
+    user is asked to confirm the selection before the function returns.
+
+    Args:
+        ds: The `DataStore` instance used to validate serial ranges and to
+            display student names for confirmation.
+
+    Returns:
+        Result[list[int]]: Ok(list[int]) on success containing validated serial
+            numbers; Err(str) with a descriptive message on failure.
+
+    Raises:
+        None: Errors are returned via the `Result` type rather than raised.
+    """
     provide_serials_formats: list[str] = [
         "Provide student serials as .txt file (one serial no per line)",
         "Provide student serials as .csv file (one serial no per line)",

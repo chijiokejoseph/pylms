@@ -3,19 +3,21 @@ from ..info import printpass
 
 
 def parse_response(menu: list[str], response: str) -> int | None:
-    """
-    Parse the user's response from a menu selection.
-    This function validates the user's input against the provided menu options
-    and returns the selected option as an integer if valid, otherwise returns None.
+    """Parse and validate a menu selection response.
 
-    :param menu: (list[str]) - The list of menu options.
-    :type menu: list[str]
+    Validate the provided `response` string against the available `menu`
+    options. The function attempts to parse `response` as an integer and
+    ensures it is within the valid 1-based range of `menu`. When valid the
+    selected index (1-based) is returned; otherwise the function returns
+    `None`.
 
-    :param response: (str) - The user's response to the menu selection.
-    :type response: str
+    Args:
+        menu (list[str]): The list of menu options presented to the user.
+        response (str): The user's raw response string.
 
-    :return: (int | None) - The selected option as an integer if valid, otherwise None.
-    :rtype: int | None
+    Returns:
+        int | None: The selected 1-based index when the input is valid, or
+            `None` when the input is invalid.
     """
     # Normalize the response string to lowercase and strip whitespace
     response = response.lower().strip()

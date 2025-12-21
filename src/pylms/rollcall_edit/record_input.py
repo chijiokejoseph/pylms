@@ -26,7 +26,7 @@ def input_record(
     class_num: int = class_dates.index(target_date) + 1
     # Prepare the prompt message for user input
     prompt: str = f"""
-From the options presented above listed {1} - {len(options)},
+From the options presented above listed 1 - {len(options)},
 Please Select which of the following Record Status should be set
 \nFor Class {class_num} held on {target_date} (only integers from 1 - {len(options)} are allowed):  """
 

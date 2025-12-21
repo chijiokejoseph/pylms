@@ -5,23 +5,24 @@ from .custom_inputs import input_num
 def input_option(
     options: list[str], title: str = "Menu", prompt: str = ""
 ) -> Result[tuple[int, str]]:
-    """
-    Prompts the user to select an option from a list and returns the selected option's index and value.
+    """Prompt the user to select an option from a list and return the selection.
 
-    This function displays a list of options to the user with an optional prompt and prompt message. The user is prompted to enter an integer corresponding to their choice. The function validates the input to ensure it is within the range of available options. If the input is valid, it returns the index and the selected option as a tuple. If the input is invalid, it raises an `InvalidInputError` after a specified number of attempts.
+    Displays a numbered menu of `options` with an optional `title` and
+    `prompt`. Prompts the user to enter a number corresponding to their
+    choice, validates that the input falls within the available range, and
+    returns a tuple containing the 1-based index and the selected option
+    string inside a `Result.ok`. If the interactive prompt fails, the error
+    `Result` is propagated.
 
-    :param options: A list of strings representing the options available for selection.
-    :type options: list[str]
+    Args:
+        options (list[str]): List of option strings to display.
+        title (str): Title displayed above the menu. Defaults to "Menu".
+        prompt (str): Optional prompt text shown above the input prompt.
 
-    :param prompt: An optional prompt to display above the list of options. Defaults to "Select from the following: ".
-    :type prompt: str, optional
-
-    :param prompt: An optional prompt message to display before the input. Defaults to an empty string.
-    :type prompt: str, optional
-
-    :return: A result containing a tuple that contains the index of the selected option (1-based) and the selected option itself.
-    :rtype: Result[tuple[int, str]]
-
+    Returns:
+        Result[tuple[int, str]]: Ok result with a tuple of (1-based index,
+            option string), or an error `Result` propagated from the input
+            helper.
     """
 
     menu_bars = "=" * 5
@@ -52,3 +53,14 @@ def input_option(
 
     # Return the 1-based choice and the corresponding option string
     return Result.ok((choice, options[choice_idx]))
+
+
+def input_bool(prompt: str) -> Result[bool]:
+    menu = ["Yes", "No"]
+    result = input_option(menu, "Confirm Menu", prompt)
+    if result.is_err():
+        return result.propagate()
+
+    idx, _ = result.unwrap()
+
+    return Result.ok(idx == 1)

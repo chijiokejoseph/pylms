@@ -29,7 +29,7 @@ from .emails_input import provide_emails
 from .input_to_config import input_course_name, input_dir
 from .input_with_quit import input_fn
 from .interact import interact
-from .option_input import input_option
+from .option_input import input_bool, input_option
 from .path_input import input_path, test_path_in
 from .select_class_date import select_class_date
 from .select_student import select_student
@@ -41,6 +41,7 @@ __all__ = [
     "input_dir",
     "input_num",
     "input_option",
+    "input_bool",
     "input_path",
     "test_path_in",
     "input_str",

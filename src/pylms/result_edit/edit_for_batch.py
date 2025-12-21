@@ -29,10 +29,10 @@ def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     """
 
     print("Please provide serial numbers of students to reward/penalize their scores.")
-    result: Result[list[int]] = provide_serials(ds)
+    result = provide_serials(ds)
     if result.is_err():
-        print(f"Error providing serials: {result.unwrap_err()}")
-        return Result[list[float]].err(result.unwrap_err())
+        return result.propagate()
+
     student_serials: list[int] = result.unwrap()
 
     # get the serial numbers and indices of the students to edit
@@ -47,23 +47,24 @@ def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
 
     # get the kind of edit to perform (add or subtract marks)
     options: list[str] = ["Add Marks", "Subtract Marks"]
-    option_result = input_option(options)
-    if option_result.is_err():
-        return Result[list[float]].err(option_result.unwrap_err())
-    idx, choice = option_result.unwrap()
+    result = input_option(options)
+    if result.is_err():
+        return result.propagate()
+
+    idx, choice = result.unwrap()
     print(f"You have selected {choice}")
 
     # get the marks to add or subtract
-    result_num = input_num(
+    result = input_num(
         f"For {choice}, enter the number of marks: ",
         1.0,
         lambda x: x > 0,
         "The value entered is not greater than zero.",
     )
     if result.is_err():
-        return Result[list[float]].err(result.unwrap_err())
+        return result.propagate()
 
-    marks = result_num.unwrap()
+    marks = result.unwrap()
     marks = marks if idx == 1 else -marks
     # apply the edit and record the updates
     for index in idxs:
@@ -71,4 +72,4 @@ def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
         old_result: float = cast(float, result_data.loc[index, result_col])
         new_result: float = old_result + marks
         result_data.loc[index, result_col] = new_result if new_result <= 100 else 100
-    return Result[list[float]].ok(updates_list)
+    return Result.ok(updates_list)

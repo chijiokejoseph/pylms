@@ -1,6 +1,6 @@
-from typing import cast
-
 import pandas as pd
+
+from pylms.info import print_info
 
 from ..cli import input_num, input_option, select_student
 from ..data import DataStore
@@ -21,20 +21,22 @@ def edit_multiple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float
 
     for each_serial in student_serials:
         index: int = each_serial - 1
-        temp = result_data.loc[index, :]
-        student_record: pd.Series = cast(pd.Series, temp)
-        student_score: float = cast(float, student_record[result_col])
-        print("\nTarget Record")
-        print(f"\n{student_record}\n")
+        student_record = result_data.loc[index, :]
+        student_score = result_data[result_col].astype(float).iloc[index]
+        print_info("Target Record")
+        print_info(f"{student_record}\n")
+
         options: list[str] = ["Add Marks", "Subtract Marks"]
-        option_result = input_option(
+
+        result = input_option(
             options, title="Edit Result", prompt="Choose how to edit this result"
         )
-        if option_result.is_err():
-            return option_result.propagate()
-        idx, choice = option_result.unwrap()
-        print(f"You have selected {choice}")
-        result: Result[float] = input_num(
+        if result.is_err():
+            return result.propagate()
+        idx, choice = result.unwrap()
+
+        print_info(f"You have selected {choice}")
+        result = input_num(
             f"For {choice}, enter the number of marks: ",
             1.0,
             lambda x: x > 0,
@@ -53,4 +55,4 @@ def edit_multiple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float
                 result_data.loc[index, result_col] = student_score - marks
                 updates_list[index] = -marks
 
-    return Result[list[float]].ok(updates_list)
+    return Result.ok(updates_list)

@@ -6,31 +6,34 @@ from .custom_inputs import input_str
 
 
 def select_class_date(msg: str, dates_in: list[str] | None = None) -> Result[list[str]]:
-    """
-    Prompts the user to select a class date from the list of class dates.
+    """Prompt the user to select one or more class dates.
 
-    The user can enter dates in the following formats:
-
-    - Single class number (e.g. "1")
+    Presents instructions and a numbered menu of available class dates, then
+    prompts the user for a selection. Accepted input formats include:
+    - Single index (e.g. "1")
     - Exact date (e.g. "13/01/2025")
-    - Comma-separated class numbers (e.g. "1, 2, 3")
-    - Comma-separated exact dates (e.g. "13/01/2025, 14/01/2025")
-    - Date ranges (e.g. "1 - 3", "1 -3, 5, 7 - 10")
-    - "all" to select all available dates
+    - Comma-separated indices (e.g. "1, 2, 3")
+    - Comma-separated dates (e.g. "13/01/2025, 14/01/2025")
+    - Ranges of indices (e.g. "1-3", "1, 3-5")
+    - The token "all" to select every available date
 
-    The function prints out the instructions on how to select class dates and the class dates with their class numbers,
-    and then uses `input_str` to receive user input before validating it.
-    Finally, it parses the user input and returns the selected class date(s) as a list of str.
+    The function validates the user's input, resolves indices to date
+    strings, and returns the selected dates inside a `Result.ok`. Errors from
+    the interactive helpers are propagated as `Result.err`.
 
-    :param msg: (str) - The message to display before prompting the user for input.
-    :type msg: str
+    Args:
+        msg (str): Message printed before displaying the date menu.
+        dates_in (list[str] | None): Optional list of candidate date strings to
+            present. When `None` the stored class dates are used.
 
-    :param src_dates_list: (list[str] | None) - An optional list of class dates to choose from. If not provided, it defaults to retrieving dates from the system.
-    :type src_dates_list: list[str] | None
+    Returns:
+        Result[list[str]]: Ok with the list of selected date strings on
+            success, or an Err with a diagnostic message when parsing or
+            validation fails.
 
-
-    :return: A result containing the list of class dates selected by the user.
-    :rtype: Result[list[str]]
+    Example:
+        >>> select_class_date(\"Choose class date:\")
+        Result.ok(['13/01/2025'])
     """
 
     # get class dates

@@ -1,28 +1,30 @@
+"""Unit tests for date string parsing helpers in ``cli_utils``.
+
+This module exercises :func:`pylms.cli_utils.date_strings_parse.parse_to_dates`.
+The tests verify correct behavior for range expressions, comma-separated lists,
+and the special keyword handling (for example, ``all``). Each test asserts the
+expected list of date strings is returned for representative inputs.
+"""
+
 import unittest
 
 from ..history import retrieve_dates
 from .date_strings_parse import parse_to_dates
 
 
-# all tests clear
-# implicitly verifies all tests for funcs in `date_strings_parse.py and date_strings_verify.py`
 class TestDateStrings(unittest.TestCase):
-    """
-    Test suite for the parse_to_dates function in src.cli.utils.date_strings_parse.
+    """Unit tests for :func:`pylms.cli_utils.date_strings_parse.parse_to_dates`.
 
-    This class contains unit tests to verify the correct parsing of various date string
-    formats into lists of date strings, including ranges, multiple dates, and special keywords.
+    The test methods cover common input forms and assert the parser returns the
+    expected list of date strings in each case.
     """
 
     def test_parse_dates(self) -> None:
-        """
-        Test parsing various date string formats into lists of dates.
+        """Verify parsing of ranges, comma-separated dates, and the 'all' keyword.
 
-        :return: (None) - returns nothing
-        :rtype: None
+        Iterates over a set of (input, expected) pairs and asserts that
+        `parse_to_dates` produces the expected output for each input.
         """
-
-        # Test data: tuples of input string and expected list of date strings
         data: list[tuple[str, list[str]]] = [
             ("14/07/2025, 15/07/2025", ["14/07/2025", "15/07/2025"]),
             ("12 - 14", ["14/07/2025", "15/07/2025", "16/07/2025"]),
@@ -30,6 +32,5 @@ class TestDateStrings(unittest.TestCase):
             ("all", retrieve_dates("").unwrap()),
         ]
 
-        # Assert that parse_to_dates returns expected lists for each input string
         for response, expected in data:
             self.assertEqual(expected, parse_to_dates(response))

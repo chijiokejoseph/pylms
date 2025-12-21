@@ -2,14 +2,18 @@ import re
 
 
 def validate_email(email_text: str) -> bool:
-    """
-    validates that the entered email passed as an argument to `email_text` is a valid gmail address.
+    """Validate a Gmail address.
 
-    :param email_text: (str) - the entered email address to validate
-    :type email_text: str
+    Checks whether the provided string is a valid Gmail address according to a
+    simple project validation: it must match the pattern
+    r'^[a-zA-Z.\d]+@gmail\.com$' and must not be composed solely of digits
+    before the @ sign.
 
-    :returns: True if `email_text` is validated as a gmail address
-    :rtype: bool
+    Args:
+        email_text (str): The email address to validate.
+
+    Returns:
+        bool: True if `email_text` is a valid Gmail address, False otherwise.
     """
 
     # this tests that the email contains a combination of letters and numbers

@@ -6,26 +6,37 @@ from ..re_phone import match_and_clean
 
 
 def clean_phone(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
-    """
-    formats all the phone numbers in a pandas DataFrame or Series which is stored in the `data` argument. It converts international numbers to local format, and uses a semicolon as a delimiter.
+    """Normalize phone numbers in the DataStream's DataFrame.
 
-    :param data_stream: ( DataStream[pd.DataFrame] ): A DataStream instance containing the data of phone numbers which are meant to be cleaned
-    :type data_stream: DataStream[pd.DataFrame]
+    This function validates that the input DataFrame contains a column named
+    by the `PHONE` constant, that the column contains non-missing string
+    values, and then applies the `match_and_clean` phone-normalization helper
+    to each value. The processed DataFrame is returned wrapped in a
+    `DataStream`.
 
-    :return: Formatted phone numbers as a DataStream object.
-    :rtype: DataStream[pd.DataFrame]
+    Args:
+        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+            DataFrame whose phone column should be normalized.
+
+    Returns:
+        DataStream[pd.DataFrame]: A DataStream wrapping the DataFrame with the
+            normalized phone numbers.
     """
 
     def validate_data(test_data: pd.DataFrame) -> bool:
-        """
-        performs a series of validation operations on the `test_data` argument. These include
-            - checking if the `test_data` contains a `PHONE` column
-            - checking if the `test_data` does not contain any missing values
-            - checking if the `test_data` contains only values of type `str`
+        """Validate that the DataFrame contains a cleanable phone column.
 
-        :param test_data: ( pd.DataFrame ): A dataframe object which is being validated
-        :rtype: bool
-        :return: a boolean that indicates if `test_data` is validated or not
+        The validator checks three things:
+        - The column named by `PHONE` exists.
+        - The column contains no missing values.
+        - All values in the column are strings.
+
+        Args:
+            test_data (pd.DataFrame): The DataFrame to validate.
+
+        Returns:
+            bool: True if the DataFrame passes all validation checks,
+                False otherwise.
         """
 
         # Test if `test_data` has a `PHONE` column

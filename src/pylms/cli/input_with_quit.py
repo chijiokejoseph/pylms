@@ -2,14 +2,19 @@ from ..errors import ForcedExitError, Result, eprint
 
 
 def input_fn(msg: str) -> Result[str]:
-    """
-    Prompt the user for input with an option to forcefully exit the operation.
+    """Prompt the user for input with an option to forcefully exit the operation.
 
-    :param msg: (str) - The message to display to the user.
-    :type msg: str
+    Presents the provided prompt to the user and returns the entered string
+    wrapped in a `Result.ok`. If the user types one of the force-exit commands
+    ('quit', 'exit', or 'q'), a message is printed and the function returns
+    `Result.err` containing a `ForcedExitError`.
 
-    :return: (Result[str]) - The user's input if not a forced exit command.
-    :rtype: Result
+    Args:
+        msg (str): The message to display to the user.
+
+    Returns:
+        Result[str]: `Result.ok` with the user's input, or `Result.err` with a
+            `ForcedExitError` when the user requests a forced exit.
     """
 
     # Append exit instructions to the prompt message

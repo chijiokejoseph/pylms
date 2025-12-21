@@ -7,6 +7,22 @@ from ..data import DataStream
 
 
 def _clean_str(data: pd.Series, fill: str) -> pd.Series:
+    """Convert series entries to strings, using `fill` for failures.
+
+    Helper that ensures every element in `data` is represented as a string.
+    If an element is already a `str` it is preserved; otherwise the function
+    attempts to convert the element using `str()`. If conversion raises a
+    `ValueError`, the provided `fill` value is used instead.
+
+    Args:
+        data (pd.Series): Series whose elements should be normalized to
+            strings.
+        fill (str): Replacement string to use when conversion fails.
+
+    Returns:
+        pd.Series: A new Series where every element is a string.
+    """
+
     def str_conv(entry: Any, default: str) -> str:
         try:
             return str(entry)
@@ -25,18 +41,23 @@ def clean_str(
     target_cols: str | list[str],
     fill: str = NA,
 ) -> DataStream[pd.DataFrame]:
-    """
-    clean a pandas series that is expected to contain only string data and replace all
+    """Ensure specified DataFrame columns contain string values.
 
-    :param data_stream: ( DataStream[pd.Series] ): a `DataStream` instance to be cleaned
-    :type data_stream: DataStream[pd.Series]
-    :param target_cols: ( str | list[str] ): a single string containing the name of a column which is expected to hold string data to apply this formatting to or a list of names of such columns.
-    :type target_cols: str | list[str]
-    :param fill: ( str ): string value to be used to replace any entry in the underlying data of the `DataStream` instance passed as the argument to `data` that is not of the string data type.
-    :type fill: str
+    Converts non-string entries in the specified column(s) to strings using
+    the `_clean_str` helper. If an element cannot be converted it will be
+    replaced with the provided `fill` value. `target_cols` may be either a
+    single column name or a list of column names.
 
-    :return: cleaned data stored in a `DataStream` object
-    :rtype: DataStream[pd.DataFrame]
+    Args:
+        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+            DataFrame to process.
+        target_cols (str | list[str]): Column name or list of column names to
+            normalize to strings.
+        fill (str): String used to replace elements that cannot be converted.
+
+    Returns:
+        DataStream[pd.DataFrame]: A DataStream wrapping the DataFrame with the
+            specified columns normalized to strings.
     """
     data: pd.DataFrame = data_stream()
     if isinstance(target_cols, str):

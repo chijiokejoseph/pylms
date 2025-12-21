@@ -6,16 +6,22 @@ from .custom_inputs import input_str
 def input_email(
     msg: str, diagnosis: str = "Email entered is not a valid email address"
 ) -> Result[str]:
-    """
-    prompts the user to enter an email (specifically a gmail) address using the `input_str` function. The `test_fn` argument is filled using a custom validation function defined in the same module called  `validate_email`.
+    """Prompt the user to enter and validate an email address.
 
-    :param msg: (str) - the prompt to the user to enter an email (gmail) address
-    :type msg: str
-    :param diagnosis: (str, Optional) - the diagnosis text to display if the entered input by the user is not validated as a gmail address. Default to "Email entered is not a valid email address"
-    :type diagnosis: str, optional
+    This function wraps `input_str` supplying the `validate_email` validator to
+    prompt the user for an email address (a Gmail address is expected by the
+    validator). If the user input validates, the validated email is returned
+    inside `Result.ok`. If the interactive prompt returns an error, that
+    error `Result` is propagated.
 
-    :returns: a result containing the input from the user if it is validated as a gmail address
-    :rtype: Result[str]
+    Args:
+        msg (str): The prompt message shown to the user.
+        diagnosis (str): Optional diagnosis message shown when validation
+            fails. Defaults to "Email entered is not a valid email address".
+
+    Returns:
+        Result[str]: `Result.ok` containing the validated email on success, or
+            an error `Result` propagated from the input helper on failure.
     """
     result: Result[str] = input_str(msg, validate_email, diagnosis)
     if result.is_err():

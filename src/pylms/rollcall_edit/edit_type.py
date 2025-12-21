@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 from ..cli import input_option
 from ..errors import Result
+from ..info import print_info
 
 
 class EditType(Enum):
@@ -22,7 +23,7 @@ def input_edit_type() -> Result[EditType]:
         return result.propagate()
 
     choice, option = result.unwrap()
-    print(f"You have selected: {option}\n")
+    print_info(f"You have selected: {option}\n")
     match int(choice):
         case 1:
             return Result.ok(EditType.ALL)

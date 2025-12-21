@@ -31,24 +31,28 @@ def input_num(
     diagnosis: str | None = None,
     trials: int = 3,
 ) -> Result[int] | Result[float]:
-    """
-    Prompts the user to enter a number and validates the input.
-    This function repeatedly prompts the user for input, attempting to parse the input as either a float or an integer
-    based on the specified return type (`rtype`). It validates the parsed input using a custom test function (`test_fn`).
-    If the input is valid, it returns the parsed number. If the input is invalid or cannot be parsed, it informs the user and retries for a specified number of trials (`trials`). If all trials are exhausted, a bad result (`Result`) is returned.
+    """Prompt the user for a numeric input and validate the response.
 
-    :param msg: (str) - The message to display to the user when prompting for input.
+    This function repeatedly prompts the user and attempts to parse the entered
+    text as either an integer or a float depending on the input. The parsed
+    value is validated with `test_fn`. On success, the parsed number is
+    returned wrapped in a `Result.ok`. If the user fails to provide valid
+    input within `trials` attempts, a `Result.err` is returned.
 
-    :param sample: (int | float) - A sample that denotes if the returned number should be int or float
+    Args:
+        prompt (str): The prompt message to display to the user.
+        sample (int | float): Example value indicating whether an int or float
+            is expected.
+        test_fn (Callable[[int], bool] | Callable[[float], bool]): Validation
+            callable that returns True for acceptable values.
+        diagnosis (str | None): Optional diagnostic message shown when the
+            parsed value fails `test_fn`.
+        trials (int): Number of attempts allowed before returning an error.
 
-    :param test_fn: (Callable[[float], bool]) - A function to test the validity of the parsed input. Defaults to a function that returns True for any input.
-
-    :param diagnosis: (str | None) - An optional message to display if the parsed input fails the test function.
-
-    :param trials: (int) - The number of attempts to allow the user to input a valid number before raising an error. Defaults to 3.
-
-    :return: (Result[float]) - A result containing the validated and parsed number input by the user.
-    :rtype: Result[float]
+    Returns:
+        Result[int] | Result[float]: Ok containing the parsed numeric value
+            (int or float) when validation succeeds, or an Err when attempts
+            are exhausted or the interactive prompt fails.
     """
 
     _ = sample
@@ -102,30 +106,26 @@ def input_str(
     lower_case: bool = True,
 ) -> Result[str]:
     # repeat execution until the user enters a valid str response or loops is exhausted
-    """
-    Prompts the user to enter a str and validates the input.
-    This function repeatedly prompts the user for input, attempting to validate the input using a custom test function (`test_fn`).
-    If the input is valid, it returns the validated str. If the input is invalid or cannot be parsed, it informs the user
-    and retries for a specified number of trials (`trials`). If all attempts are exhausted without a valid input, it returns a bad result (`Result`).
+    """Prompt the user for a validated string input.
 
-    :param msg: (str) - The message to display to the user when prompting for input.
-    :type msg: str
+    The helper prompts the user with `msg`, optionally lower-cases the
+    response, and validates it with `test_fn`. When validation succeeds the
+    function returns the string inside `Result.ok`. If the prompt fails or
+    the user exhausts `trials` attempts, an error `Result` is returned.
 
-    :param test_fn: (Callable[[str], bool]) - A function to test the validity of the parsed input. Defaults to a function that returns True for any input.
-    :type test_fn: Callable[[str], bool]
+    Args:
+        msg (str): Prompt message to present to the user.
+        test_fn (Callable[[str], bool]): Callable used to validate the input.
+            Should return True when the input is acceptable.
+        diagnosis (str | None): Optional diagnostic message printed when the
+            input fails `test_fn`.
+        trials (int): Number of attempts to allow before returning an error.
+        lower_case (bool): If True the user's response is lower-cased before
+            validation and return; otherwise the original casing is preserved.
 
-    :param diagnosis: (str | None) - An optional message to display if the parsed input fails the test function.
-    :type diagnosis: str | None
-
-    :param trials: (int) - The number of attempts to allow the user to input a valid str before raising an error. Defaults to 3.
-    :type trials: int
-
-    :param lower_case: (bool) - Whether to convert the input to lower case before validating and returning. Defaults to True.
-    :type lower_case: bool
-
-    :return: (Result[str]) - A result containing the validated and parsed str input by the user.
-    :rtype: Result[str]
-
+    Returns:
+        Result[str]: Ok with the validated string when successful, or Err
+            containing a diagnostic message when validation or prompting fails.
     """
     for _ in range(trials):
         # get input from the user

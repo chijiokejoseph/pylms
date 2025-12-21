@@ -1,14 +1,16 @@
-"""
-UTILS Package a subpackage of the src.cli package.
+"""CLI utilities package for common parsing and validation helpers.
 
-This package aggregates utility functions related to date string parsing, validation,
-response parsing, and serial parsing used throughout the CLI components of the pylms project.
+This package contains small, focused utility functions used by the CLI
+subsystem of pylms. Utilities include parsing and validating date strings,
+parsing integer/serial ranges, email validation helpers, and general response
+parsing helpers used by interactive prompts.
 
-Exports:
-- parse_to_serials: Function to parse serial numbers from strings.
-- parse_response: Function to parse user responses from menu selections.
-- parse_to_dates: Function to parse date strings into lists of dates.
-- val_date_str: Function to validate date strings.
+Exports are chosen to provide a compact API for CLI modules:
+- `parse_to_serials` — parse text like "1,3,5" or "1-3" into integers
+- `parse_response` — map user menu input to structured responses
+- `parse_to_dates` — parse date selectors into lists of date strings
+- `val_date_str` — validate a single date string
+- `validate_email` — utility used in tests and CLI validation
 """
 
 from .date_strings_parse import parse_to_dates

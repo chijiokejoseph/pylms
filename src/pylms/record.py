@@ -12,7 +12,8 @@ class RecordStatus(StrEnum):
 
 
 def retrieve_record(record_str: str) -> RecordStatus:
-    match str(record_str):
+    record_str = record_str.title()
+    match record_str:
         case "Present":
             return RecordStatus.PRESENT
         case "Excused":

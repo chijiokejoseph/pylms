@@ -5,15 +5,19 @@ from ..errors import Result, eprint
 
 
 def parse_int_str(entry: str) -> Result[list[int]]:
-    """Parses a string containing integers and returns a list of integers.
-    The string can contain integers separated by commas, spaces, or hyphens.
-    :param entry: (str) - The input string to parse.
-    :type entry: str
+    """Parse a string into a list of integers (supports ranges and lists).
 
-    :return: (list[int]) - A list of integers parsed from the input string.
-    :rtype: list[int]
+    Accepts single numbers, comma-separated lists, ranges (for example
+    "1-5"), or combinations of these formats. Parsing returns a Result
+    containing the parsed integers when successful. When input contains
+    invalid formatting a `Result.err` with a diagnostic message is returned.
 
-    :raises InvalidSelectionInputError: If the input string does not match any of the required formats.
+    Args:
+        entry (str): Input string representing one or more integer selections.
+
+    Returns:
+        Result[list[int]]: Ok with the parsed list of integers, or Err with a
+            diagnostic message when parsing fails.
     """
 
     match str(entry):
