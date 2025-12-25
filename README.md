@@ -234,6 +234,7 @@ pylms/
 - │   ├── errors.py/         # Error Handling System
 - │   ├── info.py/           # Special Prints (Display) System
 - │   ├── mainloop.py/       # Main project loops for Open/Closed cohorts
+- │   ├── numutil.py/        # Utilities for Formatted prints
 - │   └── record.py/         # RecordStatus class file
 - ├── tests/                 # Integrated tests
 - ├── LICENSE                # MIT License
