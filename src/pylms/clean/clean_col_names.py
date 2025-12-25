@@ -45,6 +45,7 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
 
         data[new_column] = data[old_column]
         # drop the old column if the new column name `new_column` is different from the old column name `old_column`
-        data = data.drop(columns=old_column) if new_column != old_column else data
+        if new_column != old_column:
+            data.drop(old_column, inplace=True)
 
     return
