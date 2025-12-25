@@ -72,5 +72,10 @@ def record_merit(history: History) -> Result[Unit]:
         return Result.err(msg)
 
     path = get_merit_path(history.cohort)
+    if path.is_err():
+        return path.propagate()
+
+    path = path.unwrap()
+
     history.merit = (path.exists(), path)
     return Result.unit()

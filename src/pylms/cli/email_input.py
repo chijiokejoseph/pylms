@@ -1,5 +1,6 @@
-from ..cli_utils import validate_email
+from ..cli_utils import verify_email
 from ..errors import Result
+from ..info import print_info
 from .custom_inputs import input_str
 
 
@@ -23,9 +24,9 @@ def input_email(
         Result[str]: `Result.ok` containing the validated email on success, or
             an error `Result` propagated from the input helper on failure.
     """
-    result: Result[str] = input_str(msg, validate_email, diagnosis)
+    result: Result[str] = input_str(msg, verify_email, diagnosis)
     if result.is_err():
         return result.propagate()
     chosen_email: str = result.unwrap()
-    print(f"Email entered: {chosen_email} has been validated. You may proceed\n")
+    print_info(f"Email entered: {chosen_email} has been validated. You may proceed\n")
     return Result.ok(chosen_email)

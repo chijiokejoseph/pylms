@@ -40,7 +40,7 @@ def clean_str(
     data_stream: DataStream[pd.DataFrame],
     target_cols: str | list[str],
     fill: str = NA,
-) -> DataStream[pd.DataFrame]:
+) -> None:
     """Ensure specified DataFrame columns contain string values.
 
     Converts non-string entries in the specified column(s) to strings using
@@ -56,13 +56,12 @@ def clean_str(
         fill (str): String used to replace elements that cannot be converted.
 
     Returns:
-        DataStream[pd.DataFrame]: A DataStream wrapping the DataFrame with the
-            specified columns normalized to strings.
+        None
     """
-    data: pd.DataFrame = data_stream()
+
+    data: pd.DataFrame = data_stream.as_ref()
     if isinstance(target_cols, str):
         data[target_cols] = _clean_str(data[target_cols], fill)
     else:
         for col in target_cols:
             data[col] = _clean_str(data[col], fill)
-    return DataStream(data)

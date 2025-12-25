@@ -56,6 +56,10 @@ class FormResource(ABC):
     def setPublishSettings(self, *, formId: str, body: dict[str, Any]) -> HttpRequest:
         pass
 
+    @abstractmethod
+    def responses(self) -> ResponseResource:
+        pass
+
 
 class DriveResource(ABC):
     @abstractmethod
@@ -71,8 +75,4 @@ class DriveResource(ABC):
 class FormsService(ABC):
     @abstractmethod
     def forms(self) -> FormResource:
-        pass
-
-    @abstractmethod
-    def responses(self) -> ResponseResource:
         pass

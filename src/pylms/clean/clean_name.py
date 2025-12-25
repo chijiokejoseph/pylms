@@ -1,27 +1,25 @@
 import pandas as pd
 
-from ..constants import COMMA_DELIM, NAME, SPACE_DELIM
+from ..constants import ARABIC_APOSTROPHE, COMMA_DELIM, NAME, SPACE_DELIM
 from ..data import DataStream
 
 
-def clean_name(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_name(data_stream: DataStream[pd.DataFrame]) -> None:
     """Format the `NAME` column entries in a DataStream's DataFrame.
 
     Reads the DataFrame from `data_stream`, applies the helper `_clean_name`
-    to each value in the column identified by the `NAME` constant, and
-    returns a new `DataStream` containing the transformed DataFrame.
+    to each value in the column identified by the `NAME` constant and mutates
+    the DataFrame
 
     Args:
         data_stream (DataStream[pd.DataFrame]): DataStream containing the
             DataFrame whose `NAME` column will be formatted.
 
     Returns:
-        DataStream[pd.DataFrame]: A DataStream wrapping the DataFrame with the
-            `NAME` column formatted.
+        None
     """
     data: pd.DataFrame = data_stream().copy()
     data[NAME] = data[NAME].apply(_clean_name)  # pyright: ignore [reportUnknownMemberType]
-    return DataStream(data)
 
 
 def _clean_name(entry: str) -> str:
@@ -40,4 +38,12 @@ def _clean_name(entry: str) -> str:
         entries: list[str] = entry.split(SPACE_DELIM)
         entry = COMMA_DELIM.join(entries)
     entry = entry.title()
+
+    idx = entry.find(ARABIC_APOSTROPHE)
+
+    if idx != -1:
+        seq = entry[idx : idx + 2]
+        entry = entry.replace(seq, seq.lower())
+        entry = entry.capitalize()
+
     return entry

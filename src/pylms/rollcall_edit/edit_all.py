@@ -1,11 +1,10 @@
 import pandas as pd
 
-from pylms.cli import input_bool
-from pylms.info import print_info
-
+from ..cli import input_bool
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
-from ..history import History, add_marked_class, get_marked_classes
+from ..history import History, add_held_class, add_marked_class, get_marked_classes
+from ..info import print_info
 from ..record import RecordStatus, retrieve_record
 from .global_record import GlobalRecord
 from .record_input import input_record
@@ -79,19 +78,21 @@ def edit_all_records(
         result = _edit_record(ds, history, first_date)
         if result.is_err():
             return result.propagate()
-
-        marked_dates = get_marked_classes(history, "")
-        unmarked_dates = [date for date in dates_to_mark if date not in marked_dates]
-
-        for date in unmarked_dates:
-            result = add_marked_class(history, date)
+    else:
+        for each_date in dates_to_mark:
+            result = _edit_record(ds, history, each_date)
             if result.is_err():
                 return result.propagate()
 
-        return Result.unit()
+    marked_dates = get_marked_classes(history, "")
+    unmarked_dates = [date for date in dates_to_mark if date not in marked_dates]
 
-    for each_date in dates_to_mark:
-        result = _edit_record(ds, history, each_date)
+    for date in unmarked_dates:
+        result = add_held_class(history, date)
+        if result.is_err():
+            return result.propagate()
+
+        result = add_marked_class(history, date)
         if result.is_err():
             return result.propagate()
 

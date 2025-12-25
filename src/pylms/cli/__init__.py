@@ -32,7 +32,6 @@ from .interact import interact
 from .option_input import input_bool, input_option
 from .path_input import input_path, test_path_in
 from .select_class_date import select_class_date
-from .select_student import select_student
 from .serials_input import provide_serials
 
 __all__ = [
@@ -48,7 +47,6 @@ __all__ = [
     "input_fn",
     "input_email",
     "select_class_date",
-    "select_student",
     "provide_emails",
     "provide_serials",
 ]

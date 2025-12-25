@@ -11,7 +11,7 @@ from ..config import read_course_name
 from ..constants import COHORT, EMAIL, GENDER, NAME, REASON, REMARK
 from ..data import DataStore, DataStream, read
 from ..email import run_email
-from ..errors import LMSError, Result, Unit
+from ..errors import LMSError, Result, Unit, eprint
 from ..paths import get_paths_excel, must_get_env
 from .find import find_col
 
@@ -41,6 +41,12 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     # Get the path to the result Excel file
     path: Path = get_paths_excel()["Result"]
 
+    # Get course name
+    course_name = read_course_name()
+    if course_name.is_err():
+        return course_name.propagate()
+    course_name = course_name.unwrap()
+
     # Read the result data into a DataFrame
     result = read(path)
 
@@ -61,23 +67,24 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         r"(\d+)", assessment_score_col
     )
     if assessment_max_match is None:
-        err_msg: str = "Error parsing assessment max score"
-        print(f"\n{err_msg}\n")
-        return Result[Unit].err(Exception(err_msg))
+        msg = "Error parsing assessment max score"
+        eprint(f"{msg}\n")
+        return Result.err(msg)
+
     assessment_max: float = float(assessment_max_match.group(1))
 
     assessment_req_col: str = find_col(result_stream, "Assessment", "Req").unwrap()
-
     attendance_count_col: str = find_col(result_stream, "Attendance", "Count").unwrap()
     attendance_score_col: str = find_col(result_stream, "Attendance", "Score").unwrap()
     attendance_req_col: str = find_col(result_stream, "Attendance", "Req").unwrap()
-
     project_score_col: str = find_col(result_stream, "Project", "Score").unwrap()
+
     project_max_match: re.Match[str] | None = re.search(r"(\d+)", project_score_col)
     if project_max_match is None:
-        err_msg = "Error parsing project max score"
-        print(f"\n{err_msg}\n")
-        return Result[Unit].err(Exception(err_msg))
+        msg = "Error parsing project max score"
+        print(f"{msg}\n")
+        return Result.err(msg)
+
     project_max: float = float(project_max_match.group(1))
 
     result_col: str = find_col(result_stream, "Result", "Score").unwrap()
@@ -237,7 +244,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 
         # Create the email message
         email_msg: EmailMessage = EmailMessage()
-        email_msg["Subject"] = f"{read_course_name()} Cohort {cohort} Result"
+        email_msg["Subject"] = f"{course_name} Cohort {cohort} Result"
         email_msg.set_content(
             "This is an HTML email. Please view in a compatible client."
         )

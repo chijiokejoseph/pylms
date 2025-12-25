@@ -20,5 +20,6 @@ def interact(menu: list[str]) -> Result[int]:
     result = input_option(menu)
     if result.is_err():
         return result.propagate()
+
     idx, _ = result.unwrap()
-    return Result[int].ok(idx)
+    return Result.ok(idx)

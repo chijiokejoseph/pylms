@@ -1,5 +1,5 @@
 from .create_form_data import Form, FormData, FormInfo, PermissionsData
-from .form_info import CDSFormInfo, ClassFormInfo, UpdateFormInfo
+from .form_info import CDSFormInfo, ClassFormInfo, UpdateFormInfo, sort_form
 from .form_response_model import (
     Answer,
     AnswerModel,
@@ -26,6 +26,8 @@ from .setup_form_data import (
     counter_setup,
 )
 
+type AllFormInfo = ClassFormInfo | UpdateFormInfo | CDSFormInfo
+
 __all__ = [
     "ClassFormInfo",
     "CDSFormInfo",
@@ -36,7 +38,7 @@ __all__ = [
     "ResponseModel",
     "TextAnswer",
     "ChoiceQuestion",
-    "FormInfo",
+    "AllFormInfo",
     "FormModel",
     "ItemsModel",
     "Question",
@@ -45,6 +47,8 @@ __all__ = [
     "TextQuestion",
     "Form",
     "FormData",
+    "FormInfo",
+    "AllFormInfo",
     "Content",
     "ContentBody",
     "CreateItem",
@@ -57,4 +61,5 @@ __all__ = [
     "PublishSettings",
     "PublishState",
     "counter_setup",
+    "sort_form",
 ]

@@ -1,7 +1,7 @@
 import re
 
 
-def validate_email(email_text: str) -> bool:
+def verify_email(email_text: str) -> bool:
     """Validate a Gmail address.
 
     Checks whether the provided string is a valid Gmail address according to a

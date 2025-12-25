@@ -24,6 +24,7 @@ from .retrieve import (
     get_marked_classes,
     get_unheld_classes,
     get_unmarked_classes,
+    get_unrecorded_classes,
     match_info_by_date,
 )
 from .save import save_history
@@ -72,6 +73,7 @@ __all__ = [
     "get_marked_classes",
     "get_unheld_classes",
     "get_unmarked_classes",
+    "get_unrecorded_classes",
     "match_info_by_date",
     "save_history",
     "retrieve_dates",

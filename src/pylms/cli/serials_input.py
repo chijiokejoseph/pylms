@@ -1,28 +1,10 @@
-"""CLI helper to collect student serial numbers from various input formats.
-
-This module provides interactive support to obtain a list of student serial
-numbers. The primary function, `provide_serials`, prompts the user to choose a
-format (plain text, CSV, Excel, delimited input, or interactive selection),
-reads and validates the serials, and finally asks for confirmation before
-returning the validated list.
-
-The function returns a `Result[list[int]]` where the Ok variant contains the
-sorted, de-duplicated serial numbers and the Err variant contains a
-descriptive error message suitable for display to the user.
-
-Note:
-- Serial validation ensures serials are positive integers within the range of
-  rows available in the provided `DataStore` instance.
-- File-reading errors and parsing errors are returned as `Result.err`.
-"""
-
 import pandas as pd
 
 from ..constants import NAME
 from ..data import DataStore, read
-from ..errors import Result
+from ..errors import Result, eprint
 from ..info import print_info
-from .option_input import input_option
+from .option_input import input_bool, input_option
 from .path_input import input_path
 from .select_student import select_student
 
@@ -48,7 +30,7 @@ def provide_serials(ds: DataStore) -> Result[list[int]]:
     Raises:
         None: Errors are returned via the `Result` type rather than raised.
     """
-    provide_serials_formats: list[str] = [
+    formats: list[str] = [
         "Provide student serials as .txt file (one serial no per line)",
         "Provide student serials as .csv file (one serial no per line)",
         "Provide student serials as .xlsx file (single col with serial nums)",
@@ -56,9 +38,7 @@ def provide_serials(ds: DataStore) -> Result[list[int]]:
     ]
 
     # Prompt user to select the format of the email input
-    result = input_option(
-        provide_serials_formats, prompt="Select the format to provide the serials in"
-    )
+    result = input_option(formats, prompt="Select the format to provide the serials in")
     if result.is_err():
         return result.propagate()
 
@@ -67,66 +47,66 @@ def provide_serials(ds: DataStore) -> Result[list[int]]:
     match pos:
         case 1 | 2:
             # Get the file path or input string based on the selected format
-            path_result = input_path(f"{format_msg}: ")
-            if path_result.is_err():
-                return Result.err(path_result.unwrap_err())
-            filepath = path_result.unwrap()
+            path = input_path(f"{format_msg}: ")
+            if path.is_err():
+                return path.propagate()
+            path = path.unwrap()
             # Read serials from a text or CSV file, one serial per line
-            if not filepath.suffix.endswith("txt") and not filepath.suffix.endswith(
-                "csv"
-            ):
-                return Result.err(
-                    f"The file provided is not a .txt or .csv file: {filepath}"
-                )
+            if not path.suffix.endswith("txt") and not path.suffix.endswith("csv"):
+                msg = f"The file provided is not a .txt or .csv file: {path}"
+                eprint(msg)
+                return Result.err(msg)
 
             try:
-                with open(filepath, "r", encoding="utf-8") as file:
+                with open(path, "r", encoding="utf-8") as file:
                     serials_str: list[str] = [
                         line.strip() for line in file if line.strip() != ""
                     ]
                     serials: list[int] = [int(s) for s in serials_str]
                     input_serials.extend(serials)
             except FileNotFoundError as e:
-                return Result.err(
-                    f"The file was not found: {filepath}, with error: {e}"
-                )
+                msg = f"The file was not found: {path}, with error: {e}"
+                eprint(msg)
+                return Result.err(msg)
 
             except ValueError:
-                return Result.err(
-                    "One or more serial numbers in the file could not be converted to integers."
-                )
+                msg = "One or more serial numbers in the file could not be converted to integers."
+                eprint(msg)
+                return Result.err(msg)
 
         case 3:
             # Get the file path or input string based on the selected format
-            path_result = input_path(f"{format_msg}: ")
-            if path_result.is_err():
-                return Result.err(path_result.unwrap_err())
-            filepath = path_result.unwrap()
+            path = input_path(f"{format_msg}: ")
+            if path.is_err():
+                return path.propagate()
+            path = path.unwrap()
             # Read serials from an Excel file with a single column
-            if not filepath.suffix.endswith("xlsx"):
-                return Result.err(f"The file provided is not a .xlsx file: {filepath}")
+            if not path.suffix.endswith("xlsx"):
+                msg = f"The file provided is not a .xlsx file: {path}"
+                eprint(msg)
+                return Result.err(msg)
 
             try:
-                data = read(filepath)
+                data = read(path)
                 if data.is_err():
                     return data.propagate()
                 data = data.unwrap()
                 if data.empty or len(data.columns.tolist()) != 1:
-                    return Result.err(
-                        "The Excel file must contain exactly one column with serial numbers."
-                    )
+                    msg = "The Excel file must contain exactly one column with serial numbers."
+                    eprint(msg)
+                    return Result.err(msg)
 
                 serials = [int(s) for s in data.iloc[:, 0].tolist()]
                 input_serials.extend(serials)
             except FileNotFoundError as e:
-                return Result.err(
-                    f"The file was not found: {filepath}, with error: {e}"
-                )
+                msg = f"The file was not found: {path}, with error: {e}"
+                eprint(msg)
+                return Result.err(msg)
 
             except ValueError:
-                return Result.err(
-                    "One or more serial numbers in the Excel file could not be converted to integers."
-                )
+                msg = "One or more serial numbers in the Excel file could not be converted to integers."
+                eprint(msg)
+                return Result.err(msg)
 
         case _:
             result = select_student(ds)
@@ -147,14 +127,12 @@ def provide_serials(ds: DataStore) -> Result[list[int]]:
         print_info(f"You have selected Student {serial}: {names[serial - 1]}")
     print()
 
-    option_result = input_option(
-        ["Yes, proceed", "No, cancel"], prompt="Proceed with these serials?"
-    )
-    if option_result.is_err():
-        return option_result.propagate()
-    idx, _ = option_result.unwrap()
+    result = input_bool("Proceed with these serials?")
+    if result.is_err():
+        return result.propagate()
+    choice = result.unwrap()
 
-    if idx != 1:
+    if not choice:
         msg = "You have cancelled the operation"
         print_info(msg)
         return Result.err(msg)

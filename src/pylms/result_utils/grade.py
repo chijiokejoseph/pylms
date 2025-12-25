@@ -6,14 +6,16 @@ import pandas as pd
 
 from ..constants import GROUP, NAME, SERIAL
 from ..data import DataStream, read
-from ..errors import Result, Unit
+from ..errors import Result, Unit, eprint
 from ..paths import get_grade_path, get_group_dir, get_group_path
 
 
 def prepare_grading(num_groups: int) -> Result[Unit]:
     path: Path = get_group_path()
     if not path.exists():
-        return Result.err(FileNotFoundError(f"path: {path} does not exist."))
+        msg = f"path: {path} does not exist."
+        eprint(msg)
+        return Result.err(msg)
 
     group_data = read(path)
     if group_data.is_err():
@@ -40,7 +42,10 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
 
         grp_grade_stream: DataStream[pd.DataFrame] = DataStream(grp_grade_data)
         grp_grade_path: Path = get_grade_path(grp_num)
-        grp_grade_stream.to_excel(grp_grade_path)
+
+        result = grp_grade_stream.to_excel(grp_grade_path)
+        if result.is_err():
+            return result.propagate()
 
     common = {
         SERIAL: [i + 1 for i in range(num_groups)],

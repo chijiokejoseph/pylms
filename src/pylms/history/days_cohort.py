@@ -54,6 +54,7 @@ def update_dates(history: History) -> Result[Unit]:
 
     # Filter all dates to include only those that match the specified class weekdays
     history.dates = [date for date in all_dates if date.weekday() in history.class_days]
+    history._updated = True  # pyright: ignore[reportPrivateUsage]
 
     return Result.unit()
 

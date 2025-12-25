@@ -18,5 +18,5 @@ def input_class_date(history: History) -> Result[list[str]]:
     """
 
     msg: str = "Attendance Form generation initiated. \nPlease enter the date(s) for which the form should be generated."
-    src_dates: list[str] = [date for date in get_unheld_classes(history, "")]
-    return select_class_date(msg, src_dates)
+    dates: list[str] = [date for date in get_unheld_classes(history, "")]
+    return select_class_date(msg, dates)

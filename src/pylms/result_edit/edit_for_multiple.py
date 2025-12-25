@@ -2,7 +2,7 @@ import pandas as pd
 
 from pylms.info import print_info
 
-from ..cli import input_num, input_option, select_student
+from ..cli import input_num, input_option, provide_serials
 from ..data import DataStore
 from ..errors import Result
 from ..result_utils import det_result_col
@@ -10,7 +10,7 @@ from ..result_utils import det_result_col
 
 def edit_multiple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     result_col: str = det_result_col()
-    student_serials = select_student(ds)
+    student_serials = provide_serials(ds)
     if student_serials.is_err():
         return student_serials.propagate()
 

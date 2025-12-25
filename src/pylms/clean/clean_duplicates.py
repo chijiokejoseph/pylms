@@ -23,30 +23,27 @@ def clean_duplicates_with_cols(
     Returns:
         DataStream[pd.DataFrame]: A DataStream wrapping the deduplicated DataFrame.
     """
-    data: pd.DataFrame = data_stream()
+    data = data_stream.as_ref()
     data.drop_duplicates(subset=identifier_columns, inplace=True)
     data.reset_index(drop=True, inplace=True)
-    new_data: DataStream[pd.DataFrame] = DataStream(data)
+    new_data = DataStream(data)
     return new_data
 
 
-def clean_duplicates(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_duplicates(data_stream: DataStream[pd.DataFrame]) -> None:
     """Remove duplicate rows from a DataStream using the default schema.
 
     Removes duplicate rows from the DataFrame contained in `data_stream`
     using the module-level `UNIQUE_COLUMNS` list to determine uniqueness.
-    The deduplicated DataFrame has its index reset and is returned wrapped in
-    a `DataStream`.
+    The index of the deduplicated DataFrame is reset.
 
     Args:
         data_stream (DataStream[pd.DataFrame]): DataStream containing the
             DataFrame to deduplicate.
 
     Returns:
-        DataStream[pd.DataFrame]: A DataStream wrapping the deduplicated DataFrame.
+        None
     """
-    data: pd.DataFrame = data_stream().copy()
+    data = data_stream.as_ref()
     data.drop_duplicates(subset=UNIQUE_COLUMNS, inplace=True)
     data.reset_index(drop=True, inplace=True)
-    new_data: DataStream[pd.DataFrame] = DataStream(data)
-    return new_data

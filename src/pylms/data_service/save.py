@@ -27,16 +27,22 @@ def save(ds: DataStore) -> Result[Unit]:
     new_week_nums: list[int] = [num for num in week_nums if num >= week_num]
     if len(new_week_nums) == 0:
         new_week_nums = [week_nums[-1]]
-    DataStore_names_display: str = ""
+    name_display: str = ""
 
     # for each new week num, write the new data in `ds` to its corresponding path.
     for num in new_week_nums:
         new_week_ds_path: Path = get_paths_weeks() / f"DataStore{num}.xlsx"
-        DataStore_names_display += f"DataStore{num}.xlsx, "
-        ds.to_excel(new_week_ds_path)
-    general_week_ds_path: Path = get_paths_excel()["DataStore"]
-    ds.to_excel(general_week_ds_path)
+        name_display += f"DataStore{num}.xlsx, "
+        result = ds.to_excel(new_week_ds_path)
+        if result.is_err():
+            return result.propagate()
 
-    DataStore_names_display = DataStore_names_display.strip().removesuffix(",")
-    printpass(f"Save made to the following files: {DataStore_names_display}")
+    general_week_ds_path: Path = get_paths_excel()["DataStore"]
+
+    result = ds.to_excel(general_week_ds_path)
+    if result.is_err():
+        return result.propagate()
+
+    name_display = name_display.strip().removesuffix(",")
+    printpass(f"Save made to the following files: {name_display}")
     return Result.unit()

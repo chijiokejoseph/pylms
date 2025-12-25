@@ -5,11 +5,11 @@ from ..data import DataStore
 from ..errors import Result
 from ..history import History
 from ..models import ClassFormInfo
-from .all_records import edit_all_records
-from .batch_records import edit_batch_records
+from .edit_all import edit_all_records
+from .edit_multiple import edit_multiple_records
+from .edit_single import edit_single_record
 from .edit_type import EditType, input_edit_type
 from .input_dates import input_date_for_edit
-from .multiple_records import edit_multiple_records
 
 
 def edit_record(ds: DataStore, history: History) -> Result[tuple[EditType, list[str]]]:
@@ -36,8 +36,8 @@ def edit_record(ds: DataStore, history: History) -> Result[tuple[EditType, list[
             if result.is_err():
                 return result.propagate()
 
-        case EditType.BATCH:
-            result = edit_batch_records(ds, history, edit_dates)
+        case EditType.SINGLE:
+            result = edit_single_record(ds, history, edit_dates)
             if result.is_err():
                 return result.propagate()
 

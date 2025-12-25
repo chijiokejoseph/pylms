@@ -3,11 +3,10 @@ from typing import NamedTuple
 
 import pandas as pd
 
-from ..cli_utils import parse_to_serials
+from ..cli_utils import parse_class_nums
 from ..constants import NAME
 from ..data import DataStore
 from ..errors import Result
-from ..info import print_info
 from .input_with_quit import input_fn
 
 
@@ -158,7 +157,7 @@ def select_student(ds: DataStore) -> Result[list[int]]:
     pretty_data: pd.DataFrame = ds.pretty()
 
     # Extract the list of student names
-    names: list[str] = pretty_data[NAME].tolist()
+    names: list[str] = pretty_data[NAME].astype(str).tolist()
 
     # Instruction message for the user
     instruction: str = """
@@ -170,28 +169,24 @@ You can enter the students serial number using one of the following formats:
     """
     # Print the instruction message
     print(instruction)
+
     # Print the list of student names formatted
     printout_names(names)
 
     # Prompt the user to enter student serial numbers
-    result = input_fn("Enter Student(s) S/N: ")
+    result = input_fn("Enter Student (S/N): ")
     if result.is_err():
         return result.propagate()
     selection = result.unwrap()
 
     # Parse the input string into a list of serial numbers
-    student_serials = parse_to_serials(selection)
+    student_serials = parse_class_nums(selection)
     if student_serials.is_err():
         return student_serials.propagate()
 
     student_serials = student_serials.unwrap()
     # Sort the serial numbers
     student_serials.sort()
-
-    # Print the selected students
-    for serial in student_serials:
-        print_info(f"You have selected Student {serial}: {names[serial - 1]}")
-    print()
 
     # Return the list of selected student serial numbers
     return Result.ok(student_serials)

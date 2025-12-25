@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..cli_utils import validate_email
+from ..cli_utils import verify_email
 from ..constants import COMMA, SEMI
 from ..data.data_read import read
 from ..data.datastream import DataStream
@@ -52,12 +52,12 @@ def provide_emails() -> Result[list[str]]:
     ]
 
     # Prompt user to select the format of the email input
-    option_result: Result[tuple[int, str]] = input_option(
+    result = input_option(
         provide_emails_formats, prompt="Select the format to provide the email in"
     )
-    if option_result.is_err():
-        return option_result.propagate()
-    pos, format_msg = option_result.unwrap()
+    if result.is_err():
+        return result.propagate()
+    pos, format_msg = result.unwrap()
 
     # Read emails based on the selected input format
     match pos:
@@ -76,7 +76,7 @@ def provide_emails() -> Result[list[str]]:
                     ) and not filepath.suffix.endswith("csv"):
                         msg: str = f"Error: Invalid file type. {filepath} is not a txt or csv file. Please select a .txt or .csv file."
                         eprint(msg)
-                        return Result.err(ValueError(msg))
+                        return Result.err(msg)
                     with filepath.open() as file:
                         emails: list[str] = file.readlines()
                         emails = [email.strip() for email in emails]
@@ -86,14 +86,20 @@ def provide_emails() -> Result[list[str]]:
                     if data.is_err():
                         return data.propagate()
                     data = data.unwrap()
-                    stream: DataStream[pd.DataFrame] = DataStream(data, verify_excel)
+
+                    stream = DataStream.new(data, verify_excel)
+                    if stream.is_err():
+                        return stream.propagate()
+                    stream = stream.unwrap()
+
                     emails = stream.as_ref().iloc[:, 0].tolist()
         case _:
-            email_result: Result[str] = input_str(f"{format_msg}: ")
-            if not email_result.is_ok():
-                return Result.err(ValueError("Invalid emails passed in"))
+            result = input_str(f"{format_msg}: ")
+            if result.is_err():
+                return result.propagate()
+
             # Read emails from a delimited input string
-            response: str = email_result.unwrap()
+            response: str = result.unwrap()
             emails = (
                 response.split(SEMI)
                 if SEMI in response
@@ -102,9 +108,12 @@ def provide_emails() -> Result[list[str]]:
                 else [response]
             )
             emails = [email.strip() for email in emails if email.strip() != ""]
-    emails = [email for email in emails if validate_email(email)]
+
+    emails = [email for email in emails if verify_email(email)]
+
     if len(emails) == 0:
         msg = "Error: No valid emails found in the file."
         eprint(msg)
-        return Result.err(ValueError(msg))
+        return Result.err(msg)
+
     return Result.ok(emails)

@@ -1,8 +1,7 @@
 from ..cli import input_str
-from ..errors import LMSError, Result
+from ..errors import Result, eprint
 from ..form_utils import select_form
 from ..history import History
-from ..models import CDSFormInfo, UpdateFormInfo
 from .construct import construct_msg
 from .utils import TextBody
 
@@ -44,7 +43,7 @@ def build_custom_select_msg() -> Result[TextBody]:
 
 def build_update_msg(history: History) -> Result[TextBody]:
     # Retrieve the URL for the update form from the history object
-    result: Result[CDSFormInfo | UpdateFormInfo] = select_form(history, "update")
+    result = select_form(history, "update")
     if result.is_err():
         return result.propagate()
 
@@ -52,7 +51,9 @@ def build_update_msg(history: History) -> Result[TextBody]:
 
     # Check if the cohort attribute in history is None and return an error if so
     if history.cohort is None:
-        return Result.err(LMSError("history.cohort is None. Expected an int value."))
+        msg = "history.cohort is None. Expected an int value."
+        eprint(msg)
+        return Result.err(msg)
 
     # Extract the cohort number from the history object
     cohort: int = history.cohort

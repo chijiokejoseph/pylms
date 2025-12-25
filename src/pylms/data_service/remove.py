@@ -1,11 +1,11 @@
-from ..cli import select_student
+from ..cli import provide_serials
 from ..data import DataStore
 from ..errors import Result, Unit
 from .sub import sub
 
 
 def remove_students(ds: DataStore) -> Result[Unit]:
-    student_serials = select_student(ds)
+    student_serials = provide_serials(ds)
     if student_serials.is_err():
         return student_serials.propagate()
 

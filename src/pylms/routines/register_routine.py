@@ -2,7 +2,6 @@ from ..cache import cache_for_cmd
 from ..cli import interact
 from ..data import DataStore
 from ..data_service import append_update, new, save
-from ..errors import eprint
 from ..form_request import request_complaint_form, request_update_form
 from ..form_retrieve import (
     retrieve_update_form,
@@ -66,26 +65,21 @@ def register(ds: DataStore, history: History) -> None:
                     continue
 
                 data_stream, info = result.unwrap()
-                if data_stream is not None:
-                    data_stream, cds_data_stream = extract_cds(data_stream)
+                data_stream, cds_data_stream = extract_cds(data_stream)
 
-                    result = append_update(ds, data_stream, info)
-                    if result.is_err():
-                        continue
+                result = append_update(ds, data_stream, info)
+                if result.is_err():
+                    continue
 
-                    record_cds(ds, cds_data_stream)
-                    global_record.crosscheck(ds)
+                record_cds(ds, cds_data_stream)
+                global_record.crosscheck(ds)
 
-                    result = save_retrieve(info)
-                    if result.is_err():
-                        continue
+                result = save_retrieve(info)
+                if result.is_err():
+                    continue
 
-                    add_recorded_update_form(history, info)
-                    printpass("CDS data marked successfully\n")
-                else:
-                    eprint(
-                        "Couldn't mark CDS data. See the earlier prints for the reasons.\n"
-                    )
+                add_recorded_update_form(history, info)
+                printpass("CDS data marked successfully\n")
             case 4:
                 result = request_complaint_form(ds)
                 if result.is_err():

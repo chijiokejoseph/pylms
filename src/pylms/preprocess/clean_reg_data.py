@@ -54,31 +54,45 @@ def clean_reg(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     :return: a preprocessed `DataStore` object
     :rtype: DataStore
     """
-    data_stream = clean_col_names(data_stream)
-    data_stream = clean_columns(data_stream)
-    data_stream = clean_na(data_stream)
-    data_stream = clean_str(data_stream, [NAME, PHONE])
-    data_stream = clean_email(data_stream)
-    data_stream = clean_name(data_stream)
-    data_stream = clean_phone(data_stream)
+    clean_col_names(data_stream)
+    clean_columns(data_stream)
+
+    result = clean_na(data_stream)
+    if result.is_err():
+        return result.propagate()
+
+    clean_str(data_stream, [NAME, PHONE])
+    clean_email(data_stream)
+    clean_name(data_stream)
+    result = clean_phone(data_stream)
+    if result.is_err():
+        return result.propagate()
+
     result = clean_cohort(data_stream)
     if result.is_err():
         return result.propagate()
-    data_stream = result.unwrap()
+
     result = clean_date(data_stream)
     if result.is_err():
         return result.propagate()
-    data_stream = result.unwrap()
-    data_stream = clean_time(data_stream)
-    data_stream = clean_internship(data_stream)
-    data_stream = clean_training(data_stream)
+
+    clean_time(data_stream)
+    clean_internship(data_stream)
+    clean_training(data_stream)
+
     result = clean_completion_date(data_stream)
     if result.is_err():
         return result.propagate()
+
+    clean_duplicates(data_stream)
+    clean_sort(data_stream)
+
+    result = clean_order(data_stream)
+    if result.is_err():
+        return result.propagate()
+
     data_stream = result.unwrap()
-    data_stream = clean_duplicates(data_stream)
-    data_stream = clean_sort(data_stream)
-    data_stream = clean_order(data_stream)
+
     return Result.ok(DataStore(data_stream))
 
 

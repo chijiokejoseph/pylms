@@ -9,7 +9,7 @@ expected list of date strings is returned for representative inputs.
 import unittest
 
 from ..history import retrieve_dates
-from .date_strings_parse import parse_to_dates
+from .class_parser import parse_classes
 
 
 class TestDateStrings(unittest.TestCase):
@@ -33,4 +33,4 @@ class TestDateStrings(unittest.TestCase):
         ]
 
         for response, expected in data:
-            self.assertEqual(expected, parse_to_dates(response))
+            self.assertEqual(expected, parse_classes(response))

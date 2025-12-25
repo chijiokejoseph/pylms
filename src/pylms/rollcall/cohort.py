@@ -136,5 +136,9 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
 
     # output the data to local file storage
     cohort_stream: DataStream[pd.DataFrame] = DataStream(cohort_data)
-    cohort_stream.to_excel(cohort_path)
+
+    result = cohort_stream.to_excel(cohort_path)
+    if result.is_err():
+        return result.propagate()
+
     return Result.ok(cohort_path)

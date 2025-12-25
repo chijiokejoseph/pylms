@@ -7,15 +7,15 @@ from ..info import print_info
 
 class EditType(Enum):
     ALL = auto()
-    BATCH = auto()
     MULTIPLE = auto()
+    SINGLE = auto()
 
 
 def input_edit_type() -> Result[EditType]:
     options: list[str] = [
         "Edit all students attendance",
-        "Edit multiple students' attendance, each record at a time",
-        "Edit multiple students' attendance, with the same record for all",
+        "Edit multiple students' attendance",
+        "Edit a selected student's attendance",
     ]
     result = input_option(options, prompt="Select a batch attendance operation")
 
@@ -30,4 +30,4 @@ def input_edit_type() -> Result[EditType]:
         case 2:
             return Result.ok(EditType.MULTIPLE)
         case _:
-            return Result.ok(EditType.BATCH)
+            return Result.ok(EditType.SINGLE)

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ..cli import select_student
+from ..cli import provide_serials
 from ..data import DataStore, DataStream, print_stream, read
 from ..errors import Result, Unit, eprint
 from ..paths import get_paths_excel
@@ -21,7 +21,7 @@ def view_result(ds: DataStore) -> Result[Unit]:
     result_data = result_data.unwrap()
 
     result_stream = DataStream(result_data, val_result_data)
-    serials = select_student(ds)
+    serials = provide_serials(ds)
     if serials.is_err():
         return serials.propagate()
 

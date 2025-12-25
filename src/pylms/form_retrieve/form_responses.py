@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import pandas as pd
 from dateutil.parser import parse
 
@@ -8,11 +5,10 @@ from ..constants import TIME, TIME_FMT
 from ..data import DataStream
 from ..errors import Result, eprint
 from ..models import (
-    CDSFormInfo,
+    AllFormInfo,
     ClassFormInfo,
     Response,
     ResponseModel,
-    UpdateFormInfo,
 )
 from ..service import FormsService, ResponseResource, run_service
 from .enums import ClassType
@@ -20,8 +16,7 @@ from .enums import ClassType
 
 def _retrieve_form_responses(
     question_id_map: dict[str, str],
-    form_path: Path,
-    cls: type,
+    form_info: AllFormInfo,
     class_type: ClassType | None = None,
     *,
     service: FormsService,
@@ -44,36 +39,30 @@ def _retrieve_form_responses(
     :return: A DataStream that yields a DataFrame with the form responses.
     :rtype: DataStream[pd.DataFrame]
     """
-    # open the form info file and load its data
-    with open(form_path, "r", encoding="utf-8") as json_form:
-        data = json.load(json_form)
 
-        # create an instance of the form class from the data
-        form_info: CDSFormInfo | ClassFormInfo | UpdateFormInfo = cls(**data)
+    # get the response resource
+    response_resource: ResponseResource = service.forms().responses()
 
-        # get the response resource
-        response_resource: ResponseResource = service.responses()
+    # determine which form to retrieve responses from based on the class type
+    match form_info:
+        case _ if (
+            isinstance(form_info, ClassFormInfo) and class_type == ClassType.PRESENT
+        ):
+            request = response_resource.list(formId=form_info.present_id)
+        case _ if (
+            isinstance(form_info, ClassFormInfo) and class_type == ClassType.EXCUSED
+        ):
+            request = response_resource.list(formId=form_info.excused_id)
+        case _ if not isinstance(form_info, ClassFormInfo):
+            request = response_resource.list(formId=form_info.uuid)
+        case _:
+            msg = f"specified form_info type {type(form_info).__name__} and class type {class_type} are invalid"
+            eprint(msg)
+            return Result.err(msg)
 
-        # determine which form to retrieve responses from based on the class type
-        match form_info:
-            case _ if (
-                isinstance(form_info, ClassFormInfo) and class_type == ClassType.PRESENT
-            ):
-                request = response_resource.list(formId=form_info.present_id)
-            case _ if (
-                isinstance(form_info, ClassFormInfo) and class_type == ClassType.EXCUSED
-            ):
-                request = response_resource.list(formId=form_info.excused_id)
-            case _ if not isinstance(form_info, ClassFormInfo):
-                request = response_resource.list(formId=form_info.uuid)
-            case _:
-                msg = f"specified form_info type {type(form_info).__name__} and class type {class_type} are invalid"
-                eprint(msg)
-                return Result.err(msg)
-
-        # execute the request and load its response
-        response_dict: dict[str, list[Response]] = request.execute()  # pyright: ignore [reportUnknownMemberType]
-        response_model: ResponseModel = ResponseModel(**response_dict)
+    # execute the request and load its response
+    response_dict: dict[str, list[Response]] = request.execute()  # pyright: ignore [reportUnknownMemberType]
+    response_model: ResponseModel = ResponseModel(**response_dict)
 
     # create a dictionary with the column names and an empty list for each
     response_data_dict: dict[str, list[str]] = {
@@ -134,8 +123,7 @@ def _retrieve_form_responses(
 
 def retrieve_form_responses(
     question_id_map: dict[str, str],
-    form_path: Path,
-    cls: type,
+    info: AllFormInfo,
     class_type: ClassType | None,
 ) -> Result[DataStream[pd.DataFrame]]:
     """
@@ -158,8 +146,7 @@ def retrieve_form_responses(
     def _run_service(service: FormsService) -> Result[DataStream[pd.DataFrame]]:
         return _retrieve_form_responses(
             question_id_map,
-            form_path,
-            cls,
+            info,
             class_type,
             service=service,
         )

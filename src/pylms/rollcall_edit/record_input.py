@@ -1,7 +1,10 @@
 from ..cli import input_num
 from ..errors import Result
 from ..history import History, all_dates
+from ..info import print_info
 from ..record import RecordStatus
+
+RECORDS = [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.EXCUSED]
 
 
 def input_record(
@@ -44,7 +47,7 @@ Please Select which of the following Record Status should be set
     selected_record: RecordStatus = options[selection - 1]
 
     # Display the selected record status
-    print(f"You have selected: {selected_record}")
+    print_info(f"You have selected: {selected_record}")
 
     # Return the selected record status
     return Result.ok(selected_record)

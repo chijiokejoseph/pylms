@@ -3,7 +3,7 @@ from typing import Callable, final, overload
 
 
 def eprint(msg: str) -> None:
-    msg = f"\n⚠️ Error {msg}\n"
+    msg = f"\n🚫 Error {msg}\n"
     _ = sys.stderr.write(msg)
 
 
@@ -87,6 +87,23 @@ class Result[T]:
     @classmethod
     def unit(cls) -> UnitResult:
         return Result.ok(Unit())
+
+    @overload
+    @classmethod
+    def fail(cls, value: str) -> Exception:
+        pass
+
+    @overload
+    @classmethod
+    def fail(cls, value: Exception) -> Exception:
+        pass
+
+    @classmethod
+    def fail(cls, value: str | Exception) -> Exception:
+        if isinstance(value, str):
+            value = LMSError(value)
+
+        return value
 
     def is_ok(self) -> bool:
         return self._error is None and self._value is not None

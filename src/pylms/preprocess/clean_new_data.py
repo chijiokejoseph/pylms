@@ -25,28 +25,36 @@ def _clean_new(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     def validate_na_removal(test_data: pd.DataFrame) -> bool:
         return not test_data.isna().any().any()
 
-    data_stream = clean_na(data_stream, validate_na_removal)
-    data_stream = clean_str(data_stream, [NAME, PHONE])
-    data_stream = clean_email(data_stream)
-    data_stream = clean_name(data_stream)
-    data_stream = clean_phone(data_stream)
+    result = clean_na(data_stream, validate_na_removal)
+    if result.is_err():
+        return result.propagate()
+
+    clean_str(data_stream, [NAME, PHONE])
+    clean_email(data_stream)
+    clean_name(data_stream)
+
+    result = clean_phone(data_stream)
+    if result.is_err():
+        return result.propagate()
+
     result = clean_cohort(data_stream)
     if result.is_err():
         return result.propagate()
-    data_stream = result.unwrap()
+
     result = clean_date(data_stream)
     if result.is_err():
         return result.propagate()
-    data_stream = result.unwrap()
-    data_stream = clean_time(data_stream)
-    data_stream = clean_internship(data_stream)
-    data_stream = clean_training(data_stream)
+
+    clean_time(data_stream)
+    clean_internship(data_stream)
+    clean_training(data_stream)
+
     result = clean_completion_date(data_stream)
     if result.is_err():
         return result.propagate()
-    data_stream = result.unwrap()
-    data_stream = clean_duplicates(data_stream)
-    data_stream = clean_sort(data_stream)
+
+    clean_duplicates(data_stream)
+    clean_sort(data_stream)
 
     # get list of columns in `data_stream`
     columns: list[str] = data_stream().columns.tolist()
@@ -58,19 +66,23 @@ def _clean_new(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     data_columns: list[str] = [column for column in columns if column in DATA_COLUMNS]
 
     # extract the dataframe for only columns in `DATA_COLUMNS`
-    subset1_data = data_stream()[data_columns]
+    subset1 = data_stream.as_ref()[data_columns]
     # extract the dataframe for only columns not in `DATA_COLUMNS`
-    subset2_data = data_stream()[not_data_columns]
+    subset2 = data_stream.as_ref()[not_data_columns]
 
-    # create a DataStream object of the data with columns in `DATA_COLUMNS`
-    subset1_ds: DataStream[pd.DataFrame] = DataStream(subset1_data)
     # clean that DataStream object
-    subset1_ds = clean_order(subset1_ds)
+    result = clean_order(DataStream(subset1))
+    if result.is_err():
+        return result.propagate()
+
+    subset1 = result.unwrap()
 
     # create a DataStore from the cleaned data
-    ds: DataStore = DataStore(subset1_ds.as_ref())
+    ds: DataStore = DataStore(subset1)
+
     # recombine the data in the DataStore and the data corresponding to columns not in `DATA_COLUMNS`
-    recombined_data = pd.concat([ds.as_ref(), subset2_data], axis="columns")
+    recombined_data = pd.concat([ds.as_ref(), subset2], axis="columns")
+
     # use a setter to replace the underlying data of `ds` with `recombined_data`
     ds.data = recombined_data
 

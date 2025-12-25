@@ -182,7 +182,10 @@ Enter the path: """
     # Save the collated data to an Excel file
     printpass("Project Recorded Successfully\n")
     project_path: Path = get_paths_excel()["Project"]
-    DataStream(data).to_excel(project_path)
+
+    result = DataStream(data).to_excel(project_path)
+    if result.is_err():
+        return result.propagate()
 
     # Record the project in the history
     record_project(history)

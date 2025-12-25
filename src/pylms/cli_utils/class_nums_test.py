@@ -1,19 +1,10 @@
-"""Unit tests for integer-string parsing helpers in ``cli_utils``.
-
-This module contains tests for :func:`pylms.cli_utils.int_str_parse.parse_int_str`.
-The test cases verify parsing of single integers, comma-separated lists,
-ranges, invalid input, and malformed input. Tests assert that the parser
-returns the expected lists (wrapped in the project's Result type) and do not
-depend on external state.
-"""
-
 import unittest
 
-from .int_str_parse import parse_int_str
+from .class_nums import parse_class_nums
 
 
-class TestIntStringParse(unittest.TestCase):
-    """Unit tests for :func:`pylms.cli_utils.int_str_parse.parse_int_str`.
+class TestParseClassNum(unittest.TestCase):
+    """
 
     Each test covers a focused parsing scenario and asserts the expected list
     of integers is returned (via the `Result` wrapper).
@@ -28,7 +19,7 @@ class TestIntStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_int_str("12").unwrap(), [12])
+        self.assertEqual(parse_class_nums("12").unwrap(), [12])
 
     def test_multiple_ints(self) -> None:
         """Parse multiple comma-separated integers.
@@ -39,7 +30,7 @@ class TestIntStringParse(unittest.TestCase):
             None
         """
         self.assertEqual(
-            parse_int_str("1, 3, 5").unwrap(),
+            parse_class_nums("1, 3, 5").unwrap(),
             [1, 3, 5],
         )
 
@@ -52,7 +43,7 @@ class TestIntStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_int_str("1 - 6, 8").unwrap(), [1, 2, 3, 4, 5, 6, 8])
+        self.assertEqual(parse_class_nums("1 - 6, 8").unwrap(), [1, 2, 3, 4, 5, 6, 8])
 
     def test_invalid_input(self) -> None:
         """Handle completely invalid input gracefully.
@@ -63,7 +54,7 @@ class TestIntStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_int_str("invalid date").unwrap(), [])
+        self.assertEqual(parse_class_nums("invalid date").unwrap(), [])
 
     def test_malformed_string(self) -> None:
         """Handle malformed numeric strings.
@@ -74,7 +65,7 @@ class TestIntStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_int_str("1 -* 52").unwrap(), [])
+        self.assertEqual(parse_class_nums("1 -* 52").unwrap(), [])
 
 
 if __name__ == "__main__":

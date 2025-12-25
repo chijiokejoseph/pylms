@@ -2,6 +2,7 @@ from enum import IntEnum
 
 from ..cli import input_option
 from ..errors import Result
+from ..info import print_info
 
 
 class Select(IntEnum):
@@ -20,7 +21,7 @@ def input_select_type() -> Result[Select]:
     if result.is_err():
         return result.propagate()
     idx, choice = result.unwrap()
-    print(f"You have selected: {choice}\n")
+    print_info(f"You have selected: {choice}\n")
     match idx:
         case 1:
             return Result.ok(Select.ALL)

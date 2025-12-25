@@ -40,7 +40,10 @@ def handle_data(ds: DataStore) -> None:
                     continue
                 printpass("Edited Datastore successfully")
             case 3:
-                list_ds(ds)
+                result = list_ds(ds)
+                if result.is_err():
+                    continue
+
             case 4:
                 result = remove_students(ds)
                 if result.is_err():

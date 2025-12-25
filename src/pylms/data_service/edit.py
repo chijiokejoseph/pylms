@@ -3,8 +3,8 @@ from typing import Any
 import numpy as np
 from dateutil.parser import ParserError, parse
 
-from ..cli import input_option, input_str, select_student
-from ..cli_utils import validate_email
+from ..cli import input_option, input_str, provide_serials
+from ..cli_utils import verify_email
 from ..constants import (
     COHORT,
     COMMA_DELIM,
@@ -63,7 +63,7 @@ def _preprocess(col_name: str, value: str) -> Any | None:
             return value_title
         case _ if col_name == EMAIL:
             # Validate email format
-            if validate_email(value.lower()):
+            if verify_email(value.lower()):
                 return value
             eprint(
                 f"Invalid {EMAIL} specified. {EMAIL} should be a valid email address."
@@ -117,7 +117,7 @@ def edit(ds: DataStore) -> Result[Unit]:
     :rtype: Result[Unit]
     """
     print("\nPlease select the students whose records you wish to edit")
-    serials = select_student(ds)
+    serials = provide_serials(ds)
     if serials.is_err():
         return serials.propagate()
 

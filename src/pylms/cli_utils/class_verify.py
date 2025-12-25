@@ -1,7 +1,7 @@
 import re
 
 
-def val_date_str(entry: str) -> bool:
+def verify_class(entry: str) -> bool:
     """Validate a user's date-selection input string.
 
     Accepts several input forms commonly used to select class dates:

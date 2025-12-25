@@ -126,6 +126,8 @@ DATA_COLUMNS: list[str] = [
 # Missing String
 NA: str = "N/A"
 
+ARABIC_APOSTROPHE = "’"
+
 # NA Columns Replacement
 NA_COLUMNS_FILL: dict[str, object] = {
     TIME: datetime.strptime(f"01/01/{datetime.now().year}", DATE_FMT),

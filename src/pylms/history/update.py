@@ -3,7 +3,7 @@ from typing import Literal, overload
 
 from ..date import parse_dates
 from ..errors import Result, Unit, eprint
-from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
+from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo, sort_form
 from .dateutil import all_dates
 from .history import History
 
@@ -75,7 +75,7 @@ def add_prop_class(
             eprint(msg)
             return Result.err(msg)
         else:
-            class_num = all_dates(history, "").index(class_id)
+            class_num = all_dates(history, "").index(class_id) + 1
 
     # Get the date corresponding to the class number and add it to held classes
     target_date: datetime = history.dates[class_num - 1]
@@ -83,6 +83,7 @@ def add_prop_class(
 
     if prop == "held":
         history.held_classes.append(target_date)
+        history.held_classes.sort()
     else:
         held_classes = parse_dates(history.held_classes)
         if held_classes.is_err():
@@ -94,8 +95,8 @@ def add_prop_class(
             eprint(msg)
             return Result.err(msg)
 
-        history.held_classes.append(target_date)
         history.marked_classes.append(target_date)
+        history.marked_classes.sort()
 
     return Result.unit()
 
@@ -110,6 +111,7 @@ def add_cds_form(history: History, form: CDSFormInfo) -> None:
     :rtype: None
     """
     history.cds_forms.append(form)
+    history.cds_forms.sort(key=sort_form)
 
 
 def add_recorded_cds_form(history: History, form: CDSFormInfo) -> None:
@@ -122,6 +124,7 @@ def add_recorded_cds_form(history: History, form: CDSFormInfo) -> None:
     :rtype: None
     """
     history.recorded_cds_forms.append(form)
+    history.recorded_cds_forms.sort(key=sort_form)
 
 
 def add_update_form(history: History, form: UpdateFormInfo) -> None:
@@ -134,6 +137,7 @@ def add_update_form(history: History, form: UpdateFormInfo) -> None:
     :rtype: None
     """
     history.update_forms.append(form)
+    history.update_forms.sort(key=sort_form)
 
 
 def add_recorded_update_form(history: History, form: UpdateFormInfo) -> None:
@@ -146,6 +150,7 @@ def add_recorded_update_form(history: History, form: UpdateFormInfo) -> None:
     :rtype: None
     """
     history.recorded_update_forms.append(form)
+    history.recorded_update_forms.sort(key=sort_form)
 
 
 def add_class_form(history: History, form: ClassFormInfo) -> None:
@@ -158,6 +163,7 @@ def add_class_form(history: History, form: ClassFormInfo) -> None:
     :rtype: None
     """
     history.class_forms.append(form)
+    history.class_forms.sort(key=sort_form)
 
 
 def add_recorded_class_form(history: History, form: ClassFormInfo) -> None:
@@ -170,3 +176,4 @@ def add_recorded_class_form(history: History, form: ClassFormInfo) -> None:
     :rtype: None
     """
     history.recorded_class_forms.append(form)
+    history.recorded_class_forms.sort(key=sort_form)

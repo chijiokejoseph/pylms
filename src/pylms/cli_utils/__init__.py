@@ -13,16 +13,16 @@ Exports are chosen to provide a compact API for CLI modules:
 - `validate_email` — utility used in tests and CLI validation
 """
 
-from .date_strings_parse import parse_to_dates
-from .date_strings_verify import val_date_str
-from .email_test import validate_email
-from .response_parser import parse_response
-from .serial_parser import parse_to_serials
+from .class_dates import parse_class_dates
+from .class_nums import parse_class_nums
+from .class_parser import parse_classes
+from .class_verify import verify_class
+from .email_verify import verify_email
 
 __all__ = [
-    "parse_to_serials",
-    "parse_response",
-    "parse_to_dates",
-    "val_date_str",
-    "validate_email",
+    "parse_class_dates",
+    "parse_class_nums",
+    "parse_classes",
+    "verify_class",
+    "verify_email",
 ]

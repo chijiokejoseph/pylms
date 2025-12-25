@@ -4,7 +4,7 @@ from typing import Callable, cast
 import numpy as np
 import pandas as pd
 
-from ..cli import input_option, input_str, select_student
+from ..cli import input_option, input_str, provide_serials
 from ..constants import ValidateDataFn
 from ..data import DataStore, DataStream, print_stream, read
 from ..errors import Result, Unit, eprint
@@ -88,7 +88,7 @@ def overwrite_result(ds: DataStore) -> Result[Unit]:
     )
     result_data = result_stream()
 
-    serials = select_student(ds)
+    serials = provide_serials(ds)
     if serials.is_err():
         return serials.propagate()
 
@@ -135,5 +135,4 @@ def overwrite_result(ds: DataStore) -> Result[Unit]:
 
         print()
 
-    recollate(DataStream(result_data)).to_excel(result_path)
-    return Result.unit()
+    return recollate(DataStream(result_data)).to_excel(result_path)

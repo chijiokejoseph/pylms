@@ -1,8 +1,8 @@
-from pathlib import Path
-
 import pandas as pd
 from google.auth.exceptions import TransportError
 from googleapiclient.http import HttpError  # pyright: ignore [reportMissingTypeStubs]
+
+from pylms.models import AllFormInfo
 
 from ..clean import clean_duplicates_with_cols
 from ..constants import NAME
@@ -18,7 +18,8 @@ from .form_responses import (
 
 
 def retrieve_form(
-    form_path: Path, record_path: Path, cls: type, class_type: ClassType | None = None
+    info: AllFormInfo,
+    class_type: ClassType | None = None,
 ) -> Result[DataStream[pd.DataFrame]]:
     """
     Retrieves a form and its responses from Google Forms.
@@ -35,20 +36,9 @@ def retrieve_form(
     :return: (DataStream[pd.DataFrame] | None) - A DataStream that yields a DataFrame with the form responses.
     :rtype: DataStream[pd.DataFrame] | None
     """
-    if not form_path.exists():
-        msg = f"No record of an existing form found. \nBecause expected data form metadata file '{form_path.name}' which is supposed to be located at \n{form_path} is not found."
-        eprint(msg)
-        return Result.err(msg)
-
-    if record_path.exists():
-        msg = f"{form_path.name} and {record_path.name} exist, \nshowing that the information stored in the form with metadata file {form_path.name} has been recorded. \nHence no further retrieval is necessary."
-        eprint(msg)
-        return Result.err(msg)
 
     try:
-        questions_id_to_columns = retrieve_form_questions(
-            form_path, cls=cls, class_type=class_type
-        )
+        questions_id_to_columns = retrieve_form_questions(info, class_type=class_type)
         if questions_id_to_columns.is_err():
             return questions_id_to_columns.propagate()
 
@@ -60,7 +50,7 @@ def retrieve_form(
 
     try:
         result = retrieve_form_responses(
-            questions_id_to_columns, form_path, cls=cls, class_type=class_type
+            questions_id_to_columns, info, class_type=class_type
         )
         if result.is_err():
             return result.propagate()

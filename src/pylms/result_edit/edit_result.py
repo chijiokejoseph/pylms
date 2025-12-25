@@ -116,5 +116,9 @@ def edit_result(ds: DataStore) -> Result[Unit]:
     result_data[new_col] = updates_list
     result_data = result_data[unchanged_cols + [new_col] + remaining_cols]
     result_stream = DataStream(result_data)
-    result_stream.to_excel(get_paths_excel()["Result"])
+
+    result = result_stream.to_excel(get_paths_excel()["Result"])
+    if result.is_err():
+        return result.propagate()
+
     return Result.unit()

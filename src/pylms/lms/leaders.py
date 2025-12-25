@@ -169,7 +169,7 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         ]
         criterion_path = get_criterion_path()
         criterion_path.mkdir(exist_ok=True)
-        DataStream(group_data).to_excel(get_group_criterion_path(group))
+        return DataStream(group_data).to_excel(get_group_criterion_path(group))
 
     leaders = pd.DataFrame(
         data={SERIAL: leader_serials, "Leader Name": leader_names, GROUP: leader_groups}
@@ -184,10 +184,21 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
     )
 
     leaders = DataStream(leaders)
-    leaders.to_excel(get_leader_path("Leader"))
-    leaders.to_excel(get_grading_leader("Leader"))
+    result = leaders.to_excel(get_leader_path("Leader"))
+    if result.is_err():
+        return result.propagate()
+
+    result = leaders.to_excel(get_grading_leader("Leader"))
+    if result.is_err():
+        return result.propagate()
+
     assistants = DataStream(assistants)
-    assistants.to_excel(get_leader_path("Assistant"))
-    assistants.to_excel(get_grading_leader("Assistant"))
+    result = assistants.to_excel(get_leader_path("Assistant"))
+    if result.is_err():
+        return result.propagate()
+
+    result = assistants.to_excel(get_grading_leader("Assistant"))
+    if result.is_err():
+        return result.propagate()
 
     return Result[Unit].unit()

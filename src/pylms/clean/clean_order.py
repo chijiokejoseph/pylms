@@ -2,9 +2,12 @@ import pandas as pd
 
 from ..constants import DATA_COLUMNS
 from ..data import DataStream
+from ..errors import Result
 
 
-def clean_order(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_order(
+    data_stream: DataStream[pd.DataFrame],
+) -> Result[DataStream[pd.DataFrame]]:
     """Validate and reorder DataFrame columns according to the known schema.
 
     This function attaches a validator that ensures every column in the
@@ -27,6 +30,10 @@ def clean_order(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFram
                 return False
         return True
 
-    valid_data: pd.DataFrame = DataStream(data_stream, validator)()
-    valid_data = valid_data[DATA_COLUMNS]
-    return DataStream(valid_data)
+    result = DataStream.verify(data_stream, validator)
+    if result.is_err():
+        return result.propagate()
+
+    data = data_stream.as_ref()
+    data = data[DATA_COLUMNS]
+    return Result.ok(DataStream(data))

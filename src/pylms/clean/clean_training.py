@@ -1,12 +1,10 @@
-from typing import cast
-
 import pandas as pd
 
 from ..constants import NA_COLUMNS_FILL, TRAINING
 from ..data import DataStream
 
 
-def clean_training(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_training(data_stream: DataStream[pd.DataFrame]) -> None:
     """Fill the `TRAINING` column with the configured default value.
 
     This function obtains the DataFrame from the provided `DataStream`, looks
@@ -22,7 +20,7 @@ def clean_training(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataF
         DataStream[pd.DataFrame]: A DataStream wrapping the DataFrame with the
             `TRAINING` column set to the default fill value.
     """
-    data: pd.DataFrame = data_stream()
-    training_fill: str = cast(str, NA_COLUMNS_FILL[TRAINING])
-    data[TRAINING] = training_fill
-    return DataStream(data)
+    data: pd.DataFrame = data_stream.as_ref()
+    training = NA_COLUMNS_FILL[TRAINING]
+    if isinstance(training, str):
+        data[TRAINING] = training

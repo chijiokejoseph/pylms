@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import Literal, overload
 
+from pylms.errors import Result, eprint
+
 from ..constants import DATE_FMT
+from ..date import parse_dates
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from .history import History
 
@@ -45,7 +48,7 @@ def get_available_update_forms(history: History) -> list[UpdateFormInfo]:
     ]
 
 
-def match_info_by_date(history: History, class_date: str) -> ClassFormInfo:
+def match_info_by_date(history: History, class_date: str) -> Result[ClassFormInfo]:
     """
     Returns a Class Form that matches the given date.
 
@@ -54,7 +57,13 @@ def match_info_by_date(history: History, class_date: str) -> ClassFormInfo:
     :return: (ClassFormInfo) - The Class Form that matches the given date.
     :rtype: ClassFormInfo
     """
-    return [form for form in history.class_forms if form.date == class_date][0]
+    matched_forms = [form for form in history.class_forms if form.date == class_date]
+    if len(matched_forms) == 0:
+        msg = f"No class form matches the specified date: {class_date}"
+        eprint(msg)
+        return Result.err(msg)
+
+    return Result.ok(matched_forms[0])
 
 
 def get_classes(
@@ -63,7 +72,6 @@ def get_classes(
     sample: str | datetime,
     present: bool,
 ) -> list[str] | list[datetime]:
-    held_dates = history.held_classes
     if prop == "held":
         dates = history.held_classes
     else:
@@ -73,12 +81,14 @@ def get_classes(
         if present:
             return dates
         else:
-            return [date for date in held_dates if date not in dates]
+            return [date for date in history.dates if date not in dates]
     else:
         if present:
             return [date.strftime(DATE_FMT) for date in dates]
         else:
-            return [date.strftime(DATE_FMT) for date in held_dates if date not in dates]
+            return [
+                date.strftime(DATE_FMT) for date in history.dates if date not in dates
+            ]
 
 
 @overload
@@ -191,3 +201,36 @@ def get_marked_classes(
     history: History, sample: str | datetime
 ) -> list[str] | list[datetime]:
     return get_classes(history, "marked", sample, True)
+
+
+@overload
+def get_unrecorded_classes(history: History, sample: str) -> list[str]:
+    pass
+
+
+@overload
+def get_unrecorded_classes(history: History, sample: datetime) -> list[datetime]:
+    pass
+
+
+def get_unrecorded_classes(
+    history: History, sample: str | datetime
+) -> list[str] | list[datetime]:
+    if isinstance(sample, datetime):
+        held_dates = get_held_classes(history, sample)
+        unmarked_dates = get_unmarked_classes(history, sample)
+        held_dates = parse_dates(held_dates).unwrap()
+        unmarked_dates = parse_dates(unmarked_dates).unwrap()
+    else:
+        held_dates = get_held_classes(history, sample)
+        unmarked_dates = get_unmarked_classes(history, sample)
+
+    held_dates = set(held_dates)
+    unmarked_dates = set(unmarked_dates)
+    result = held_dates.intersection(unmarked_dates)
+    result = list(result)
+    result.sort()
+    if isinstance(sample, str):
+        return result
+
+    return parse_dates(result).unwrap()

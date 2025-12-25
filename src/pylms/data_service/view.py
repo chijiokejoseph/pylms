@@ -1,10 +1,10 @@
-from ..cli import select_student
+from ..cli import provide_serials
 from ..data import DataStore, print_stream
 from ..errors import Result, Unit
 
 
 def view(ds: DataStore) -> Result[Unit]:
-    student_serials = select_student(ds)
+    student_serials = provide_serials(ds)
     if student_serials.is_err():
         return student_serials.propagate()
 

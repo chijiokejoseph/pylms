@@ -7,7 +7,7 @@ from ..cli.option_input import input_option
 from ..constants import COMPLETION, COMPLETION_FMT
 from ..data import DataStream
 from ..date import format_date
-from ..errors import Result
+from ..errors import Result, Unit
 
 
 def _clean_date(entry: str | datetime, day_first: bool) -> str:
@@ -29,7 +29,7 @@ def _clean_date(entry: str | datetime, day_first: bool) -> str:
 
 def clean_completion_date(
     data_stream: DataStream[pd.DataFrame],
-) -> Result[DataStream[pd.DataFrame]]:
+) -> Result[Unit]:
     """Normalize the NYSC/SIWES completion month column in a DataStream.
 
     Prompts the user to choose the input date ordering (\"day first\" or
@@ -42,15 +42,16 @@ def clean_completion_date(
             DataFrame to transform.
 
     Returns:
-        Result[DataStream[pd.DataFrame]]: Ok result wrapping the transformed
-            DataStream, or an error `Result` propagated from the input prompt
-            when the user cancels or an invalid selection occurs.
+        Result[Unit]: Ok result wrapping a `Unit` to indicate success, or an error
+        `Result` propagated from the input prompt when the user cancels or an
+        invalid selection occurs.
     """
-    data: pd.DataFrame = data_stream()
-    format_options: list[str] = ["day first", "month first"]
+    data = data_stream.as_ref()
+    format_options = ["day first", "month first"]
     result = input_option(
         format_options,
-        title="\nSelect the date format for the NYSC SIWES Completion Month\n",
+        title="NYSC/SIWES Completion Date",
+        prompt="Select the appropriate date format",
     )
     if result.is_err():
         return result.propagate()
@@ -63,4 +64,4 @@ def clean_completion_date(
         return lambda x: _clean_date(x, day_first=day_first)
 
     data[COMPLETION] = data[COMPLETION].apply(apply())  # pyright: ignore [reportUnknownMemberType]
-    return Result.ok(DataStream(data))
+    return Result.unit()

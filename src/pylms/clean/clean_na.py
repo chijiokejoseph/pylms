@@ -3,6 +3,8 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
+from pylms.errors import Result, Unit
+
 from ..constants import DATA_COLUMNS, NA_COLUMNS_FILL
 from ..data import DataStream
 
@@ -11,7 +13,7 @@ type Validator = Callable[[pd.DataFrame], bool]
 
 def clean_na(
     data_stream: DataStream[pd.DataFrame], validate_na_removal: Validator | None = None
-) -> DataStream[pd.DataFrame]:
+) -> Result[Unit]:
     """Fill missing values and return a DataStream with a validator.
 
     Fill missing or N/A entries in the DataFrame contained in `data_stream`
@@ -29,11 +31,11 @@ def clean_na(
             succeeds. If None, a default validator is attached.
 
     Returns:
-        DataStream[pd.DataFrame]: A DataStream wrapping the filled DataFrame and
-            the validator used to assert the cleaning operation was successful.
+        Result[Unit]: A Unit Result if the cleaning operation was successful
+        or an `Result.err` value containing the validation error
     """
 
-    data: pd.DataFrame = data_stream()
+    data: pd.DataFrame = data_stream.as_ref()
     data = data.fillna(NA_COLUMNS_FILL)  # pyright: ignore [reportUnknownMemberType]
 
     def validate(test_data: pd.DataFrame) -> bool:
@@ -47,4 +49,4 @@ def clean_na(
     if validate_na_removal is None:
         validate_na_removal = validate
 
-    return DataStream(data, validate_na_removal)
+    return DataStream.verify(data, validate_na_removal)

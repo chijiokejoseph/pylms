@@ -64,11 +64,22 @@ def collate_awardees(
             AWARDEES["CertID"]: AWARDEES_EMTPY,
         }
     )
-    awardees_path: Path = (
-        get_merit_path(cohort_num)
-        if collate_type == "merit"
-        else get_fast_track_path(cohort_num)
-    )
+    merit_path = get_merit_path(cohort_num)
+    if merit_path.is_err():
+        return merit_path.propagate()
+    merit_path = merit_path.unwrap()
+
+    fast_track_path = get_fast_track_path(cohort_num)
+    if fast_track_path.is_err():
+        return fast_track_path.propagate()
+    fast_track_path = fast_track_path.unwrap()
+
+    awardees_path: Path = merit_path if collate_type == "merit" else fast_track_path
+
     awardees_stream: DataStream[pd.DataFrame] = DataStream(awardees_data)
-    awardees_stream.to_excel(awardees_path)
+
+    result = awardees_stream.to_excel(awardees_path)
+    if result.is_err():
+        return result.propagate()
+
     return Result.unit()

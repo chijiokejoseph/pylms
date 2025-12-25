@@ -3,7 +3,7 @@ import re
 from ..constants import COMMA_DELIM
 
 
-def parse_date_str(entry: str) -> list[str]:
+def parse_class_dates(entry: str) -> list[str]:
     """Parse a date string or comma-separated date strings into a list.
 
     Accepts a single date string in the form 'dd/mm/yyyy' or a comma-separated
@@ -19,7 +19,7 @@ def parse_date_str(entry: str) -> list[str]:
         list[str]: Parsed date strings. Returns an empty list when the input
             does not match the supported formats.
     """
-    match str(entry):
+    match entry:
         # matches a single date string like "12/11/2030" or "09/03/2004"
         case _ if re.fullmatch(r"^\d{2}/\d{2}/\d{4}$", entry):
             return [entry]

@@ -1,5 +1,4 @@
 import re
-from typing import cast
 
 import pandas as pd
 
@@ -7,8 +6,6 @@ from ..data import DataStream
 from ..errors import Result
 from ..form_utils import UpdateFormInfo, select_form
 from ..history import History
-from ..models.form_info import CDSFormInfo
-from ..paths import ret_update_path
 from .form import retrieve_form
 
 
@@ -34,15 +31,14 @@ def rename_date_col(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
 
 def retrieve_update_form(
     history: History,
-) -> Result[tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]]:
-    form_info: Result[CDSFormInfo | UpdateFormInfo] = select_form(history, "update")
-    if form_info.is_err():
-        return Result[tuple[DataStream[pd.DataFrame] | None, UpdateFormInfo]].err(
-            form_info.unwrap_err()
-        )
-    info: UpdateFormInfo = cast(UpdateFormInfo, form_info.unwrap())
-    update_form_path, update_record_path = ret_update_path(info.timestamp)
-    result = retrieve_form(update_form_path, update_record_path, UpdateFormInfo)
+) -> Result[tuple[DataStream[pd.DataFrame], UpdateFormInfo]]:
+    info = select_form(history, "update")
+    if info.is_err():
+        return info.propagate()
+
+    info = info.unwrap()
+
+    result = retrieve_form(info)
     if result.is_err():
         return result.propagate()
     result = result.unwrap()

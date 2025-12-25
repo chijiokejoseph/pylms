@@ -8,7 +8,7 @@ to be simple, deterministic unit tests that validate the parsing logic.
 
 import unittest
 
-from .date_str_parse import parse_date_str
+from .class_dates import parse_class_dates
 
 
 class TestDateStringParse(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestDateStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_date_str("12/11/2023"), ["12/11/2023"])
+        self.assertEqual(parse_class_dates("12/11/2023"), ["12/11/2023"])
 
     def test_multiple_dates(self) -> None:
         """Parse multiple comma-separated date strings.
@@ -39,7 +39,7 @@ class TestDateStringParse(unittest.TestCase):
             None
         """
         self.assertEqual(
-            parse_date_str("12/11/2023, 01/05/2024"),
+            parse_class_dates("12/11/2023, 01/05/2024"),
             ["12/11/2023", "01/05/2024"],
         )
 
@@ -52,7 +52,7 @@ class TestDateStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_date_str("invalid date"), [])
+        self.assertEqual(parse_class_dates("invalid date"), [])
 
     def test_empty_string(self) -> None:
         """Handle empty input.
@@ -62,7 +62,7 @@ class TestDateStringParse(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_date_str(""), [])
+        self.assertEqual(parse_class_dates(""), [])
 
 
 if __name__ == "__main__":

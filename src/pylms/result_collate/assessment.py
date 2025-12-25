@@ -167,7 +167,9 @@ Enter the path:  """
     assessment_path: Path = get_paths_excel()["Assessment"]
 
     # Write the attendance spreadsheet to the assessment spreadsheet
-    DataStream(data).to_excel(assessment_path)
+    result = DataStream(data).to_excel(assessment_path)
+    if result.is_err():
+        return result.propagate()
 
     # Record the assessment in the history
     record_assessment(history)

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
-from ..errors import Result
+from ..errors import Result, eprint
 from .custom_inputs import input_str
 
 
@@ -37,22 +37,28 @@ def input_path(
         return result.propagate()
 
     path_str: str = result.unwrap()
+
     # Strip whitespace and remove surrounding quotes
     path_str = path_str.strip()
     path_str = path_str.removesuffix('"')
     path_str = path_str.removesuffix("'")
     path_str = path_str.removeprefix('"')
     path_str = path_str.removeprefix("'")
+
     # Convert string to Path object
     path: Path = Path(path_str)
+
     # Validate the Path object
     test, remark = test_path_in(path)
+
     if not test:
         diagnosis = f"\nInput Path: '{path}', diagnosis: '{remark}'"
-        err_msg: str = f"'{path_str}' does not meet input requirements. {diagnosis}"
+        msg = f"'{path_str}' does not meet input requirements. {diagnosis}"
+
         # Return Result with error if validation fails
-        print(f"\n{err_msg}\n")
-        return Result.err(err_msg)
+        eprint(f"{msg}\n")
+        return Result.err(msg)
+
     # Return the validated Path object
     return Result.ok(path)
 
@@ -75,7 +81,9 @@ def test_path_in(path_input: Path) -> tuple[bool, str]:
     # Check if the path is absolute
     if not path_input.is_absolute():
         return False, f"{path_input} is not absolute"
+
     # Check if the path exists
     if not path_input.exists():
         return False, f"{path_input} does not exist"
+
     return True, ""

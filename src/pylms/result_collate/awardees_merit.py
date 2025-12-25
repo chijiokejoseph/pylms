@@ -145,7 +145,10 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
     )
     result_data[REMARK] = remarks
     result_data[REASON] = reasons
-    DataStream(result_data).to_excel(get_paths_excel()["Result"])
+
+    result = DataStream(result_data).to_excel(get_paths_excel()["Result"])
+    if result.is_err():
+        return result.propagate()
 
     pass_logic_idx: pd.Series = attendance_score_pass & assessment_pass
     pretty_data: pd.DataFrame = ds.pretty()

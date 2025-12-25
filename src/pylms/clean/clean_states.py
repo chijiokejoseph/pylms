@@ -4,11 +4,12 @@ from ..data import DataStore
 from ..date import to_unique_week_nums
 from ..errors import Result, Unit
 from ..history import History, all_dates, save_history, set_class_days, set_cohort
+from ..info import print_info
 from ..paths import get_paths_weeks
 from ..record import RecordStatus
 
 
-def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> None:
+def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> Result[Unit]:
     """Write weekly DataStore files for unique week numbers.
 
     Given a DataStore and a list of date strings, compute the unique week
@@ -22,12 +23,16 @@ def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> None:
             will be derived.
 
     Returns:
-        None
+        Result[Unit]: a Unit Result if successful or `Result.err` for any
+        caught errors
     """
     unique_week_nums: list[int] = to_unique_week_nums(dates_list)
     for each_week_num in unique_week_nums:
-        new_ds.to_excel(get_paths_weeks() / f"DataStore{each_week_num}.xlsx")
-    return None
+        result = new_ds.to_excel(get_paths_weeks() / f"DataStore{each_week_num}.xlsx")
+        if result.is_err():
+            return result.propagate()
+
+    return Result.unit()
 
 
 def input_class_days() -> Result[list[str]]:
@@ -57,8 +62,11 @@ def input_class_days() -> Result[list[str]]:
         if result.is_err():
             return result.propagate()
         _, class_day = result.unwrap()
+
         days[i] = class_day
-        print(f"\nYou selected {COMMA_DELIM.join(days[slice(None, i + 1)]).strip()}\n")
+        print_info(
+            f"You selected {COMMA_DELIM.join(days[slice(None, i + 1)]).strip()}\n"
+        )
     days.sort()
     return Result.ok(days)
 
@@ -105,5 +113,5 @@ def normalize(ds: DataStore, history: History) -> Result[Unit]:
 
     date_cols: list[str] = all_dates(history, "")
     ds.as_ref()[date_cols] = RecordStatus.EMPTY
-    make_weekly_ds(ds, date_cols)
-    return Result.unit()
+
+    return make_weekly_ds(ds, date_cols)

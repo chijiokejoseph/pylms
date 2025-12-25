@@ -2,19 +2,18 @@ from ..cache import cache_for_cmd
 from ..cli import interact
 from ..data import DataStore
 from ..data_service import save
-from ..errors import eprint
+from ..errors import Result, eprint
 from ..form_request import request_class_form
 from ..form_retrieve import (
     ClassType,
     retrieve_class_form,
-    save_retrieve,
 )
 from ..history import (
     History,
+    add_class_form,
     add_marked_class,
     add_recorded_class_form,
     all_dates,
-    get_marked_classes,
     match_info_by_date,
     save_history,
 )
@@ -31,6 +30,16 @@ from ..rollcall_edit import (
     edit_record,
     new_edit_info,
 )
+
+
+def get_date_index(history: History, date: str) -> Result[int]:
+    dates = all_dates(history, "")
+    if date not in dates:
+        msg = f"{date} not in src: '{dates}'"
+        eprint(msg)
+        return Result.err(msg)
+
+    return Result.ok(dates.index(date) + 1)
 
 
 def handle_rollcall(ds: DataStore, history: History) -> None:
@@ -73,14 +82,18 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                 class_dates = dates_result.unwrap()
 
                 for each_date in class_dates:
-                    present_turnout = retrieve_class_form(each_date, ClassType.PRESENT)
+                    present_turnout = retrieve_class_form(
+                        history, each_date, ClassType.PRESENT
+                    )
 
                     if present_turnout.is_err():
                         continue
 
                     present_turnout = present_turnout.unwrap()
 
-                    excused_turnout = retrieve_class_form(each_date, ClassType.EXCUSED)
+                    excused_turnout = retrieve_class_form(
+                        history, each_date, ClassType.EXCUSED
+                    )
 
                     if excused_turnout.is_err():
                         continue
@@ -104,25 +117,18 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                         )
 
                     record_absent(ds, present_turnout, each_date)
+
                     info = match_info_by_date(history, each_date)
-
-                    result = save_retrieve(info)
-
-                    if result.is_err():
-                        class_num = all_dates(history, "").index(each_date) + 1
-                        eprint(
-                            f"Failed to save records for Class {class_num} on '{each_date}'. Please retry for Class {class_num}"
-                        )
+                    if info.is_err():
                         continue
-
-                    _ = result.unwrap()
+                    info = info.unwrap()
 
                     add_recorded_class_form(history, info)
                     _ = add_marked_class(history, each_date).unwrap()
                     print_info(f"Recorded all those absent for date '{each_date}'")
 
-                for date in get_marked_classes(history, ""):
-                    class_num = all_dates(history, "").index(date)
+                for date in class_dates:
+                    class_num = get_date_index(history, date).unwrap()
                     printpass(
                         f"Recorded attendance for Class {class_num} held on '{date}'"
                     )
@@ -139,17 +145,12 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                 # only save retrieval if the record attendance manually was done for the whole batch of Students
                 if edit_type == EditType.ALL:
                     for each_date in edited_dates:
-                        result = add_marked_class(history, each_date)
-                        if result.is_err():
-                            continue
-                        result = save_retrieve(new_edit_info(each_date))
-                        if result.is_err():
-                            continue
-
+                        form_info = new_edit_info(each_date)
+                        add_class_form(history, form_info)
                         marked_dates.append(each_date)
 
                     for date in marked_dates:
-                        class_num = all_dates(history, "").index(date)
+                        class_num = get_date_index(history, date).unwrap()
                         printpass(
                             f"Recorded attendance for Class {class_num} held on '{date}'"
                         )

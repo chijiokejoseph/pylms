@@ -10,7 +10,7 @@ def input_date_for_edit(history: History, edit_type: EditType) -> Result[list[st
     match edit_type:
         case EditType.ALL:
             choice = input_bool(
-                "Do you wish to edit a date whose attendance has already been recorded?"
+                "Do you wish to edit a date whose attendance has already been marked?"
             )
             if choice.is_err():
                 return choice.propagate()

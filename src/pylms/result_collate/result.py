@@ -103,7 +103,10 @@ def collate_result(history: History) -> Result[Unit]:
     # Save the collated result data to an Excel file
     result_stream: DataStream[pd.DataFrame] = DataStream(collated_data)
     result_path: Path = get_paths_excel()["Result"]
-    result_stream.to_excel(result_path)
+
+    result = result_stream.to_excel(result_path)
+    if result.is_err():
+        return result.propagate()
 
     # Record the result in the history
     record_result(history)

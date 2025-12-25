@@ -193,7 +193,10 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
 
     # Save the collated data to an Excel file
     path: Path = get_paths_excel()["Attendance"]
-    DataStream(collated_data).to_excel(path)
+
+    result = DataStream(collated_data).to_excel(path)
+    if result.is_err():
+        return result.propagate()
 
     # Record attendance in the history
     record_attendance(history)

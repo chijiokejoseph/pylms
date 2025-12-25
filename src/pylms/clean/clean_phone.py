@@ -2,25 +2,24 @@ import pandas as pd
 
 from ..constants import PHONE
 from ..data import DataStream
+from ..errors import Result, Unit
 from ..re_phone import match_and_clean
 
 
-def clean_phone(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_phone(data_stream: DataStream[pd.DataFrame]) -> Result[Unit]:
     """Normalize phone numbers in the DataStream's DataFrame.
 
     This function validates that the input DataFrame contains a column named
     by the `PHONE` constant, that the column contains non-missing string
     values, and then applies the `match_and_clean` phone-normalization helper
-    to each value. The processed DataFrame is returned wrapped in a
-    `DataStream`.
+    to each value.
 
     Args:
         data_stream (DataStream[pd.DataFrame]): DataStream containing the
             DataFrame whose phone column should be normalized.
 
     Returns:
-        DataStream[pd.DataFrame]: A DataStream wrapping the DataFrame with the
-            normalized phone numbers.
+        None
     """
 
     def validate_data(test_data: pd.DataFrame) -> bool:
@@ -56,6 +55,11 @@ def clean_phone(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFram
         test3: bool = test_data[PHONE].apply(is_str).all().item()  # pyright: ignore [reportUnknownMemberType]
         return test3
 
-    valid_data: pd.DataFrame = DataStream(data_stream, validate_data)()
-    valid_data[PHONE] = valid_data[PHONE].apply(match_and_clean)  # pyright: ignore [reportUnknownMemberType]
-    return DataStream(valid_data)
+    result = DataStream.verify(data_stream, validate_data)
+    if result.is_err():
+        result.print_if_err()
+        return result.propagate()
+
+    data = data_stream.as_ref()
+    data[PHONE] = data[PHONE].apply(match_and_clean)  # pyright: ignore [reportUnknownMemberType]
+    return Result.unit()

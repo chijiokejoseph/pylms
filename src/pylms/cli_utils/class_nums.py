@@ -4,7 +4,7 @@ from ..constants import COMMA, COMMA_DELIM, HYPHEN
 from ..errors import Result, eprint
 
 
-def parse_int_str(entry: str) -> Result[list[int]]:
+def parse_class_nums(entry: str) -> Result[list[int]]:
     """Parse a string into a list of integers (supports ranges and lists).
 
     Accepts single numbers, comma-separated lists, ranges (for example

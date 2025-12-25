@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
@@ -26,9 +24,18 @@ def _val_awardees(test_data: pd.DataFrame) -> bool:
 
 def collate_merge(ds: DataStore) -> Result[Unit]:
     cohort_num: int = ds.as_ref()[COHORT].iloc[0]
-    merged_path: Path = get_merged_path(cohort_num)
+    merged_path = get_merged_path(cohort_num)
+    if merged_path.is_err():
+        return merged_path.propagate()
 
-    fast_track_path: Path = get_fast_track_path(cohort_num)
+    merged_path = merged_path.unwrap()
+
+    fast_track_path = get_fast_track_path(cohort_num)
+    if fast_track_path.is_err():
+        return fast_track_path.propagate()
+
+    fast_track_path = fast_track_path.unwrap()
+
     if not fast_track_path.exists():
         msg = "Cannot merge merit results with fast track results as fast track results do not exits."
         return Result.err(msg)
@@ -38,7 +45,12 @@ def collate_merge(ds: DataStore) -> Result[Unit]:
         return fast_track_data.propagate()
     fast_track_data = fast_track_data.unwrap()
 
-    merit_path: Path = get_merit_path(cohort_num)
+    merit_path = get_merit_path(cohort_num)
+    if merit_path.is_err():
+        return merit_path.propagate()
+
+    merit_path = merit_path.unwrap()
+
     if not merit_path.exists():
         msg = "Cannot merge fast track results with merit results as merit results do not yet exist."
         return Result.err(msg)
@@ -46,7 +58,9 @@ def collate_merge(ds: DataStore) -> Result[Unit]:
     merit_data = read(merit_path)
     if merit_data.is_err():
         return merit_data.propagate()
+
     merit_data = merit_data.unwrap()
+
     merit_data = DataStream(merit_data, _val_awardees)()
 
     fast_track_data = DataStream(fast_track_data, _val_awardees)()
@@ -67,5 +81,9 @@ def collate_merge(ds: DataStore) -> Result[Unit]:
     merged_data[AWARDEES["Phone"]] = merged_data[AWARDEES["Phone"]].astype(np.str_)
     merged_data.sort_values(by=AWARDEES["Name"], inplace=True)
     merged_data.reset_index(drop=True, inplace=True)
-    DataStream(merged_data).to_excel(merged_path)
+
+    result = DataStream(merged_data).to_excel(merged_path)
+    if result.is_err():
+        return result.propagate()
+
     return Result.unit()

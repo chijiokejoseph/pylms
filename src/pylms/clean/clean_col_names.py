@@ -5,7 +5,7 @@ import pandas as pd
 from ..data import DataStream
 
 
-def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
+def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
     """Clean and normalize column names in a DataStream.
 
     This function formats the column names of the DataFrame contained in the
@@ -23,10 +23,9 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
             DataFrame whose column names should be cleaned.
 
     Returns:
-        DataStream[pd.DataFrame]: A new DataStream containing the DataFrame
-            with cleaned column names.
+        None
     """
-    data: pd.DataFrame = data_stream().copy()
+    data: pd.DataFrame = data_stream.as_ref()
     for old_column in data.columns:
         new_column: str = old_column.strip().title()
 
@@ -48,5 +47,4 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
         # drop the old column if the new column name `new_column` is different from the old column name `old_column`
         data = data.drop(columns=old_column) if new_column != old_column else data
 
-    new_data: DataStream[pd.DataFrame] = DataStream(data)
-    return new_data
+    return
