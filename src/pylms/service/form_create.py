@@ -2,6 +2,7 @@ from typing import Any
 
 from googleapiclient.http import HttpRequest  # pyright: ignore[reportMissingTypeStubs]
 
+from ..cli_utils import emphasis
 from ..errors import eprint
 from ..info import print_info
 from ..models import Form, FormData
@@ -44,8 +45,9 @@ def _create_form(
         if form_url is None or form_id is None:
             return None
         print_info(
-            f"Form with name={form_name} and title={form_title} created successfully\n"
+            f"Form with \nName = {emphasis(form_name)}\nTitle = {emphasis(form_title)}"
         )
+        print_info("Created successfully\n")
         return Form(title=form_title, name=form_name, url=form_url, uuid=form_id)
     except Exception as e:
         eprint(

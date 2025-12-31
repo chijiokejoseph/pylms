@@ -2,6 +2,7 @@ from googleapiclient.http import (  # pyright: ignore[reportMissingTypeStubs]
     HttpRequest,
 )
 
+from ..cli_utils import emphasis
 from ..errors import eprint
 from ..info import printpass
 from ..models import Form, PermissionsData
@@ -32,11 +33,13 @@ def _share_form(form: Form, email: str, *, service: DriveResource) -> Form | Non
             fileId=form.uuid, body=user_permission
         )
         share_request.execute()  # pyright: ignore[reportUnknownMemberType]
-        printpass(f"Success, form {form.name} has been shared to {email}. SUCCESS\n")
+        printpass(
+            f"Success, form {emphasis(form.name)} has been shared to {email}. SUCCESS\n"
+        )
         return form
     except Exception as e:
         eprint(
-            f"Fatal error occurred while sharing {form.url} with {email}. Error encountered is {e}. ERROR\n",
+            f"Fatal error occurred while sharing form {emphasis(form.name)} with {email}. Error encountered is {e}. ERROR\n",
         )
         return None
 

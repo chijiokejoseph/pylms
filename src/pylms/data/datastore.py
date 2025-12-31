@@ -89,6 +89,12 @@ class DataStore(DataStream[pd.DataFrame]):
     `DataStore` enforces the presence and order of columns defined in
     `DATA_COLUMNS` and provides helper methods for common transformations and
     persistence (export to Excel, pretty-print transformations, etc.).
+
+    Note:
+         When building instances of this class with validators, prefer the `new_`
+         class method over Python's `__init__` magic method as the former will
+         return a Result whose error can be handled while the latter will raise
+         an exception.
     """
 
     @classmethod
@@ -166,6 +172,15 @@ class DataStore(DataStream[pd.DataFrame]):
         The initializer will extract the underlying DataFrame (if a
         `DataStream` is provided) and validate the data against the expected
         schema (`validate`) before storing it.
+
+        Raises:
+            Exception: if validation of data fails.
+
+        Note:
+             When building instances of this class with validators, prefer the `new_`
+             class method over Python's `__init__` magic method as the former will
+             return a Result whose error can be handled while the latter will raise
+             an exception.
         """
         # If a DataStream was passed, call it to get the actual DataFrame value.
         # Copying here ensures we don't accidentally share mutable state between
@@ -178,6 +193,11 @@ class DataStore(DataStream[pd.DataFrame]):
         # Delegate to the DataStream initializer with the module-level `validate`
         # function enforcing the required schema at construction time.
         super().__init__(true_data, validate)
+
+    @classmethod
+    def new_(cls, data: pd.DataFrame | DataStream[pd.DataFrame]) -> Result[Self]:
+        data = data.as_clone() if isinstance(data, DataStream) else data.copy()
+        return cls.from_data(data)
 
     def copy_from(self, ds: Self) -> None:
         # Copy both the stored data and the `prefilled` marker from another store.

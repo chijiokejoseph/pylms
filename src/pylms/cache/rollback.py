@@ -8,7 +8,7 @@ import pandas as pd
 from ..cli import input_num
 from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME
 from ..data import DataStream, read
-from ..errors import Result, Unit, eprint
+from ..errors import Result, Unit
 from ..paths import get_data_path, get_metadata_path, get_snapshot_path
 from .cache import copy_data
 
@@ -121,14 +121,13 @@ def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
         )
 
     # Prompt user to enter index for rollback
-    value_result: Result[int] = input_num(
+    result = input_num(
         "Enter the index of the state to roll back to: ",
         1,
     )
-    if value_result.is_err():
-        eprint(f"Error retrieving index: {value_result.unwrap_err()}")
-        return value_result.propagate()
-    idx = value_result.unwrap()
+    if result.is_err():
+        return result.propagate()
+    idx = result.unwrap()
 
     # Get the snapshot ID from the selected cache record
     snapshot_value = cache_records[CACHE_ID].astype(str).iloc[idx - 1]

@@ -2,6 +2,7 @@ from typing import Any
 
 from googleapiclient.http import HttpRequest  # pyright: ignore[reportMissingTypeStubs]
 
+from ..cli_utils import emphasis
 from ..errors import eprint
 from ..info import print_info
 from ..models import ContentBody, Form
@@ -43,8 +44,9 @@ def _setup_form(
         )
         request.execute()  # pyright: ignore [reportUnknownMemberType]
         print_info(
-            f"Form with name={form.name}, title={form.title} and url={form.url} setup successfully.\n"
+            f"Form with \nName = {emphasis(form.name)}\nTitle = {emphasis(form.title)}\nUrl = {emphasis(form.url)}"
         )
+        print_info("Setup successfully.\n")
         return form
     except Exception as e:
         eprint(f"Fatal error occurred while updating form. Error encountered is {e}\n")

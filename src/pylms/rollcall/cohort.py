@@ -7,11 +7,15 @@ from ..cli import input_bool
 from ..constants import COHORT, DATA_COLUMNS, DATE_FMT
 from ..data import DataStore, DataStream
 from ..errors import Result, eprint
-from ..history import History, get_available_cds_forms, retrieve_dates
+from ..history import (
+    History,
+    get_available_cds_forms,
+    get_marked_classes,
+    retrieve_dates,
+)
 from ..info import print_info
 from ..models import CDSFormInfo
 from ..paths import get_cohort_path
-from ..paths_class import get_class_path
 from ..record import RecordStatus
 
 
@@ -47,7 +51,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     pretty_data: pd.DataFrame = ds.pretty()
 
     # get cohort no
-    cohort_no: int = pretty_data[COHORT].iloc[0]
+    cohort_no: int = pretty_data[COHORT].astype(int).iloc[0]
 
     # get class dates
     dates = retrieve_dates("")
@@ -57,12 +61,12 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     dates = dates.unwrap()
 
     today: datetime = datetime.now()
-    past_class_dates: list[str] = [
+    past_classes: list[str] = [
         each_date
         for each_date in dates
         if datetime.strptime(each_date, DATE_FMT) <= today
     ]
-    last_class_date: str = past_class_dates[-1]
+    last_class: str = past_classes[-1]
 
     # check that the CDS days of the NYSC students in the cohort
     # have been recorded before taking cohort attendance
@@ -75,21 +79,8 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
         return Result.err(msg)
 
     required_records: int = 3
-    gotten_records: int = 0
-    for class_date in past_class_dates:
-        class_idx: int = dates.index(class_date)
-        class_num: int = class_idx + 1
-
-        class_record_file = get_class_path(class_date, "record")
-        if class_record_file.is_err():
-            return class_record_file.propagate()
-        class_record_file = class_record_file.unwrap()
-
-        # check that every previous class date has had its attendance recorded.
-        if class_record_file.exists():
-            gotten_records += 1
-        else:
-            print_info(f"Record for Class {class_num} on date {class_date} is missing")
+    marked_dates = get_marked_classes(history, "")
+    gotten_records = len(marked_dates)
 
     if gotten_records < required_records:
         msg = f"Cannot record half cohort attendance since the Total Attendance Records: {gotten_records} is less than {required_records}"
@@ -115,7 +106,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     data_cols: list[str] = pretty_data.columns.tolist()
 
     # get the index of the column that corresponds to the `last_class_date` of the half-cohort week
-    last_date_idx: int = data_cols.index(last_class_date)
+    last_date_idx: int = data_cols.index(last_class)
 
     # extract all the columns from the beginning of the dataset to the `last_class_date` column
     required_cols: list[str] = data_cols[: last_date_idx + 1]

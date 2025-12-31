@@ -3,7 +3,7 @@ import pandas as pd
 from ..cli import input_bool
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
-from ..history import History, add_held_class, add_marked_class, get_marked_classes
+from ..history import History, add_held_class, add_marked_class, get_unmarked_classes
 from ..info import print_info
 from ..record import RecordStatus, retrieve_record
 from .global_record import GlobalRecord
@@ -64,11 +64,14 @@ def edit_all_records(
 
     dates_str = ", ".join(dates_to_mark)
 
-    result = input_bool(f"Are you making the same edit for dates: {dates_str}")
-    if result.is_err():
-        return result.propagate()
+    if len(dates_to_mark) == 1:
+        choice = True
+    else:
+        result = input_bool(f"Are you making the same edit for dates: {dates_str}")
+        if result.is_err():
+            return result.propagate()
 
-    choice = result.unwrap()
+        choice = result.unwrap()
 
     if choice:
         first_date = dates_to_mark[0]
@@ -84,10 +87,10 @@ def edit_all_records(
             if result.is_err():
                 return result.propagate()
 
-    marked_dates = get_marked_classes(history, "")
-    unmarked_dates = [date for date in dates_to_mark if date not in marked_dates]
+    unmarked_dates = get_unmarked_classes(history, "")
+    edited_dates = [date for date in dates_to_mark if date in unmarked_dates]
 
-    for date in unmarked_dates:
+    for date in edited_dates:
         result = add_held_class(history, date)
         if result.is_err():
             return result.propagate()

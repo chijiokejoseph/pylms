@@ -61,6 +61,12 @@ class DataStream[T: pd.DataFrame | pd.Series]:
         Raises:
             Exception: If `validate_fn` is provided and returns False for the
                 underlying data.
+
+         Note:
+             When building instances of this class with validators, prefer the `new`
+             class method over Python's `__init__` magic method as the former will
+             return a Result whose error can be handled while the latter will raise
+             an exception.
         """
         # Extract the underlying value whether the caller passed a DataStream
         # (in which case we call it to get the stored object) or a raw pandas
@@ -179,8 +185,12 @@ class DataStream[T: pd.DataFrame | pd.Series]:
         Args:
             path (Path): Filesystem path where the Excel file will be written.
 
-        Raises:
-            OSError: Propagates any I/O errors raised by pandas or the filesystem.
+        Returns:
+            Result[Unit]: A result object indicating if write was successful.
+
+        Note:
+            Any I/O errors raised by pandas or the filesystem is caught by the function
+            and a result object with `err` value is returned.
         """
         # Extract the stored value and only attempt to write when it's a DataFrame.
         # Writing a Series would either require additional handling or produce
@@ -188,8 +198,9 @@ class DataStream[T: pd.DataFrame | pd.Series]:
         # limits output to DataFrames.
         data = self()
 
-        if not path.exists():
-            msg = f"Path specified: '{path} does not exist"
+        parent = path.parent
+        if not parent.exists():
+            msg = f"Parent path specified: '{parent} does not exist"
             eprint(msg)
             return Result.err(msg)
 

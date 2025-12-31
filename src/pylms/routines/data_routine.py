@@ -60,6 +60,8 @@ def handle_data(ds: DataStore) -> None:
 
                 app_ds = app_ds.unwrap()
                 ds.copy_from(app_ds)
+
+                printpass("Rollback completed successfully")
             case _:
                 break
 

@@ -1,3 +1,4 @@
+from ..cli_utils import emphasis
 from ..errors import eprint
 from ..info import print_info
 from ..models import Form, PublishRequest, PublishSettings, PublishState
@@ -18,8 +19,9 @@ def _publish_form(form: Form, service: FormsService) -> Form | None:
     try:
         _ = request.execute()  # pyright: ignore[reportUnknownMemberType]
         print_info(
-            f"Form with name={form.name} and title={form.title} published successfully\n"
+            f"Form with \nName = {emphasis(form.name)}\nTitle = {emphasis(form.title)}"
         )
+        print_info("Published successfully\n")
         return form
     except Exception as e:
         eprint(f"Failed to publish form due to error\nError details: {e}\n")

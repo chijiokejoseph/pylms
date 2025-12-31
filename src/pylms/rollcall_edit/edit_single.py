@@ -47,12 +47,15 @@ def edit_single_serial(
     if serial < 1 or serial > len_rows:
         raise Result.fail(f"serial argument must be between 1 - {len_rows}")
 
-    choice = input_bool(
-        f"Do you wish to make a single edit for every date in '{dates}'"
-    )
-    if choice.is_err():
-        return choice.propagate()
-    choice = choice.unwrap()
+    if len(dates) == 1:
+        choice = True
+    else:
+        choice = input_bool(
+            f"Do you wish to make a single edit for every date in '{dates}'"
+        )
+        if choice.is_err():
+            return choice.propagate()
+        choice = choice.unwrap()
 
     names = ds.to_pretty()
     data = ds.as_ref()

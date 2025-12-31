@@ -17,6 +17,7 @@ from .class_dates import parse_class_dates
 from .class_nums import parse_class_nums
 from .class_parser import parse_classes
 from .class_verify import verify_class
+from .colors import emphasis
 from .email_verify import verify_email
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "parse_classes",
     "verify_class",
     "verify_email",
+    "emphasis",
 ]
