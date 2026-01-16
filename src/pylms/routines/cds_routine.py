@@ -5,7 +5,6 @@ from ..data_service import save
 from ..form_request import request_cds_form
 from ..form_retrieve import (
     retrieve_cds_form,
-    save_retrieve,
 )
 from ..history import History, add_recorded_cds_form, save_history
 from ..info import print_info, printpass
@@ -54,11 +53,6 @@ def handle_cds(ds: DataStore, history: History) -> None:
                     continue
 
                 add_recorded_cds_form(history, info)
-
-                result = save_retrieve(info)
-                if result.is_err():
-                    continue
-
                 printpass("Marked CDS Records")
             case _:
                 break

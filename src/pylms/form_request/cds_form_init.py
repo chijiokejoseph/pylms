@@ -1,6 +1,4 @@
-import json
 from datetime import datetime
-from pathlib import Path
 
 import pandas as pd
 
@@ -23,7 +21,6 @@ from ..models import (
     Question,
     QuestionItem,
 )
-from ..paths import get_cds_path
 from ..service import (
     run_create_form,
     run_publish_form,
@@ -130,8 +127,5 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
         timestamp=timestamp,
     )
     add_cds_form(history, info)
-    cds_form_path: Path = get_cds_path("form", info.timestamp)
-    with open(cds_form_path, "w") as json_file:
-        json.dump(info.model_dump(), json_file, indent=2)
 
     return Result.unit()

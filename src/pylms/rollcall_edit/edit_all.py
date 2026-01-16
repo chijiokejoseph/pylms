@@ -3,10 +3,15 @@ import pandas as pd
 from ..cli import input_bool
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
-from ..history import History, add_held_class, add_marked_class, get_unmarked_classes
-from ..info import print_info
+from ..history import (
+    History,
+    add_held_class,
+    add_marked_class,
+    get_unmarked_classes,
+    match_date_index,
+)
+from ..info import print_info, printpass
 from ..record import RecordStatus, retrieve_record
-from .global_record import GlobalRecord
 from .record_input import input_record
 
 
@@ -20,20 +25,14 @@ def _edit_record(ds: DataStore, history: History, each_date: str) -> Result[Unit
         return record.propagate()
     selected_record: RecordStatus = record.unwrap()
 
-    global_record = GlobalRecord.new()
-    if global_record.is_err():
-        return global_record.propagate()
-
-    global_record = global_record.unwrap()
-    global_record.swap(each_date, selected_record)
-
     data_ref: pd.DataFrame = ds.as_ref()
     records = data_ref[each_date].astype(str).tolist()
     class_record = [retrieve_record(record) for record in records]
     new_class_record = [
-        _fill(old_record, selected_record) for old_record in class_record
+        str(_fill(old_record, selected_record)) for old_record in class_record
     ]
-    data_ref.loc[:, each_date] = new_class_record
+    data_ref[each_date] = data_ref[each_date].astype(str)
+    data_ref[each_date] = new_class_record
     return Result.unit()
 
 
@@ -98,5 +97,8 @@ def edit_all_records(
         result = add_marked_class(history, date)
         if result.is_err():
             return result.propagate()
+
+        class_num = match_date_index(history, date).unwrap()
+        printpass(f"Recorded attendance for Class {class_num} held on '{date}'")
 
     return Result.unit()

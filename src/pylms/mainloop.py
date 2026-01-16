@@ -81,7 +81,7 @@ def mainloop(config: Config) -> Result[bool]:
         case 2:
             handle_cds(ds, history)
         case 3:
-            handle_cohort(config)
+            handle_cohort(config, ds, history)
         case 4:
             handle_data(ds)
         case 5:
@@ -106,6 +106,19 @@ def closed_loop(config: Config) -> Result[bool]:
         "Cohort",
         "Quit",
     ]
+
+    history = load_history()
+    if history.is_err():
+        return history.propagate()
+
+    history = history.unwrap()
+
+    ds = load()
+    if ds.is_err():
+        return ds.propagate()
+
+    ds = ds.unwrap()
+
     selection = interact(menu)
 
     if selection.is_err():
@@ -135,7 +148,7 @@ def closed_loop(config: Config) -> Result[bool]:
                 return result.propagate()
 
         case 3:
-            handle_cohort(config)
+            handle_cohort(config, ds, history)
         case _:
             print_info(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import overload
 
 from ..errors import Result
-from .dateutil import all_dates
+from .dates_with_history import all_dates
 from .new import load_history
 
 

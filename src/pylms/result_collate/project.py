@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from ..cli import input_path
-from ..constants import GROUP, NAME, ValidateDataFn
+from ..constants import GROUP, NAME
 from ..data import DataStream, read
 from ..errors import Result, Unit, eprint
 from ..history import History, record_project
@@ -19,14 +19,14 @@ from ..result_utils import (
 )
 
 
-def _val_data(assessment_required: bool) -> Callable[[pd.DataFrame], bool]:
+def val_assessment(assessment_required: bool) -> Callable[[pd.DataFrame], bool]:
     if assessment_required:
         return val_assessment_data
     else:
         return val_attendance_data
 
 
-def _val_input_data(test_data: pd.DataFrame) -> bool:
+def val_project(test_data: pd.DataFrame) -> bool:
     columns_list: list[str] = test_data.columns.tolist()
     test_df_rows: int = test_data.shape[-2]
     num_groups: int = _extract_num_groups()
@@ -76,7 +76,7 @@ def collate_project(history: History) -> Result[Unit]:
     """
 
     if not history.has_collated_assessment:
-        msg = "\nAssessment has not been collated yet. Please collate the assessment first.\n"
+        msg = "Assessment has not been collated yet. Please collate the assessment first.\n"
         eprint(msg)
         return Result.err(msg)
 
@@ -86,7 +86,7 @@ def collate_project(history: History) -> Result[Unit]:
         return assessment_data.propagate()
     assessment_data = assessment_data.unwrap()
 
-    validate_data_fn: Callable[[pd.DataFrame], bool] = _val_data(True)
+    validate_data_fn: Callable[[pd.DataFrame], bool] = val_assessment(True)
     data_stream = DataStream(assessment_data, validate_data_fn)
     data: pd.DataFrame = data_stream()
 
@@ -131,8 +131,7 @@ Enter the path: """
         return project_df.propagate()
     project_df = project_df.unwrap()
 
-    validate_fn = cast(ValidateDataFn, _val_input_data)
-    project_stream: DataStream[pd.DataFrame] = DataStream(project_df, validate_fn)
+    project_stream: DataStream[pd.DataFrame] = DataStream(project_df, val_project)
 
     # Validate the input data
     project_df = project_stream()

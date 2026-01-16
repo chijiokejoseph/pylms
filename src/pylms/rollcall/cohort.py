@@ -14,7 +14,6 @@ from ..history import (
     retrieve_dates,
 )
 from ..info import print_info
-from ..models import CDSFormInfo
 from ..paths import get_cohort_path
 from ..record import RecordStatus
 
@@ -48,10 +47,10 @@ def fill_records(record_input: str) -> RecordStatus:
 
 def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     # get DataStore data in its pretty form
-    pretty_data: pd.DataFrame = ds.pretty()
+    pretty: pd.DataFrame = ds.pretty()
 
     # get cohort no
-    cohort_no: int = pretty_data[COHORT].astype(int).iloc[0]
+    cohort_no: int = pretty[COHORT].astype(int).iloc[0]
 
     # get class dates
     dates = retrieve_dates("")
@@ -72,7 +71,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     # have been recorded before taking cohort attendance
     # this is done by checking that at least one cds form has been generated and retrieved
     # and that there are no cds forms unretrieved.
-    available_cds_forms: list[CDSFormInfo] = get_available_cds_forms(history)
+    available_cds_forms = get_available_cds_forms(history)
     if len(available_cds_forms) != 0 and len(history.recorded_cds_forms) > 0:
         msg = "Cannot record half cohort attendance since the CDS days of the NYSC students has not yet been recorded. Please record the CDS days then try again."
         print_info(msg)
@@ -88,7 +87,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
         return Result.err(msg)
 
     # if the half-cohort attendance has already been generated, return early
-    cohort_path: Path = get_cohort_path(cohort_no)
+    cohort_path = get_cohort_path(cohort_no)
     if cohort_path.exists():
         print_info(
             f"Cohort Attendance for the Cohort {cohort_no} has already been recorded. This record can be found at the path\nPath: {cohort_path.resolve()}"
@@ -103,7 +102,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
             return Result.ok(cohort_path)
 
     # get all the columns in the data
-    data_cols: list[str] = pretty_data.columns.tolist()
+    data_cols: list[str] = pretty.columns.tolist()
 
     # get the index of the column that corresponds to the `last_class_date` of the half-cohort week
     last_date_idx: int = data_cols.index(last_class)
@@ -112,21 +111,23 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     required_cols: list[str] = data_cols[: last_date_idx + 1]
 
     # extract the entries for the half-cohort attendance
-    cohort_data: pd.DataFrame = pretty_data.loc[:, required_cols]
+    cohort_data: pd.DataFrame = pretty.loc[:, required_cols]
 
     _ = fill_norm_records("Excused")
-    for column in cohort_data.columns.tolist():
+
+    for column in cohort_data.columns:
         # if `column` is in `DATA_COLUMNS` i.e., it is not a date column skip
         if column in DATA_COLUMNS:
             continue
         # format column by using fill_record on all its entries
-        class_record: list[str] = cohort_data[column].tolist()
+        class_record = cohort_data.loc[:, column].astype(str)
         new_class_record = [fill_records(record) for record in class_record]
+        new_class_record = [str(record) for record in new_class_record]
         # update the column data with the `new_class_record`
-        cohort_data[column] = new_class_record
+        cohort_data.loc[:, column] = new_class_record
 
     # output the data to local file storage
-    cohort_stream: DataStream[pd.DataFrame] = DataStream(cohort_data)
+    cohort_stream = DataStream(cohort_data)
 
     result = cohort_stream.to_excel(cohort_path)
     if result.is_err():

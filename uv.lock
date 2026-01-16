@@ -492,6 +492,24 @@ wheels = [
 ]
 
 [[package]]
+name = "fastexcel"
+version = "0.18.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/bd/29c2e1689587ca5fa23f2e422e1a845cb6c3b6e19197f56d8ac8360f9889/fastexcel-0.18.0.tar.gz", hash = "sha256:00d82b787ca6dd0fae9c5d75e6c7b0a2c489236ac93e63cba70571e6d3e87568", size = 59027, upload-time = "2025-11-24T11:07:52.799Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/af/86df57906c473d0072785360f1951b222ba6d33b2ff1e0bea86ff6070503/fastexcel-0.18.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:6ec6e53de42519b8a080dcaf1ec8e8eca99c5e6a19d30022d168f488b1f0ec12", size = 3065735, upload-time = "2025-11-24T11:07:41.223Z" },
+    { url = "https://files.pythonhosted.org/packages/81/74/ce74f5d5a7fd36e3384499fe43bb5db23cf16c98b7f95b0f3a2456361cb3/fastexcel-0.18.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:b7fadce17c6649819709bd06f5acb66bae3ce38112237d80b4816ab791693b73", size = 2857635, upload-time = "2025-11-24T11:07:43.6Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/05/68f6145b7230a4e75b8c08a592ce4dcac88567420967aca190b7feee73e3/fastexcel-0.18.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3f8edb3e38aa458a110dffd3fb6aabb64ef8e10b8c5cede2d2346e5c04e5e1ef", size = 3185991, upload-time = "2025-11-24T11:07:33.102Z" },
+    { url = "https://files.pythonhosted.org/packages/81/c5/d2833ce05892e78979450c0a439a0298bddbb5613244d5d43406341cc217/fastexcel-0.18.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9eaebd921d4d89d02293e94739d92965f58873433e77a44a187ed1947769592c", size = 3359228, upload-time = "2025-11-24T11:07:35.07Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/71/61572e6c59029a1edfe99ec05722cb1fcdf4825adc49c5c9308fa7e83c24/fastexcel-0.18.0-cp310-abi3-win_amd64.whl", hash = "sha256:259d29c1f40828e4665d64762232dd6680fec2344192ea850ba9fe4f4fddd6de", size = 2890696, upload-time = "2025-11-24T11:07:49.238Z" },
+    { url = "https://files.pythonhosted.org/packages/26/f7/30bfe0a608bb26606b76db3ce9493501f2d3d5b0efc29de75175b9b847ca/fastexcel-0.18.0-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:cb9be21a5b5e28cd77081f37e0a972833c8fb8f1b646986b56f893313672df0a", size = 3057524, upload-time = "2025-11-24T11:07:45.607Z" },
+    { url = "https://files.pythonhosted.org/packages/df/1f/e4e91eed5cc9ee7327176483204bf16611884315c11bca273f9e3fecf503/fastexcel-0.18.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:102dfe32348519be7e8055f010f6fad1857201f768d94e418c563c6fde439410", size = 2847009, upload-time = "2025-11-24T11:07:47.352Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/c7/8fab170bf0fe48d0179e2bcbbdc797c8f577d7edbb7858fc23483cec2620/fastexcel-0.18.0-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0cf22c4753c9895fe273835e160b52e64edaef89d84585a90f8b82ef1e9adc6a", size = 3185911, upload-time = "2025-11-24T11:07:36.879Z" },
+    { url = "https://files.pythonhosted.org/packages/58/a6/0957473ed388e8315d18c7c6e054b37b9f278b27a70afb50f6e3684528df/fastexcel-0.18.0-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:178cf27b44a8b16be23dc165081c144463322a91b6b4043e60d6cc1b9415233b", size = 3354475, upload-time = "2025-11-24T11:07:39.095Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/ff/7c1f5af4b3339910f11a9b621b72e1345b8016c6dff99737e9df1388e911/fastexcel-0.18.0-cp314-cp314t-win_amd64.whl", hash = "sha256:79bb347d1ea573f6ed7de01cec0a3fc850ddaade0096f9500a07692b32541af4", size = 2890781, upload-time = "2025-11-24T11:07:51.133Z" },
+]
+
+[[package]]
 name = "fastjsonschema"
 version = "2.21.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1845,6 +1863,42 @@ wheels = [
 ]
 
 [[package]]
+name = "polars"
+version = "1.37.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "polars-runtime-32" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/84/ae/dfebf31b9988c20998140b54d5b521f64ce08879f2c13d9b4d44d7c87e32/polars-1.37.1.tar.gz", hash = "sha256:0309e2a4633e712513401964b4d95452f124ceabf7aec6db50affb9ced4a274e", size = 715572, upload-time = "2026-01-12T23:27:03.267Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/75/ec73e38812bca7c2240aff481b9ddff20d1ad2f10dee4b3353f5eeaacdab/polars-1.37.1-py3-none-any.whl", hash = "sha256:377fed8939a2f1223c1563cfabdc7b4a3d6ff846efa1f2ddeb8644fafd9b1aff", size = 805749, upload-time = "2026-01-12T23:25:48.595Z" },
+]
+
+[package.optional-dependencies]
+excel = [
+    { name = "fastexcel" },
+    { name = "openpyxl" },
+    { name = "xlsx2csv" },
+    { name = "xlsxwriter" },
+]
+
+[[package]]
+name = "polars-runtime-32"
+version = "1.37.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/0b/addabe5e8d28a5a4c9887a08907be7ddc3fce892dc38f37d14b055438a57/polars_runtime_32-1.37.1.tar.gz", hash = "sha256:68779d4a691da20a5eb767d74165a8f80a2bdfbde4b54acf59af43f7fa028d8f", size = 2818945, upload-time = "2026-01-12T23:27:04.653Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/a2/e828ea9f845796de02d923edb790e408ca0b560cd68dbd74bb99a1b3c461/polars_runtime_32-1.37.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:0b8d4d73ea9977d3731927740e59d814647c5198bdbe359bcf6a8bfce2e79771", size = 43499912, upload-time = "2026-01-12T23:25:51.182Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/46/81b71b7aa9e3703ee6e4ef1f69a87e40f58ea7c99212bf49a95071e99c8c/polars_runtime_32-1.37.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:c682bf83f5f352e5e02f5c16c652c48ca40442f07b236f30662b22217320ce76", size = 39695707, upload-time = "2026-01-12T23:25:54.289Z" },
+    { url = "https://files.pythonhosted.org/packages/81/2e/20009d1fde7ee919e24040f5c87cb9d0e4f8e3f109b74ba06bc10c02459c/polars_runtime_32-1.37.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fc82b5bbe70ca1a4b764eed1419f6336752d6ba9fc1245388d7f8b12438afa2c", size = 41467034, upload-time = "2026-01-12T23:25:56.925Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/21/9b55bea940524324625b1e8fd96233290303eb1bf2c23b54573487bbbc25/polars_runtime_32-1.37.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8362d11ac5193b994c7e9048ffe22ccfb976699cfbf6e128ce0302e06728894", size = 45142711, upload-time = "2026-01-12T23:26:00.817Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/25/c5f64461aeccdac6834a89f826d051ccd3b4ce204075e562c87a06ed2619/polars_runtime_32-1.37.1-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:04f5d5a2f013dca7391b7d8e7672fa6d37573a87f1d45d3dd5f0d9b5565a4b0f", size = 41638564, upload-time = "2026-01-12T23:26:04.186Z" },
+    { url = "https://files.pythonhosted.org/packages/35/af/509d3cf6c45e764ccf856beaae26fc34352f16f10f94a7839b1042920a73/polars_runtime_32-1.37.1-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:fbfde7c0ca8209eeaed546e4a32cca1319189aa61c5f0f9a2b4494262bd0c689", size = 44721136, upload-time = "2026-01-12T23:26:07.088Z" },
+    { url = "https://files.pythonhosted.org/packages/af/d1/5c0a83a625f72beef59394bebc57d12637997632a4f9d3ab2ffc2cc62bbf/polars_runtime_32-1.37.1-cp310-abi3-win_amd64.whl", hash = "sha256:da3d3642ae944e18dd17109d2a3036cb94ce50e5495c5023c77b1599d4c861bc", size = 44948288, upload-time = "2026-01-12T23:26:10.214Z" },
+    { url = "https://files.pythonhosted.org/packages/10/f3/061bb702465904b6502f7c9081daee34b09ccbaa4f8c94cf43a2a3b6dd6f/polars_runtime_32-1.37.1-cp310-abi3-win_arm64.whl", hash = "sha256:55f2c4847a8d2e267612f564de7b753a4bde3902eaabe7b436a0a4abf75949a0", size = 41001914, upload-time = "2026-01-12T23:26:12.997Z" },
+]
+
+[[package]]
 name = "prometheus-client"
 version = "0.23.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2137,6 +2191,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pandas-stubs" },
     { name = "pip" },
+    { name = "polars", extra = ["excel"] },
     { name = "pydantic" },
     { name = "pytest" },
     { name = "python-dateutil" },
@@ -2163,6 +2218,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.3.1" },
     { name = "pandas-stubs", specifier = ">=2.2.3.241126" },
     { name = "pip", specifier = ">=24.3.1" },
+    { name = "polars", extras = ["excel"], specifier = ">=1.37.1" },
     { name = "pydantic", specifier = ">=2.10.4" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "python-dateutil", specifier = ">=2.8.0" },
@@ -2811,4 +2867,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bd/f4/c67440c7fb409a71b7404b7aefcd7569a9c0d6bd071299bf4198ae7a5d95/widgetsnbextension-4.0.15.tar.gz", hash = "sha256:de8610639996f1567952d763a5a41af8af37f2575a41f9852a38f947eb82a3b9", size = 1097402, upload-time = "2025-11-01T21:15:55.178Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/0e/fa3b193432cfc60c93b42f3be03365f5f909d2b3ea410295cf36df739e31/widgetsnbextension-4.0.15-py3-none-any.whl", hash = "sha256:8156704e4346a571d9ce73b84bee86a29906c9abfd7223b7228a28899ccf3366", size = 2196503, upload-time = "2025-11-01T21:15:53.565Z" },
+]
+
+[[package]]
+name = "xlsx2csv"
+version = "0.8.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/20/94860286a308a4213581c1beacd4fc7be724250c03583fcff23aaa6107bb/xlsx2csv-0.8.4.tar.gz", hash = "sha256:2aa809888826f6af5b26c77fc7f613f2bbeada0d8cc09e5a58e0f59684bb6911", size = 221390, upload-time = "2024-11-19T17:06:07.818Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/c0/15c21556362c67f1155f3643a375d50ac67559b82c768e64e800a42a2577/xlsx2csv-0.8.4-py3-none-any.whl", hash = "sha256:52ab873fc7b2f2ca75d14aee8bd1985a9f5c1bcb3cc7b80df7a5d57a40a67473", size = 15904, upload-time = "2024-11-19T17:06:05.362Z" },
+]
+
+[[package]]
+name = "xlsxwriter"
+version = "3.2.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/2c/c06ef49dc36e7954e55b802a8b231770d286a9758b3d936bd1e04ce5ba88/xlsxwriter-3.2.9.tar.gz", hash = "sha256:254b1c37a368c444eac6e2f867405cc9e461b0ed97a3233b2ac1e574efb4140c", size = 215940, upload-time = "2025-09-16T00:16:21.63Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/0c/3662f4a66880196a590b202f0db82d919dd2f89e99a27fadef91c4a33d41/xlsxwriter-3.2.9-py3-none-any.whl", hash = "sha256:9a5db42bc5dff014806c58a20b9eae7322a134abb6fce3c92c181bfb275ec5b3", size = 175315, upload-time = "2025-09-16T00:16:20.108Z" },
 ]

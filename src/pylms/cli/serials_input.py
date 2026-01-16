@@ -6,7 +6,7 @@ from ..errors import Result, eprint
 from ..info import print_info
 from .option_input import input_bool, input_option
 from .path_input import input_path
-from .select_student import select_student
+from .students_input import select_student
 
 
 def provide_serials(ds: DataStore) -> Result[list[int]]:

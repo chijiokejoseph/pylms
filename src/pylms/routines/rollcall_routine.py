@@ -2,44 +2,19 @@ from ..cache import cache_for_cmd
 from ..cli import interact
 from ..data import DataStore
 from ..data_service import save
-from ..errors import Result, eprint
 from ..form_request import request_class_form
-from ..form_retrieve import (
-    ClassType,
-    retrieve_class_form,
-)
 from ..history import (
     History,
-    add_class_form,
-    add_marked_class,
-    add_recorded_class_form,
-    all_dates,
-    match_info_by_date,
     save_history,
 )
 from ..info import print_info, printpass
 from ..rollcall import (
-    input_class_date,
-    record_absent,
     record_cohort,
-    record_excused,
-    record_present,
+    run_record,
 )
 from ..rollcall_edit import (
-    EditType,
     edit_record,
-    new_edit_info,
 )
-
-
-def get_date_index(history: History, date: str) -> Result[int]:
-    dates = all_dates(history, "")
-    if date not in dates:
-        msg = f"{date} not in src: '{dates}'"
-        eprint(msg)
-        return Result.err(msg)
-
-    return Result.ok(dates.index(date) + 1)
 
 
 def handle_rollcall(ds: DataStore, history: History) -> None:
@@ -74,86 +49,15 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
 
                 printpass("Generated Attendance Form successfully\n")
             case 2:
-                dates_result = input_class_date(history)
-
-                if dates_result.is_err():
+                result = run_record(ds, history)
+                if result.is_err():
                     continue
 
-                class_dates = dates_result.unwrap()
-
-                for each_date in class_dates:
-                    present_turnout = retrieve_class_form(
-                        history, each_date, ClassType.PRESENT
-                    )
-
-                    if present_turnout.is_err():
-                        continue
-
-                    present_turnout = present_turnout.unwrap()
-
-                    excused_turnout = retrieve_class_form(
-                        history, each_date, ClassType.EXCUSED
-                    )
-
-                    if excused_turnout.is_err():
-                        continue
-
-                    excused_turnout = excused_turnout.unwrap()
-
-                    if not present_turnout.is_empty():
-                        record_present(ds, present_turnout)
-                        print_info(f"Attendance for {each_date} marked successfully")
-                    else:
-                        print_info(
-                            f"Class Form for {each_date} which marks 'Present' students has no responses"
-                        )
-
-                    if not excused_turnout.is_empty():
-                        record_excused(ds, excused_turnout)
-                        print_info(f"Excused List for {each_date} marked successfully")
-                    else:
-                        print_info(
-                            f"Class Form for {each_date} which marks 'Excused' students has no responses"
-                        )
-
-                    record_absent(ds, present_turnout, each_date)
-
-                    info = match_info_by_date(history, each_date)
-                    if info.is_err():
-                        continue
-                    info = info.unwrap()
-
-                    add_recorded_class_form(history, info)
-                    _ = add_marked_class(history, each_date).unwrap()
-                    print_info(f"Recorded all those absent for date '{each_date}'")
-
-                for date in class_dates:
-                    class_num = get_date_index(history, date).unwrap()
-                    printpass(
-                        f"Recorded attendance for Class {class_num} held on '{date}'"
-                    )
             case 3:
                 edit_result = edit_record(ds, history)
 
                 if edit_result.is_err():
                     continue
-
-                edit_type, edited_dates = edit_result.unwrap()
-
-                marked_dates: list[str] = []
-
-                # only save retrieval if the record attendance manually was done for the whole batch of Students
-                if edit_type == EditType.ALL:
-                    for each_date in edited_dates:
-                        form_info = new_edit_info(each_date)
-                        add_class_form(history, form_info)
-                        marked_dates.append(each_date)
-
-                    for date in marked_dates:
-                        class_num = get_date_index(history, date).unwrap()
-                        printpass(
-                            f"Recorded attendance for Class {class_num} held on '{date}'"
-                        )
             case 4:
                 record_path = record_cohort(ds, history)
                 if record_path.is_err():

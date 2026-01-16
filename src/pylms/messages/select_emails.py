@@ -81,7 +81,7 @@ def message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]
     and sends the emails using the provided SMTP server. It collects and reports any errors encountered
     during the sending process.
     """
-    print("\nInitializing Sending Emails to provided emails...\n")
+    print_info("Initializing Sending Emails to provided emails...\n")
 
     errors: list[MailError] = []
     # retrieve the sender email from the environment

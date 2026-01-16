@@ -28,7 +28,7 @@ def must_get_env(variable: str) -> str:
 
         # Raise an error if the variable is not set in the .env file
         raise LMSError(
-            "The 'EMAIL' variable is not set in the .env file. Please set it and try again"
+            f"The '{variable}' variable is not set in the .env file. Please set it and try again"
         )
 
     # Return the value of the environment variable

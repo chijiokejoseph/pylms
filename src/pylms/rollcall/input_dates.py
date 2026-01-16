@@ -1,7 +1,6 @@
 from ..cli import select_class_date
 from ..errors import Result, eprint
 from ..history import History, get_unrecorded_classes
-from .dates_filter import filter_dates
 
 
 def input_class_date(history: History) -> Result[list[str]]:
@@ -17,10 +16,5 @@ def input_class_date(history: History) -> Result[list[str]]:
     if result.is_err():
         return result.propagate()
 
-    chosen_dates = result.unwrap()
-    dates = filter_dates(chosen_dates)
-    if dates.is_err():
-        return dates.propagate()
-
-    dates = dates.unwrap()
+    dates = result.unwrap()
     return Result.ok(dates)

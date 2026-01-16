@@ -21,11 +21,10 @@ from ..service import (
     run_setup_form,
     run_share_form,
 )
-from .errors import FormServiceError
 
 
 def init_excused_form(ds: DataStore, input_date: str, email: str) -> Result[Form]:
-    names: list[str] = ds.pretty()[NAME].tolist()
+    names: list[str] = ds.to_pretty()[NAME].tolist()
     cohort_no: int = ds.as_ref()[COHORT].iloc[0]
     head = return_name(cohort_no, "Excused", input_date)
     form_title, form_name = head.title, head.name
@@ -93,10 +92,7 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Result[Form
         form_content,
     )
     if excused_form is None:
-        msg = (
-            "setup"
-            f"Form creation failed when creating excused list for students for date {input_date}. \nPlease restart the program and try again."
-        )
+        msg = f"Form creation failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
         eprint(msg)
         return Result.err(msg)
 
@@ -109,8 +105,7 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Result[Form
 
     excused_form = run_share_form(excused_form, email)
     if excused_form is None:
-        raise FormServiceError(
-            "share",
-            "Form sharing failed when trying to share form \nPlease restart the program and try again.",
-        )
+        msg = "Form sharing failed when trying to share form \nPlease restart the program and try again."
+        eprint(msg)
+        return Result.err(msg)
     return Result.ok(excused_form)

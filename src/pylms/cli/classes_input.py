@@ -1,11 +1,10 @@
-from pylms.cli.option_input import input_bool
-
 from ..cli_utils import parse_classes, verify_class
 from ..errors import Result, eprint
 from ..history import retrieve_dates
 from ..info import print_info
 from ..numutil import det_num_width, max_content_width, max_index_width
 from .custom_inputs import input_str
+from .option_input import input_bool
 
 
 def select_class_date(msg: str, dates_in: list[str] | None = None) -> Result[list[str]]:

@@ -1,12 +1,16 @@
-from ..cli import input_option, interact
+from ..cli import get_interlude_dates, input_option, interact
 from ..config import Config, new_config, write_config
-from ..constants import GLOBAL_RECORD_PATH, HISTORY_PATH
+from ..constants import DATE_FMT, GLOBAL_RECORD_PATH, HISTORY_PATH
+from ..data import DataStore
+from ..data_service import save
+from ..history import History, add_interlude, save_history
 from ..info import print_info, printpass
 from ..paths import get_cache_path, rm_path
 
 
-def handle_cohort(config: Config) -> None:
+def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
     menu: list[str] = [
+        "Add Cohort Interlude",
         "End the Cohort",
         "Reopen the Cohort",
         "New Cohort",
@@ -22,6 +26,20 @@ def handle_cohort(config: Config) -> None:
 
         match selection:
             case 1:
+                interlude = get_interlude_dates(history)
+                if interlude.is_err():
+                    continue
+
+                interlude = interlude.unwrap()
+                result = add_interlude(ds, history, interlude)
+                if result.is_err():
+                    continue
+
+                printpass(
+                    f"Successfully added interlude starting from {interlude.start.strftime(DATE_FMT)} to {interlude.end.strftime(DATE_FMT)}"
+                )
+
+            case 2:
                 if not config.is_open():
                     print_info("Cohort is already closed.\n")
                     continue
@@ -38,7 +56,7 @@ def handle_cohort(config: Config) -> None:
                     printpass(
                         "The Cohort, which was previously open, has been closed.\n"
                     )
-            case 2:
+            case 3:
                 if config.is_open():
                     print_info("Cohort is already open.\n")
                     continue
@@ -53,7 +71,7 @@ def handle_cohort(config: Config) -> None:
                 if choice == "Yes":
                     config.open()
                     printpass("The Cohort, which was previously closed, is now open.\n")
-            case 3:
+            case 4:
                 if config.is_open():
                     print_info("Close the Cohort First before creating a new cohort.\n")
                     continue
@@ -74,4 +92,17 @@ def handle_cohort(config: Config) -> None:
             case _:
                 break
         write_config(config)
+
+        result = save_history(history)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
+
+        result = save(ds)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
+
     return None

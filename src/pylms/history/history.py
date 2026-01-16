@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
+from .interlude import Interlude
 
 
 class History:
@@ -72,6 +73,7 @@ class History:
         self.dates: list[datetime] = []
         self.orientation_date: datetime | None = None
         self.weeks: int = 5
+        self.interlude: Interlude | None = None
         self.held_classes: list[datetime] = []
         self.marked_classes: list[datetime] = []
         self.class_forms: list[ClassFormInfo] = []

@@ -5,7 +5,6 @@ from ..data_service import append_update, new, save
 from ..form_request import request_complaint_form, request_update_form
 from ..form_retrieve import (
     retrieve_update_form,
-    save_retrieve,
 )
 from ..history import History, add_recorded_update_form, save_history
 from ..info import print_info, printpass
@@ -13,7 +12,6 @@ from ..rollcall import (
     extract_cds,
     record_cds,
 )
-from ..rollcall_edit import GlobalRecord
 
 
 def register(ds: DataStore, history: History) -> None:
@@ -53,12 +51,6 @@ def register(ds: DataStore, history: History) -> None:
                     continue
                 printpass("Generated Update Form successfully\n")
             case 3:
-                global_record = GlobalRecord().new()
-                if global_record.is_err():
-                    continue
-
-                global_record = global_record.unwrap()
-
                 result = retrieve_update_form(history)
 
                 if result.is_err():
@@ -72,12 +64,6 @@ def register(ds: DataStore, history: History) -> None:
                     continue
 
                 record_cds(ds, cds_data_stream)
-                global_record.crosscheck(ds)
-
-                result = save_retrieve(info)
-                if result.is_err():
-                    continue
-
                 add_recorded_update_form(history, info)
                 printpass("CDS data marked successfully\n")
             case 4:

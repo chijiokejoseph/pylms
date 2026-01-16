@@ -124,16 +124,16 @@ def printout_names(names_list: list[str]) -> None:
     for serial in range(1, names_len + 1, num_names_per_line):
         diff: int = names_len - serial
         if diff > num_names_per_line:
-            # Create indices for a full line of names
-            indices: list[int] = [
+            # Create serial nums for a full line of names
+            serials: list[int] = [
                 serial + increment for increment in range(num_names_per_line)
             ]
         else:
-            # Create indices for the remaining names
-            indices = [serial + increment for increment in range(diff)]
+            # Create serial nums for the remaining names
+            serials = [serial + increment for increment in range(diff + 1)]
 
         # Append the formatted names for the current line
-        names_print += add_names_printout(names_list, indices)
+        names_print += add_names_printout(names_list, serials)
 
     # Print all formatted names
     print(names_print)
@@ -154,7 +154,7 @@ def select_student(ds: DataStore) -> Result[list[int]]:
             or an Err propagated from input/validation helpers.
     """
     # Get a pretty formatted DataFrame of the data store
-    pretty_data: pd.DataFrame = ds.pretty()
+    pretty_data: pd.DataFrame = ds.to_pretty()
 
     # Extract the list of student names
     names: list[str] = pretty_data[NAME].astype(str).tolist()

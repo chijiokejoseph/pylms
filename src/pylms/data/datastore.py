@@ -32,7 +32,7 @@ def apply_fn(delim: str) -> Callable[[str], str]:
     """
     # Return a simple closure that calls str.replace; intentionally minimal to
     # keep the transformation cheap when applied over large Series.
-    return lambda x: x.replace(delim, "")
+    return lambda x: x.replace(delim, "").strip()
 
 
 def validate(test_data: pd.DataFrame) -> bool:

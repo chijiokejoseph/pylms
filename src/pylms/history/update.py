@@ -4,7 +4,7 @@ from typing import Literal, overload
 from ..date import parse_dates
 from ..errors import Result, Unit, eprint
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo, sort_form
-from .dateutil import all_dates
+from .dates_with_history import all_dates
 from .history import History
 
 

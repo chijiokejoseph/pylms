@@ -6,7 +6,7 @@ from ..errors import Result, Unit, eprint
 from .history import History
 
 
-def update_dates(history: History) -> Result[Unit]:
+def sync_classes(history: History) -> Result[Unit]:
     """
     Updates the dates based on the class dates and orientation date.
 
@@ -33,13 +33,13 @@ def update_dates(history: History) -> Result[Unit]:
         return Result.err(msg)
 
     # Generate all dates for the course duration, starting from the day after orientation
-    all_dates: list[datetime] = [
+    dates = [
         history.orientation_date + timedelta(days=i)
         for i in range(1, 7 * history.weeks)
     ]
 
     # Identify the last date in the generated range
-    last_date: datetime = all_dates[-1]
+    last_date = dates[-1]
 
     # Calculate how many days remain in the final week to reach the next Sunday
     diff = 6 - last_date.weekday()
@@ -50,10 +50,46 @@ def update_dates(history: History) -> Result[Unit]:
     ]
 
     # Extend the list of all dates to include the remaining days in the final week
-    all_dates.extend(dates_left)
+    dates.extend(dates_left)
 
-    # Filter all dates to include only those that match the specified class weekdays
-    history.dates = [date for date in all_dates if date.weekday() in history.class_days]
+    # Check for interlude
+
+    interlude = history.interlude
+
+    if interlude is None:
+        # Filter all dates to include only those that match the specified class weekdays
+        history.dates = [date for date in dates if date.weekday() in history.class_days]
+        history._updated = True  # pyright: ignore[reportPrivateUsage]
+
+        return Result.unit()
+
+    gap_start = interlude.start
+
+    pre_dates = [date for date in dates if date <= gap_start]
+
+    held_days = (gap_start - pre_dates[0]).days
+    held_weeks = held_days // 7
+
+    if held_days % 7 != 0:
+        held_weeks += 1
+
+    rem_weeks = history.weeks - held_weeks
+
+    gap_end = interlude.end
+
+    shifted_dates = [gap_end + timedelta(i) for i in range(7 * rem_weeks)]
+
+    last_date = shifted_dates[-1]
+
+    diff = 6 - last_date.weekday()
+
+    # Generate the remaining dates to complete the final week
+    dates_left = [last_date + timedelta(days=i) for i in range(1, diff + 1)]
+
+    dates = pre_dates + shifted_dates + dates_left
+    dates = [date for date in dates if date.weekday() in history.class_days]
+
+    history.dates = dates
     history._updated = True  # pyright: ignore[reportPrivateUsage]
 
     return Result.unit()
@@ -139,13 +175,13 @@ def set_class_days(
         case _ if all(isinstance(day, str) for day in days) and not all(
             day in WEEK_DAYS for day in days
         ):
-            msg = "Days must be a list of strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
+            msg = f"Days must be a list of strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
             eprint(msg)
             return Result.err(msg)
 
         # For any other invalid input, raise an error
         case _:
-            msg = "Days must be a list of integers or strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
+            msg = f"Days must be a list of integers or strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
             eprint(msg)
             return Result.err(msg)
 
@@ -168,7 +204,7 @@ def extend_weeks(history: History, additional_weeks: int) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
     history.weeks += additional_weeks
-    return update_dates(history)
+    return sync_classes(history)
 
 
 def replan_weeks(history: History, new_weeks: int) -> Result[Unit]:
@@ -192,4 +228,4 @@ def replan_weeks(history: History, new_weeks: int) -> Result[Unit]:
         return Result.err(msg)
 
     history.weeks = new_weeks
-    return update_dates(history)
+    return sync_classes(history)

@@ -1,47 +1,52 @@
-import json
-from typing import Any
+from pylms.cli import input_bool
 
 from ..data import DataStore
 from ..errors import Result, Unit
 from ..form_utils import input_class_date
-from ..history import History
+from ..history import History, get_marked_classes, match_date_index, match_info_by_date
 from ..info import print_info
-from ..models import ClassFormInfo
-from ..paths_class import get_class_path
 from .class_form_init import init_class_form
 
 
 def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
-    dates_result = input_class_date(history)
-    if dates_result.is_err():
-        return dates_result.propagate()
+    dates = input_class_date(history)
+    if dates.is_err():
+        return dates.propagate()
 
-    form_dates: list[str] = dates_result.unwrap()
-    print(f"You have selected the following dates: {form_dates}")
+    dates = dates.unwrap()
+    print(f"You have selected the following dates: {dates}")
 
-    new_form_dates: list[str] = form_dates.copy()
+    new_dates: list[str] = dates.copy()
 
-    for date in form_dates:
-        class_num: int = form_dates.index(date) + 1
-        metadata_path = get_class_path(date, "class")
-        if metadata_path.is_err():
-            return metadata_path.propagate()
+    for date in dates:
+        class_num = match_date_index(history, date).unwrap()
+        info = match_info_by_date(history, date)
+        if info.is_err():
+            continue
 
-        metadata_path = metadata_path.unwrap()
+        info = info.unwrap()
+        print_info(f"\nClass {class_num} held on Date: {date}")
+        print_info(f"Attendance Url: {info.present_url}")
+        print_info(f"Excused Url: {info.excused_url}\n")
 
-        if metadata_path.exists():
-            print_info(
-                f"\n{date} has already had attendance and excused lists generated for it.\n"
-            )
-            with metadata_path.open("r", encoding="utf-8") as file:
-                data: dict[Any, Any] = json.load(file)
-                info: ClassFormInfo = ClassFormInfo(**data)
-                print(f"\nClass {class_num} held on Date: {date}")
-                print(f"Attendance Url: {info.present_url}")
-                print(f"Excused Url: {info.excused_url}\n")
-                print()
-            new_form_dates.remove(date)
+        marked_dates = get_marked_classes(history, "")
+        if date in marked_dates:
+            print_info(f"Attendance for Class {class_num} has been recorded")
+            continue
 
-    if len(new_form_dates) == 0:
+        choice = input_bool(
+            f"Do you wish to regenerate the attendance for Class {class_num}: "
+        )
+        if choice.is_err():
+            return choice.propagate()
+
+        choice = choice.unwrap()
+
+        if not choice:
+            continue
+
+        new_dates.remove(date)
+
+    if len(new_dates) == 0:
         return Result.unit()
-    return init_class_form(ds, history, new_form_dates)
+    return init_class_form(ds, history, new_dates)

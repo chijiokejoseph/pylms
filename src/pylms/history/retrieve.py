@@ -1,12 +1,40 @@
 from datetime import datetime
 from typing import Literal, overload
 
-from pylms.errors import Result, eprint
-
 from ..constants import DATE_FMT
 from ..date import parse_dates
+from ..errors import Result, eprint
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
+from .dates_with_history import all_dates
 from .history import History
+
+
+def match_date_index(history: History, date: str) -> Result[int]:
+    dates = all_dates(history, "")
+    if date not in dates:
+        msg = f"{date} not in src: '{dates}'"
+        eprint(msg)
+        return Result.err(msg)
+
+    return Result.ok(dates.index(date) + 1)
+
+
+def match_info_by_date(history: History, class_date: str) -> Result[ClassFormInfo]:
+    """
+    Returns a Class Form that matches the given date.
+
+    :param class_date: (str) - The date to match the Class Form to.
+    :type class_date: str
+    :return: (ClassFormInfo) - The Class Form that matches the given date.
+    :rtype: ClassFormInfo
+    """
+    matched_forms = [form for form in history.class_forms if form.date == class_date]
+    if len(matched_forms) == 0:
+        msg = f"No class form matches the specified date: {class_date}"
+        eprint(msg)
+        return Result.err(msg)
+
+    return Result.ok(matched_forms[0])
 
 
 def get_available_class_forms(history: History) -> list[ClassFormInfo]:
@@ -46,24 +74,6 @@ def get_available_update_forms(history: History) -> list[UpdateFormInfo]:
         for form in history.update_forms
         if form not in history.recorded_update_forms
     ]
-
-
-def match_info_by_date(history: History, class_date: str) -> Result[ClassFormInfo]:
-    """
-    Returns a Class Form that matches the given date.
-
-    :param class_date: (str) - The date to match the Class Form to.
-    :type class_date: str
-    :return: (ClassFormInfo) - The Class Form that matches the given date.
-    :rtype: ClassFormInfo
-    """
-    matched_forms = [form for form in history.class_forms if form.date == class_date]
-    if len(matched_forms) == 0:
-        msg = f"No class form matches the specified date: {class_date}"
-        eprint(msg)
-        return Result.err(msg)
-
-    return Result.ok(matched_forms[0])
 
 
 def get_classes(
@@ -191,7 +201,7 @@ def get_marked_classes(history: History, sample: str) -> list[str]:
     """
     Returns a list of marked classes i.e., classes that are part of the marked_classes list.
 
-    :return: (list[str]) - A list of datetime objects representing the marked classes.
+    :return: (list[str]) - A list of date strings representing the marked classes.
     :rtype: list[str]
     """
     pass

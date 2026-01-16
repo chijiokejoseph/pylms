@@ -78,7 +78,7 @@ def collate_assessment(history: History) -> Result[Unit]:
     """
     # Check if the attendance has been collated
     if not history.has_collated_attendance:
-        msg = "\nPlease collate the attendance first before collating the assessment.\n"
+        msg = "Please collate the attendance first before collating the assessment.\n"
         eprint(msg)
         return Result.err(msg)
 
@@ -100,9 +100,7 @@ Note: Student names must match existing data in spelling and casing.
 Enter the path:  """
 
     # Get the path to the assessment spreadsheet from the user
-    result = input_path(
-        msg,
-    )
+    result = input_path(msg)
     if result.is_err():
         return result.propagate()
     path = result.unwrap()
@@ -118,10 +116,10 @@ Enter the path:  """
     assessment_df = assessment_stream()
 
     # Prompt the user to enter the assessment requirement
-    req_result = input_marks_req("Enter the Assessment Requirement [1 - 100]: ")
-    if req_result.is_err():
-        return req_result.propagate()
-    req: int = req_result.unwrap()
+    req = input_marks_req("Enter the Assessment Requirement [1 - 100]: ")
+    if req.is_err():
+        return req.propagate()
+    req = req.unwrap()
 
     # Get the columns of the assessment spreadsheet
     assessment_cols: list[str] = assessment_df.columns.tolist()

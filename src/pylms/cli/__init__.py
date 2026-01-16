@@ -20,18 +20,19 @@ Exports:
 - select_student: Function to select students.
 """
 
+from .classes_input import select_class_date
 from .custom_inputs import (
     input_num,
     input_str,
 )
 from .email_input import input_email
 from .emails_input import provide_emails
+from .input_interlude import get_interlude_dates
 from .input_to_config import input_course_name, input_dir
 from .input_with_quit import input_fn
 from .interact import interact
 from .option_input import input_bool, input_option
 from .path_input import input_path, test_path_in
-from .select_class_date import select_class_date
 from .serials_input import provide_serials
 
 __all__ = [
@@ -49,4 +50,5 @@ __all__ = [
     "select_class_date",
     "provide_emails",
     "provide_serials",
+    "get_interlude_dates",
 ]

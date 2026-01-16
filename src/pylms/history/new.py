@@ -6,15 +6,15 @@ from ..date import parse_dates, to_date
 from ..errors import Result, eprint
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from ..paths import get_history_path
-from .days_cohort import update_dates
+from .classes import sync_classes
 from .history import History
+from .interlude import Interlude
 
 
 def load_history() -> Result[History]:
     """Loads the history data from a JSON file and initializes the History object.
     :return: (History) - An instance of the History class with loaded data.
     :rtype: History
-
 
     """
     history = History()
@@ -99,6 +99,13 @@ def load_history() -> Result[History]:
             eprint(msg)
             return Result.err(msg)
         history.weeks = data["weeks"]
+
+    if "interlude" in data:
+        interlude = Interlude.from_dict(data["interlude"])
+        if interlude.is_err():
+            return interlude.propagate()
+
+        history.interlude = interlude.unwrap()
 
     # Check and set attribute `held_classes`
     if "held_classes" in data:
@@ -244,7 +251,7 @@ def load_history() -> Result[History]:
         history.merit = (data["merit"][0], Path(data["merit"][1]))
 
     # Update the dates based on the loaded data
-    result = update_dates(history)
+    result = sync_classes(history)
     if result.is_err():
         return result.propagate()
 

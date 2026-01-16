@@ -23,7 +23,7 @@ from ..service import (
 
 
 def init_present_form(ds: DataStore, input_date: str, email: str) -> Result[Form]:
-    names: list[str] = ds.pretty()[NAME].tolist()
+    names: list[str] = ds.to_pretty()[NAME].tolist()
     cohort_no: int = ds.as_ref()[COHORT].iloc[0]
     head = return_name(cohort_no, "Attendance", input_date)
     form_title, form_name = head.title, head.name

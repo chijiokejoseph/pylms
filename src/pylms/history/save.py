@@ -4,7 +4,7 @@ from pathlib import Path
 from ..constants import DATE_FMT, HISTORY_PATH
 from ..errors import Result, Unit, eprint
 from ..paths import get_history_path, get_paths_json
-from .dateutil import all_dates
+from .dates_with_history import all_dates
 from .history import History
 
 
@@ -24,10 +24,14 @@ def save_history(history: History) -> Result[Unit]:
         "dates": [date.strftime(DATE_FMT) for date in history.dates],
         # orientation date in the format specified by DATE_FMT or None
         "orientation_date": history.orientation_date.strftime(DATE_FMT)
-        if history.orientation_date
+        if history.orientation_date is not None
         else None,
         # Number of weeks the course lasts
         "weeks": history.weeks,
+        # Interlude if present
+        "interlude": history.interlude.to_dict()
+        if history.interlude is not None
+        else None,
         # List of classes for which attendance has been generated
         "held_classes": [date.strftime(DATE_FMT) for date in history.held_classes],
         # List of classes for which attendance has been marked
