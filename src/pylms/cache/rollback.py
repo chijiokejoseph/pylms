@@ -3,32 +3,38 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-import pandas as pd
+import polars as pl
 
 from ..cli import input_num
-from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME
+from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME, COMMA_DELIM
 from ..data import DataStream, read
 from ..errors import Result, Unit
 from ..paths import get_data_path, get_metadata_path, get_snapshot_path
 from .cache import copy_data
 
 
-def verify_cache_records(test_data: pd.DataFrame) -> bool:
+def verify_cache_records(test_data: pl.DataFrame) -> tuple[bool, str]:
     """Verify that the cache records DataFrame contains the required columns.
 
     Checks that the provided DataFrame contains the expected cache metadata
     columns: `CACHE_TIME`, `CACHE_CMD` and `CACHE_ID`.
 
     Args:
-        test_data (pd.DataFrame): The DataFrame to verify.
+        test_data (pl.DataFrame): The DataFrame to verify.
 
     Returns:
-        bool: True if all required columns are present, False otherwise.
+        tuple[bool, str]: True if all required columns are present along with an empty string, False otherwise and a message indicating the invalid columns.
     """
     # Check if the required columns are present in the DataFrame
-    cols: list[str] = test_data.columns.tolist()
-    required_cols: list[str] = [CACHE_TIME, CACHE_CMD, CACHE_ID]
-    return all(col in required_cols for col in cols)
+    cols = test_data.columns
+    required_cols = [CACHE_TIME, CACHE_CMD, CACHE_ID]
+    bad_cols = [col for col in cols if col not in required_cols]
+    if len(bad_cols) > 0:
+        columns = COMMA_DELIM.join(bad_cols)
+        required_cols_print = COMMA_DELIM.join(required_cols)
+        msg = f"columns: '{columns} are not part of the required_cols: '{required_cols_print}'"
+        return False, msg
+    return True, ""
 
 
 def fmt_time(timestamp: str | datetime) -> str:
@@ -89,10 +95,15 @@ def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
     cache_records = cache_records.unwrap()
 
     # Create a DataStream with validation
-    cache_stream = DataStream(cache_records, verify_cache_records)
+    cache_stream = DataStream.new(cache_records, verify_cache_records)
+
+    if cache_stream.is_err():
+        return cache_stream.propagate()
+
+    cache_stream = cache_stream.unwrap()
 
     # Validate and get the cache records
-    cache_records = cache_stream()
+    cache_records = cache_stream.as_ref()
 
     # Calculate max length for index column display
     max_index_len: int = cache_records.shape[0]
@@ -100,12 +111,12 @@ def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
 
     # Calculate max length for timestamp column display
     max_time_len: int = max(
-        [len_str(fmt_time(timestamp)) for timestamp in cache_records.loc[:, CACHE_TIME]]
+        [len_str(fmt_time(timestamp)) for timestamp in cache_records[CACHE_TIME]]
     )
     max_time_len = max(max_time_len, len_str("Timestamp"))
 
     # Calculate max length for command column display
-    max_cmd_len: int = max([len_str(cmd) for cmd in cache_records.loc[:, CACHE_CMD]])
+    max_cmd_len: int = max([len_str(cmd) for cmd in cache_records[CACHE_CMD]])
     max_cmd_len = max(max_cmd_len, len_str("Command"))
 
     # Print header row with column names
@@ -114,8 +125,9 @@ def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
     )
 
     # Iterate over cache records and print each with formatted values
-    for index, timestamp, cmd, _ in cache_records.itertuples():
-        count = f"{index + 1}."
+    for count, row in enumerate(cache_records.to_arrow().to_pylist(), start=1):
+        timestamp = row[CACHE_TIME]
+        cmd = row[CACHE_CMD]
         print(
             f"{count:<{max_index_len}}\t{fmt_time(timestamp):<{max_time_len}}\t{cmd:<{max_cmd_len}}\n"
         )
@@ -130,7 +142,8 @@ def rollback_to_cmd(test_path: Path | None = None) -> Result[Unit]:
     idx = result.unwrap()
 
     # Get the snapshot ID from the selected cache record
-    snapshot_value = cache_records[CACHE_ID].astype(str).iloc[idx - 1]
+    snapshot_value: str = cache_records.item(idx-1, CACHE_CMD)
+
     snapshot_id = UUID(snapshot_value)
 
     # Get the snapshot path for the rollback

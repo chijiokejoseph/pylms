@@ -3,10 +3,10 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
-import pandas as pd
+import polars as pl
 
 from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME
-from ..data import read
+from ..data import read, write
 from ..errors import Result, Unit, eprint
 from ..paths import (
     get_cache_path,
@@ -17,7 +17,7 @@ from ..paths import (
 )
 
 
-def new_cache_record(command: str) -> tuple[pd.DataFrame, UUID]:
+def new_cache_record(command: str) -> tuple[pl.DataFrame, UUID]:
     """Create a new cache record and generate a snapshot UUID.
 
     Create a one-row DataFrame containing cache metadata (timestamp, command,
@@ -28,7 +28,7 @@ def new_cache_record(command: str) -> tuple[pd.DataFrame, UUID]:
         command (str): Description of the command or operation to cache.
 
     Returns:
-        tuple[pd.DataFrame, UUID]: A DataFrame containing the new cache record
+        tuple[pl.DataFrame, UUID]: A DataFrame containing the new cache record
             and the generated snapshot UUID.
     """
     # Get the current datetime
@@ -38,7 +38,7 @@ def new_cache_record(command: str) -> tuple[pd.DataFrame, UUID]:
     # Generate a new unique snapshot ID
     snapshot: UUID = uuid4()
     # Create and return the cache record DataFrame and snapshot ID
-    return pd.DataFrame(
+    return pl.DataFrame(
         data={
             CACHE_TIME: [timestamp],
             CACHE_CMD: [command],
@@ -184,15 +184,13 @@ def cache_for_cmd(cmd: str) -> Result[Unit]:
 
         # Limit cache size by trimming older records if necessary
         if cache.shape[0] >= 100:
-            cache = cache.loc[50:, :]
+            cache = cache[50:]
 
         # Append new record to cache
-        cache = pd.concat((cache, record), axis=0)
+        cache = cache.vstack(record)
 
         # Save updated cache metadata
-        cache.to_csv(get_metadata_path(), index=False)
+        return write(cache, get_metadata_path())
     else:
         # Create new cache metadata file
-        record.to_csv(get_metadata_path(), index=False)
-
-    return Result.unit()
+        return write(record, get_metadata_path())
