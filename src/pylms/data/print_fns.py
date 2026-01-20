@@ -1,9 +1,9 @@
 from collections.abc import Iterable
 from typing import Any
 
-import pandas as pd
+import polars as pl
 
-from .datastream import DataStream
+from .datapolar import DataStream
 
 
 def _max_print(items: Iterable[Any]) -> int:
@@ -26,7 +26,7 @@ def _max_print(items: Iterable[Any]) -> int:
     return max([len(str(item)) for item in items])
 
 
-def print_df(data: pd.DataFrame, serials: list[int]) -> None:
+def print_df(data: pl.DataFrame, serials: list[int]) -> None:
     """Pretty-print selected rows of a DataFrame.
 
     The function selects rows by 1-based serial numbers from `serials`, formats
@@ -34,7 +34,7 @@ def print_df(data: pd.DataFrame, serials: list[int]) -> None:
     entries with aligned columns for readability.
 
     Args:
-        data (pd.DataFrame): The DataFrame to print from.
+        data (pl.DataFrame): The DataFrame to print from.
         serials (list[int]): A list of 1-based row indices indicating which
             rows to print.
 
@@ -42,34 +42,36 @@ def print_df(data: pd.DataFrame, serials: list[int]) -> None:
         None
 
     Examples:
-        >>> df = pd.DataFrame({'a': [1,2], 'b': ['x','y']})
+        >>> df = pl.DataFrame({'a': [1,2], 'b': ['x','y']})
         >>> print_df(df, [1])
         a : 1
         b : x
     """
     indices = [i - 1 for i in serials]
-    subset = data.loc[indices, :]
-    dataset = subset.to_dict(orient="records")  # pyright: ignore[reportUnknownMemberType]
+    subset = data[indices]
+
+    dataset = subset.to_dicts()
     for entry in dataset:
         max_key = _max_print(entry.keys())
         max_value = _max_print(entry.values())
         for key, value in entry.items():
+            value = str(value)
             print(f"{key:<{max_key}} : {value:<{max_value}}")
         print("\n")
 
 
-def print_stream(stream: DataStream[pd.DataFrame], serials: list[int]) -> None:
+def print_stream(stream: DataStream, serials: list[int]) -> None:
     """Pretty-print rows from a `DataStream`-backed DataFrame.
 
     This is a thin wrapper around `print_df` that extracts the DataFrame from
     the provided `DataStream` and delegates printing.
 
     Args:
-        stream (DataStream[pd.DataFrame]): DataStream wrapping the DataFrame.
+        stream (DataStream): DataStream wrapping the DataFrame.
         serials (list[int]): A list of 1-based row indices indicating which
             rows to print.
 
     Returns:
         None
     """
-    print_df(stream(), serials)
+    print_df(stream.as_ref(), serials)

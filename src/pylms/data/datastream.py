@@ -1,14 +1,13 @@
 from pathlib import Path
 from typing import Callable, cast, overload, override
 
-import pandas as pd
 
 from ..errors import Result, Unit, eprint
 
-type DS[K: pd.DataFrame | pd.Series] = DataStream[K]
+type DS[K: pl.DataFrame | pd.Series] = DataStream[K]
 
 
-class DataStream[T: pd.DataFrame | pd.Series]:
+class DataStream[T: pl.DataFrame | pd.Series]:
     """Lightweight container for a pandas DataFrame or Series with validation.
 
     This class wraps a pandas DataFrame or Series (or another `DataStream`)
@@ -97,7 +96,7 @@ class DataStream[T: pd.DataFrame | pd.Series]:
             )
 
     @classmethod
-    def new[K: pd.Series | pd.DataFrame](
+    def new[K: pd.Series | pl.DataFrame](
         cls, data: K | DS[K], validator: Callable[[K], bool] | None = None
     ) -> Result[DS[K]]:
         try:
@@ -109,7 +108,7 @@ class DataStream[T: pd.DataFrame | pd.Series]:
             return Result.err(msg)
 
     @classmethod
-    def verify[K: pd.Series | pd.DataFrame](
+    def verify[K: pd.Series | pl.DataFrame](
         cls, data: K | DS[K], validator: Callable[[K], bool]
     ) -> Result[Unit]:
         result = DataStream.new(data, validator)

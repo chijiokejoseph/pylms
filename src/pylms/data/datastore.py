@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Callable, Literal, Self, final, override
 
-import pandas as pd
 
 from ..constants import (
     COMMA,
@@ -13,6 +12,8 @@ from ..constants import (
 from ..errors import LMSError, Result, Unit, eprint
 from .data_read import read
 from .datastream import DataStream
+
+import pandas as pd
 
 type Validator = Callable[[pd.DataFrame], bool]
 
@@ -43,7 +44,7 @@ def validate(test_data: pd.DataFrame) -> bool:
     expected names and order.
 
     Args:
-        test_data (pd.DataFrame): DataFrame to validate.
+        test_data (pl.DataFrame): DataFrame to validate.
 
     Returns:
         bool: True if valid, False otherwise.
@@ -122,7 +123,7 @@ class DataStore(DataStream[pd.DataFrame]):
         return cls.from_data(data)
 
     @classmethod
-    def from_data(cls, data: pd.DataFrame) -> Result[Self]:
+    def from_data(cls, data: pl.DataFrame) -> Result[Self]:
         """Construct a DataStore from an existing DataFrame.
 
         The function will attempt to select the columns in `DATA_COLUMNS` from
@@ -131,7 +132,7 @@ class DataStore(DataStream[pd.DataFrame]):
         returned.
 
         Args:
-            data (pd.DataFrame): Source DataFrame containing at least the
+            data (pl.DataFrame): Source DataFrame containing at least the
                 columns defined in `DATA_COLUMNS`.
 
         Returns:
@@ -139,7 +140,7 @@ class DataStore(DataStream[pd.DataFrame]):
         """
         try:
             # Attempt to slice the DataFrame to only the expected columns.
-            subset_data: pd.DataFrame = data[DATA_COLUMNS]
+            subset_data: pl.DataFrame = data[DATA_COLUMNS]
         except KeyError as e:
             # Missing columns — produce a helpful message for debugging.
             msg = f"Failed at from_local, failed to validate the passed in as argument to `data`, because it lacked required columns stored in the constant `DATA_COLUMNS.\nError encountered: {e}`"
@@ -159,12 +160,12 @@ class DataStore(DataStream[pd.DataFrame]):
         return Result.ok(ds)
 
     def __init__(
-        self, data: pd.DataFrame | DataStream[pd.DataFrame], prefilled: bool = False
+        self, data: pl.DataFrame | DataStream, prefilled: bool = False
     ) -> None:
         """Initialize a DataStore instance.
 
         Args:
-            data (pd.DataFrame | DataStream[pd.DataFrame]): Source data or
+            data (pl.DataFrame | DataStream): Source data or
                 DataStream providing the data.
             prefilled (bool): Whether the store contains dummy/prefilled data.
                 Defaults to False.
@@ -185,7 +186,7 @@ class DataStore(DataStream[pd.DataFrame]):
         # If a DataStream was passed, call it to get the actual DataFrame value.
         # Copying here ensures we don't accidentally share mutable state between
         # the caller and this instance when a DataStream was provided.
-        true_data: pd.DataFrame = (
+        true_data: pl.DataFrame = (
             data.as_clone() if isinstance(data, DataStream) else data.copy()
         )
         # Record whether this store contains prefilling/demo data.
@@ -195,7 +196,7 @@ class DataStore(DataStream[pd.DataFrame]):
         super().__init__(true_data, validate)
 
     @classmethod
-    def new_(cls, data: pd.DataFrame | DataStream[pd.DataFrame]) -> Result[Self]:
+    def new_(cls, data: pl.DataFrame | DataStream) -> Result[Self]:
         data = data.as_clone() if isinstance(data, DataStream) else data.copy()
         return cls.from_data(data)
 
@@ -205,8 +206,8 @@ class DataStore(DataStream[pd.DataFrame]):
         self.data = ds.data
         self.prefilled = ds.prefilled
 
-    def pretty(self) -> pd.DataFrame:
-        data: pd.DataFrame = self.as_clone()
+    def pretty(self) -> pl.DataFrame:
+        data: pl.DataFrame = self.as_clone()
 
         # Remove formatting markers from display fields to make the output
         # friendlier for users (commas/semi-colons used as internal markers).
@@ -214,7 +215,7 @@ class DataStore(DataStream[pd.DataFrame]):
         data[PHONE] = data[PHONE].astype(str).apply(apply_fn(SEMI))  # pyright: ignore [reportUnknownMemberType]
         return data
 
-    def to_pretty(self) -> pd.DataFrame:
+    def to_pretty(self) -> pl.DataFrame:
         # Produce a reduced view containing only display fields; operate on a copy
         # to avoid mutating the store's internal value.
         data = self.as_ref()
@@ -239,7 +240,7 @@ class DataStore(DataStream[pd.DataFrame]):
         """
         # Choose whether to transform the data for presentation prior to writing.
         if style == "pretty":
-            data: pd.DataFrame = self.pretty()
+            data: pl.DataFrame = self.pretty()
         else:
             # as_ref returns the stored object by reference; pandas will read from it.
             data = self.as_ref()
@@ -254,17 +255,17 @@ class DataStore(DataStream[pd.DataFrame]):
         return Result.unit()
 
     @property
-    def data(self) -> pd.DataFrame:
+    def data(self) -> pl.DataFrame:
         """Return a cloned copy of the underlying DataFrame.
 
         Returns:
-            pd.DataFrame: A copy of the stored data.
+            pl.DataFrame: A copy of the stored data.
         """
         # Return a clone to protect internal state from accidental mutation by callers.
         return self.as_clone()
 
     @data.setter
-    def data(self, data: pd.DataFrame) -> None:
+    def data(self, data: pl.DataFrame) -> None:
         """Validate and set the underlying DataFrame value.
 
         The setter performs a column-name and ordering validation against
@@ -272,12 +273,12 @@ class DataStore(DataStream[pd.DataFrame]):
         an exception and the setter will not modify the stored value.
 
         Args:
-            data (pd.DataFrame): New DataFrame to set as the store's value.
+            data (pl.DataFrame): New DataFrame to set as the store's value.
         """
 
         # Define a lightweight validator used to check whether the incoming
         # DataFrame matches the required schema for the store.
-        def validator(test_data: pd.DataFrame) -> bool:
+        def validator(test_data: pl.DataFrame) -> bool:
             input_cols: list[str] = test_data.columns.tolist()
             expected_cols: list[str] = DATA_COLUMNS
             if len(input_cols) < len(expected_cols):
