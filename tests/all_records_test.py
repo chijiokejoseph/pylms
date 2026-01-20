@@ -2,7 +2,6 @@ import time
 import unittest
 from typing import final, override
 
-import pandas as pd
 
 from pylms.data_service import load
 from pylms.history import load_history, retrieve_dates
