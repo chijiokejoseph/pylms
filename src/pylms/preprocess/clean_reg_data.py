@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pandas as pd
 
 from ..clean import (
     clean_cohort,
@@ -26,7 +25,7 @@ from ..data import DataStore, DataStream, read
 from ..errors import Result
 
 
-def clean_reg(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
+def clean_reg(data_stream: DataStream) -> Result[DataStore]:
     """
     private helper function that carries out the actual cleaning operation on the registration data that is passed in as a `DataStream` object containing and underlying pandas DataFrame. After cleaning the data, the data is returned back as a `DataStore`.
 
@@ -48,8 +47,8 @@ def clean_reg(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
 
 
 
-    :param data_stream: (Result[DataStream[pd.DataFrame]]): A result containing the registration data passed in as a `DataStream` Object.
-    :type data_stream: Result[DataStream[pd.DataFrame]]
+    :param data_stream: (Result[DataStream]): A result containing the registration data passed in as a `DataStream` Object.
+    :type data_stream: Result[DataStream]
 
     :return: a preprocessed `DataStore` object
     :rtype: DataStore
@@ -117,5 +116,5 @@ Enter the path:  """
     if dataframe.is_err():
         return dataframe.propagate()
     dataframe = dataframe.unwrap()
-    register_ds: DataStream[pd.DataFrame] = DataStream(dataframe)
+    register_ds: DataStream = DataStream(dataframe)
     return clean_reg(register_ds)

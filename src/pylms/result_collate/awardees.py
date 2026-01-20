@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Literal
 
-import pandas as pd
 
 from ..config import read_course_name
 from ..constants import (
@@ -29,15 +28,15 @@ type CollateType = Literal["merit", "fast track"]
 
 
 def collate_awardees(
-    stream: DataStream[pd.DataFrame], collate_type: CollateType = "merit"
+    stream: DataStream, collate_type: CollateType = "merit"
 ) -> Result[Unit]:
-    def validate_fn(test_data: pd.DataFrame) -> bool:
+    def validate_fn(test_data: pl.DataFrame) -> bool:
         columns: list[str] = test_data.columns.tolist()
         req_cols: list[str] = [EMAIL, NAME, PHONE, COHORT]
         return all([req_col in columns for req_col in req_cols])
 
     stream = DataStream(stream(), validate_fn)
-    data: pd.DataFrame = stream()
+    data: pl.DataFrame = stream()
     dates_list = retrieve_dates("")
     if dates_list.is_err():
         return dates_list.propagate()
@@ -52,7 +51,7 @@ def collate_awardees(
     if course_name.is_err():
         return course_name.propagate()
 
-    awardees_data: pd.DataFrame = pd.DataFrame(
+    awardees_data: pl.DataFrame = pl.DataFrame(
         data={
             AWARDEES["Email"]: data[EMAIL],
             AWARDEES["CourseTitle"]: course_name,
@@ -76,7 +75,7 @@ def collate_awardees(
 
     awardees_path: Path = merit_path if collate_type == "merit" else fast_track_path
 
-    awardees_stream: DataStream[pd.DataFrame] = DataStream(awardees_data)
+    awardees_stream: DataStream = DataStream(awardees_data)
 
     result = awardees_stream.to_excel(awardees_path)
     if result.is_err():

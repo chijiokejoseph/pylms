@@ -1,5 +1,3 @@
-import pandas as pd
-
 from pylms.info import print_info
 
 from ..cli import input_num, input_option, provide_serials
@@ -8,7 +6,7 @@ from ..errors import Result
 from ..result_utils import det_result_col
 
 
-def edit_multiple(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
+def edit_multiple(ds: DataStore, result_data: pl.DataFrame) -> Result[list[float]]:
     result_col: str = det_result_col()
     student_serials = provide_serials(ds)
     if student_serials.is_err():

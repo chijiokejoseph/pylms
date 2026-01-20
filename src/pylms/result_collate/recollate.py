@@ -1,13 +1,11 @@
-import pandas as pd
-
 from ..constants import RESULT_UPDATE
 from ..data import DataStream
 from ..result_utils import det_result_col, find_col, val_result_data
 
 
 def recollate(
-    results_stream: DataStream[pd.DataFrame],
-) -> DataStream[pd.DataFrame]:
+    results_stream: DataStream,
+) -> DataStream:
     results = results_stream()
     results_stream = DataStream(results, val_result_data)
 

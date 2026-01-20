@@ -1,5 +1,3 @@
-import pandas as pd
-
 from ..constants import DATE, DATE_FMT, NAME, TIME
 from ..data import DataStream
 from ..date import format_date
@@ -17,8 +15,8 @@ def _get_time_idx(
     return [timestamp_as_date == class_date_in for timestamp_as_date in timestamp_list]
 
 
-def filter_names(turnout_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
-    def validator(test_data: pd.DataFrame) -> bool:
+def filter_names(turnout_stream: DataStream) -> DataStream:
+    def validator(test_data: pl.DataFrame) -> bool:
         return (
             DATE in test_data.columns.tolist()
             and NAME in test_data.columns.tolist()
@@ -37,5 +35,5 @@ def filter_names(turnout_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
         idx = _get_time_idx(timestamp, class_date, False)
 
     # remove names that were filled on a different date than the attendance's date.
-    turnout_data: pd.DataFrame = turnout_data.loc[idx, :]
+    turnout_data: pl.DataFrame = turnout_data.loc[idx, :]
     return DataStream(turnout_data)

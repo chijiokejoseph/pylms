@@ -1,11 +1,9 @@
-import pandas as pd
-
 from ..cli import input_num, input_option
 from ..errors import Result
 from ..result_utils import det_result_col
 
 
-def edit_all(result_data: pd.DataFrame) -> Result[list[float]]:
+def edit_all(result_data: pl.DataFrame) -> Result[list[float]]:
     num_rows: int = result_data.shape[0]
     result_col: str = det_result_col()
     options: list[str] = ["Add Marks", "Subtract Marks"]

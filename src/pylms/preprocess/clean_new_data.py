@@ -1,5 +1,3 @@
-import pandas as pd
-
 from ..clean import (
     clean_cohort,
     clean_completion_date,
@@ -21,8 +19,8 @@ from ..data import DataStore, DataStream
 from ..errors import Result
 
 
-def _clean_new(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
-    def validate_na_removal(test_data: pd.DataFrame) -> bool:
+def _clean_new(data_stream: DataStream) -> Result[DataStore]:
+    def validate_na_removal(test_data: pl.DataFrame) -> bool:
         return not test_data.isna().any().any()
 
     result = clean_na(data_stream, validate_na_removal)
@@ -89,12 +87,12 @@ def _clean_new(data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
     return Result.ok(ds)
 
 
-def clean_new_data(new_data_stream: DataStream[pd.DataFrame]) -> Result[DataStore]:
+def clean_new_data(new_data_stream: DataStream) -> Result[DataStore]:
     """
     cleans data that is passed into the program to add additional entries to the main registration data which has already been stored as a `DataStore` object.
 
-    :param new_data_stream: (DataStream[pd.DataFrame]): A `DataStream` object that contains an underlying pandas DataFrame. it is the data read into the program to add extra entries to the already processed registration data.
-    :type new_data_stream: DataStream[pd.DataFrame]
+    :param new_data_stream: (DataStream): A `DataStream` object that contains an underlying pandas DataFrame. it is the data read into the program to add extra entries to the already processed registration data.
+    :type new_data_stream: DataStream
 
     :return: (Result[DataStore]) - a `Result` containing the `DataStore` object of the cleaned data, which makes it suitable for being added to the existing registration data that is also stored as a `DataStore`.
     :rtype: Result[DataStore]

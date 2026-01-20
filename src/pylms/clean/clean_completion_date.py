@@ -1,13 +1,15 @@
 from collections.abc import Callable
 from datetime import datetime
 
-import pandas as pd
+import numpy as np
+import polars as pl
+
+from pylms.data import datamap
 
 from ..cli.option_input import input_option
 from ..constants import COMPLETION, COMPLETION_FMT
-from ..data import DataStream
 from ..date import format_date
-from ..errors import Result, Unit
+from ..errors import Result
 
 
 def _clean_date(entry: str | datetime, day_first: bool) -> str:
@@ -28,25 +30,23 @@ def _clean_date(entry: str | datetime, day_first: bool) -> str:
 
 
 def clean_completion_date(
-    data_stream: DataStream[pd.DataFrame],
-) -> Result[Unit]:
-    """Normalize the NYSC/SIWES completion month column in a DataStream.
+    data: pl.DataFrame,
+) -> Result[pl.DataFrame]:
+    """Normalize the NYSC/SIWES completion month column in a pl.DataFrame.
 
     Prompts the user to choose the input date ordering (\"day first\" or
     \"month first\") and applies a consistent formatting to the column named
     by the `COMPLETION` constant. The formatted DataFrame is returned wrapped
-    in a `Result.ok(DataStream(...))`.
+    in a `Result.ok(pl.DataFrame(...))`.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
-            DataFrame to transform.
+        data (pl.DataFrame): The DataFrame to transform.
 
     Returns:
-        Result[Unit]: Ok result wrapping a `Unit` to indicate success, or an error
+        Result[pl.DataFrame]: Ok result wrapping a `pl.DataFrame` to indicate success, or an error
         `Result` propagated from the input prompt when the user cancels or an
         invalid selection occurs.
     """
-    data = data_stream.as_ref()
     format_options = ["day first", "month first"]
     result = input_option(
         format_options,
@@ -59,9 +59,15 @@ def clean_completion_date(
     _, fmt = result.unwrap()
     day_first = fmt == format_options[0]
 
+    @np.vectorize
     def apply() -> Callable[[str], str]:
         """Return a callable that formats entries using the chosen ordering."""
         return lambda x: _clean_date(x, day_first=day_first)
 
-    data[COMPLETION] = data[COMPLETION].apply(apply())  # pyright: ignore [reportUnknownMemberType]
-    return Result.unit()
+    # completion: np.ndarray = data[COMPLETION].to_numpy()
+    # completion = apply(completion)
+    # completion = np.array(completion, dtype=np.str_)
+    # data = data.with_columns(pl.Series(COMPLETION, completion, dtype=pl.String))
+
+    data = datamap(data, COMPLETION, apply, np.str_, pl.String())
+    return Result.ok(data)

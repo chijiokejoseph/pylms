@@ -1,9 +1,8 @@
 import re
 
-import pandas as pd
+import polars as pl
 
 from ..constants import COMPLETION, DATA_COLUMNS
-from ..data import DataStream
 
 
 def preprocess_col(col: str) -> str:
@@ -27,8 +26,8 @@ def preprocess_col(col: str) -> str:
             return col.strip().title()
 
 
-def clean_columns(data_stream: DataStream[pd.DataFrame]) -> None:
-    """Normalize and filter DataFrame columns inside a DataStream.
+def clean_columns(data: pl.DataFrame) -> pl.DataFrame:
+    """Normalize and filter DataFrame columns inside a pl.DataFrame.
 
     This function computes a mapping from normalized column names (via
     `preprocess_col`) to the original column names, applies the mapping to
@@ -36,16 +35,14 @@ def clean_columns(data_stream: DataStream[pd.DataFrame]) -> None:
     in the module-level `DATA_COLUMNS`
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
-            DataFrame to be processed.
+        data (pl.DataFrame): The DataFrame to be processed.
 
     Returns:
-        None
+        pl.DataFrame: The processed DataFrame
     """
-    data = data_stream.as_ref()
-    columns: list[str] = data.columns.tolist()
-    col_mappings: dict[str, str] = {preprocess_col(col): col for col in columns}
-    data.rename(columns=col_mappings, inplace=True)
-    columns_to_drop: list[str] = [col for col in columns if col not in DATA_COLUMNS]
-    data.drop(columns=columns_to_drop, inplace=True)
-    return None
+    columns = data.columns
+    col_mappings = {preprocess_col(col): col for col in columns}
+    data = data.rename(col_mappings)
+    columns_to_drop = [col for col in columns if col not in DATA_COLUMNS]
+    data = data.drop(columns_to_drop)
+    return data

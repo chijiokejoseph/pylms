@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import pandas as pd
+import polars as pl
 
 from ..cli_utils import verify_email
 from ..constants import COMMA, SEMI
@@ -12,7 +12,7 @@ from .option_input import input_option
 from .path_input import input_path
 
 
-def verify_excel(data: pd.DataFrame) -> bool:
+def verify_excel(data: pl.DataFrame) -> bool:
     """Validate that an Excel-read DataFrame is a single non-empty column.
 
     This function checks that the provided DataFrame is not empty and that it
@@ -21,19 +21,19 @@ def verify_excel(data: pd.DataFrame) -> bool:
     single-column list of email addresses).
 
     Args:
-        data (pd.DataFrame): The DataFrame to validate.
+        data (pl.DataFrame): The DataFrame to validate.
 
     Returns:
         bool: True if the DataFrame is non-empty and has exactly one column,
             False otherwise.
     """
     # Check if the data is empty
-    if data.empty:
+    if data.shape[0] == 0:
         # If the data is empty, it's not valid
         return False
 
     # Check if the data has more than one column
-    elif len(data.columns.tolist()) > 1:
+    elif len(data.columns) > 1:
         # If the data has more than one column, it's not valid
         return False
 
@@ -87,12 +87,11 @@ def provide_emails() -> Result[list[str]]:
                         return data.propagate()
                     data = data.unwrap()
 
-                    stream = DataStream.new(data, verify_excel)
+                    stream = DataStream.verify(data, verify_excel)
                     if stream.is_err():
                         return stream.propagate()
-                    stream = stream.unwrap()
 
-                    emails = stream.as_ref().iloc[:, 0].tolist()
+                    emails = data[data.columns[0]].to_list()
         case _:
             result = input_str(f"{format_msg}: ")
             if result.is_err():

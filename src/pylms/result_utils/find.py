@@ -1,7 +1,6 @@
 import re
 from typing import Literal
 
-import pandas as pd
 
 from ..constants import REQ
 from ..data import DataStream
@@ -9,7 +8,7 @@ from ..errors import Result, eprint
 
 
 def find_col(
-    stream: DataStream[pd.DataFrame],
+    stream: DataStream,
     col_name: Literal["Assessment", "Attendance", "Project", "Result"],
     col_type: Literal["Score", "Count", "Req"],
 ) -> Result[str]:

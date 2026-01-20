@@ -1,5 +1,3 @@
-import pandas as pd
-
 from ..data import DataStore, DataStream
 from ..date import det_week_num
 from ..errors import Result, Unit, eprint
@@ -10,7 +8,7 @@ from .add import add
 
 
 def append_update(
-    ds: DataStore, update_stream: DataStream[pd.DataFrame], info: UpdateFormInfo
+    ds: DataStore, update_stream: DataStream, info: UpdateFormInfo
 ) -> Result[Unit]:
     week_num: int = det_week_num()
     update_form_path, update_record_path = ret_update_path(info.timestamp)

@@ -1,7 +1,6 @@
 import re
 from typing import cast
 
-import pandas as pd
 
 from ..constants import CDS, NAME, WORK_DAYS
 from ..data import DataStore, DataStream
@@ -9,7 +8,7 @@ from ..date import to_day_num
 from ..record import RecordStatus
 
 
-def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> None:
+def record_cds(ds: DataStore, cds_data_stream: DataStream) -> None:
     pretty = ds.to_pretty()
     names = pretty.loc[:, NAME].astype(str)
     data_ref = ds.as_ref()

@@ -1,4 +1,3 @@
-import pandas as pd
 from google.auth.exceptions import TransportError
 from googleapiclient.http import HttpError  # pyright: ignore [reportMissingTypeStubs]
 
@@ -20,7 +19,7 @@ from .form_responses import (
 def retrieve_form(
     info: AllFormInfo,
     class_type: ClassType | None = None,
-) -> Result[DataStream[pd.DataFrame]]:
+) -> Result[DataStream]:
     """
     Retrieves a form and its responses from Google Forms.
 
@@ -33,8 +32,8 @@ def retrieve_form(
     :param class_type: (ClassType | None) - The class type indicating the form type.
     :type class_type: ClassType | None
 
-    :return: (DataStream[pd.DataFrame] | None) - A DataStream that yields a DataFrame with the form responses.
-    :rtype: DataStream[pd.DataFrame] | None
+    :return: (DataStream | None) - A DataStream that yields a DataFrame with the form responses.
+    :rtype: DataStream | None
     """
 
     try:

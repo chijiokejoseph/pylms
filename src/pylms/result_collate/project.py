@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Callable, cast
 
 import numpy as np
-import pandas as pd
+import polars as pl
 
 from ..cli import input_path
 from ..constants import GROUP, NAME
@@ -19,14 +19,14 @@ from ..result_utils import (
 )
 
 
-def val_assessment(assessment_required: bool) -> Callable[[pd.DataFrame], bool]:
+def val_assessment(assessment_required: bool) -> Callable[[pl.DataFrame], bool]:
     if assessment_required:
         return val_assessment_data
     else:
         return val_attendance_data
 
 
-def val_project(test_data: pd.DataFrame) -> bool:
+def val_project(test_data: pl.DataFrame) -> bool:
     columns_list: list[str] = test_data.columns.tolist()
     test_df_rows: int = test_data.shape[-2]
     num_groups: int = _extract_num_groups()
@@ -86,9 +86,9 @@ def collate_project(history: History) -> Result[Unit]:
         return assessment_data.propagate()
     assessment_data = assessment_data.unwrap()
 
-    validate_data_fn: Callable[[pd.DataFrame], bool] = val_assessment(True)
+    validate_data_fn: Callable[[pl.DataFrame], bool] = val_assessment(True)
     data_stream = DataStream(assessment_data, validate_data_fn)
-    data: pd.DataFrame = data_stream()
+    data: pl.DataFrame = data_stream()
 
     # Get the project groups
     group_path: Path = get_group_path()
@@ -131,7 +131,7 @@ Enter the path: """
         return project_df.propagate()
     project_df = project_df.unwrap()
 
-    project_stream: DataStream[pd.DataFrame] = DataStream(project_df, val_project)
+    project_stream: DataStream = DataStream(project_df, val_project)
 
     # Validate the input data
     project_df = project_stream()

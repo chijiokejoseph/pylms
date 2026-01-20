@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pl
 
 from ..cli import input_bool
 from ..data import DataStore
@@ -25,7 +25,7 @@ def _edit_record(ds: DataStore, history: History, each_date: str) -> Result[Unit
         return record.propagate()
     selected_record: RecordStatus = record.unwrap()
 
-    data_ref: pd.DataFrame = ds.as_ref()
+    data_ref: pl.DataFrame = ds.as_ref()
     records = data_ref[each_date].astype(str).tolist()
     class_record = [retrieve_record(record) for record in records]
     new_class_record = [

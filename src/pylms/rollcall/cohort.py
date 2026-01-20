@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
 
 from ..cli import input_bool
 from ..constants import COHORT, DATA_COLUMNS, DATE_FMT
@@ -47,7 +46,7 @@ def fill_records(record_input: str) -> RecordStatus:
 
 def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     # get DataStore data in its pretty form
-    pretty: pd.DataFrame = ds.pretty()
+    pretty: pl.DataFrame = ds.pretty()
 
     # get cohort no
     cohort_no: int = pretty[COHORT].astype(int).iloc[0]
@@ -111,7 +110,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     required_cols: list[str] = data_cols[: last_date_idx + 1]
 
     # extract the entries for the half-cohort attendance
-    cohort_data: pd.DataFrame = pretty.loc[:, required_cols]
+    cohort_data: pl.DataFrame = pretty.loc[:, required_cols]
 
     _ = fill_norm_records("Excused")
 

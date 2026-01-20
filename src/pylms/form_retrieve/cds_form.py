@@ -1,5 +1,3 @@
-import pandas as pd
-
 from ..data import DataStream
 from ..errors import Result
 from ..form_utils import select_form
@@ -10,7 +8,7 @@ from .form import retrieve_form
 
 def retrieve_cds_form(
     history: History,
-) -> Result[tuple[DataStream[pd.DataFrame], CDSFormInfo]]:
+) -> Result[tuple[DataStream, CDSFormInfo]]:
     info = select_form(history, "cds")
 
     if info.is_err():

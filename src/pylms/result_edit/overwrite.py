@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Callable, cast
 
 import numpy as np
-import pandas as pd
 
 from ..cli import input_option, input_str, provide_serials
 from ..constants import ValidateDataFn
@@ -45,7 +44,7 @@ def _parse(
         return None
 
 
-def get_mutable_cols(data_stream: DataStream[pd.DataFrame]) -> list[str]:
+def get_mutable_cols(data_stream: DataStream) -> list[str]:
     return [
         find_col(data_stream, "Attendance", "Req").unwrap(),
         find_col(data_stream, "Assessment", "Req").unwrap(),
@@ -56,9 +55,7 @@ def get_mutable_cols(data_stream: DataStream[pd.DataFrame]) -> list[str]:
     ]
 
 
-def _preprocess(
-    data_stream: DataStream[pd.DataFrame], col: str, value: str
-) -> float | None:
+def _preprocess(data_stream: DataStream, col: str, value: str) -> float | None:
     match str(col):
         case _ if col in [
             find_col(data_stream, "Attendance", "Score").unwrap(),
@@ -83,7 +80,7 @@ def overwrite_result(ds: DataStore) -> Result[Unit]:
         return result_data.propagate()
     result_data = result_data.unwrap()
 
-    result_stream: DataStream[pd.DataFrame] = DataStream(
+    result_stream: DataStream = DataStream(
         result_data, cast(ValidateDataFn, val_result_data)
     )
     result_data = result_stream()

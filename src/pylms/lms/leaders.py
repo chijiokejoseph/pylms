@@ -3,7 +3,6 @@ import re
 from pathlib import Path
 from typing import Literal, NamedTuple
 
-import pandas as pd
 
 from ..constants import GENDER, GROUP, NAME, SERIAL
 from ..data import DataStore, DataStream, read
@@ -31,7 +30,7 @@ class LeaderMap(NamedTuple):
 
 
 def get_present_count(ds: DataStore, serial: int) -> int:
-    data: pd.DataFrame = ds.as_ref()
+    data: pl.DataFrame = ds.as_ref()
     columns: list[str] = data.columns.tolist()
     date_columns: list[str] = [
         col for col in columns if re.match(r"\d{2}/\d{2}/\d{4}", col) is not None
@@ -171,11 +170,11 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         criterion_path.mkdir(exist_ok=True)
         return DataStream(group_data).to_excel(get_group_criterion_path(group))
 
-    leaders = pd.DataFrame(
+    leaders = pl.DataFrame(
         data={SERIAL: leader_serials, "Leader Name": leader_names, GROUP: leader_groups}
     )
 
-    assistants = pd.DataFrame(
+    assistants = pl.DataFrame(
         data={
             SERIAL: assistant_serials,
             "Assistant Leader Name": assistant_names,

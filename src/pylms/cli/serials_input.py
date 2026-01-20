@@ -1,5 +1,3 @@
-import pandas as pd
-
 from ..constants import NAME
 from ..data import DataStore, read
 from ..errors import Result, eprint
@@ -91,12 +89,12 @@ def provide_serials(ds: DataStore) -> Result[list[int]]:
                 if data.is_err():
                     return data.propagate()
                 data = data.unwrap()
-                if data.empty or len(data.columns.tolist()) != 1:
+                if data.shape[0] == 0 or len(data.columns) != 1:
                     msg = "The Excel file must contain exactly one column with serial numbers."
                     eprint(msg)
                     return Result.err(msg)
 
-                serials = [int(s) for s in data.iloc[:, 0].tolist()]
+                serials = data[data.columns[0]].to_list()
                 input_serials.extend(serials)
             except FileNotFoundError as e:
                 msg = f"The file was not found: {path}, with error: {e}"
@@ -122,9 +120,11 @@ def provide_serials(ds: DataStore) -> Result[list[int]]:
     valid_serials = list(set(valid_serials))  # remove duplicates
     valid_serials.sort()  # sort the list
 
-    names: pd.Series = ds.pretty().loc[:, NAME]
+    pretty = ds.pretty()
     for serial in valid_serials:
-        print_info(f"You have selected Student {serial}: {names[serial - 1]}")
+        print_info(
+            f"You have selected Student {serial}: {pretty.item(serial - 1, NAME)}"
+        )
     print()
 
     result = input_bool("Proceed with these serials?")

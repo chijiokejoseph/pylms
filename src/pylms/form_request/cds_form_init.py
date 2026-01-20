@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pandas as pd
 
 from ..cli import input_email
 from ..constants import CDS, COHORT, INTERNSHIP, NAME, TIMESTAMP_FMT, WORK_DAYS
@@ -30,7 +29,7 @@ from ..service import (
 
 
 def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
-    data: pd.DataFrame = ds.pretty()
+    data: pl.DataFrame = ds.pretty()
     nysc_selector: pd.Series = data[INTERNSHIP] == "NYSC"
     corpers: pd.Series = data[NAME].loc[nysc_selector]
     corper_names: list[str] = corpers.tolist()

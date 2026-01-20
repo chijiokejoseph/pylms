@@ -1,30 +1,29 @@
 import re
 from datetime import datetime
 
-import pandas as pd
+import polars as pl
 
 from ..cli import input_num, input_str
 from ..constants import COHORT, DATE, DATE_FMT
-from ..data import DataStream
-from ..errors import Result, Unit
+from ..errors import Result
 
 
 def clean_cohort(
-    data_stream: DataStream[pd.DataFrame],
-) -> Result[Unit]:
-    """Prompt for and assign a cohort number to the DataStream.
+    data: pl.DataFrame,
+) -> Result[pl.DataFrame]:
+    """Prompt for and assign a cohort number to the pl.DataFrame.
 
     Prompts the user to enter the cohort number using `input_num` and validates
     that the provided value is a positive number. On success, the cohort value
     is written to the column specified by the `COHORT` constant and the
-    updated DataFrame is returned wrapped in `Result.ok(DataStream(...))`.
+    updated DataFrame is returned wrapped in `Result.ok(pl.DataFrame(...))`.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+        data (pl.DataFrame): The
             DataFrame to update with the cohort number.
 
     Returns:
-        Result[Unit]: Unit Result indicating success, or an error `Result`
+        Result[pl.DataFrame]: Unit Result indicating success, or an error `Result`
             propagated from the input prompt if validation fails.
     """
     msg: str = "\nCleaning Cohort in preprocessing stage... \nPlease enter the cohort number for this current cohort: "
@@ -46,14 +45,13 @@ def clean_cohort(
 
     cohort_no: int = result.unwrap()
 
-    data = data_stream()
-    data[COHORT] = cohort_no
-    return Result.unit()
+    data = data.with_columns(pl.lit(cohort_no).alias(COHORT))
+    return Result.ok(data)
 
 
 def clean_date(
-    data_stream: DataStream[pd.DataFrame],
-) -> Result[Unit]:
+    data: pl.DataFrame,
+) -> Result[pl.DataFrame]:
     """Prompt for and validate the cohort orientation date, then assign it.
 
     Prompts the user to enter the orientation date for the cohort. The
@@ -63,12 +61,10 @@ def clean_date(
     date is written to the column specified by `DATE`.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
-            DataFrame to update with the cohort orientation date.
+        data (pl.DataFrame): The DataFrame to update with the cohort orientation date.
 
     Returns:
-        Result[Unit]: Unit result indicating success or an error `Result`
-        propagated from the input prompt if validation fails.
+        Result[pl.DataFrame]: DataFrame result indicating success or an error `Result` propagated from the input prompt if validation fails.
     """
 
     msg: str = "Cleaning Cohort in preprocessing stage... \nPlease enter the orientation date for this current cohort. \nIt should be of the form dd/mm/yyyy: "
@@ -114,6 +110,5 @@ def clean_date(
 
     cohort_date: str = result.unwrap()
 
-    data = data_stream.as_ref()
-    data[DATE] = cohort_date
-    return Result.unit()
+    data = data.with_columns(pl.lit(cohort_date).alias(DATE))
+    return Result.ok(data)

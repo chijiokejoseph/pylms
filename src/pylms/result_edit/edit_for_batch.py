@@ -1,6 +1,5 @@
 from typing import cast
 
-import pandas as pd
 
 from ..cli import input_num, input_option
 from ..cli.serials_input import provide_serials
@@ -9,7 +8,7 @@ from ..errors import Result
 from ..result_utils import det_result_col
 
 
-def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
+def edit_batch(ds: DataStore, result_data: pl.DataFrame) -> Result[list[float]]:
     # generate a very detailed documentation for the function in sphinx format
     """
     Edit the results of multiple students in a batch.
@@ -20,8 +19,8 @@ def edit_batch(ds: DataStore, result_data: pd.DataFrame) -> Result[list[float]]:
     :param ds: (DataStore) - The DataStore object containing student data.
     :type ds: DataStore
 
-    :param result_data: (pd.DataFrame) - The DataFrame containing the results of students.
-    :type result_data: pd.DataFrame
+    :param result_data: (pl.DataFrame) - The DataFrame containing the results of students.
+    :type result_data: pl.DataFrame
 
     :return:
         A list of floats representing the updates made to the results of the students.

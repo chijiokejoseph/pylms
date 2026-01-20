@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
+import polars as pl
 
 from ..cli import input_path
 from ..constants import SERIAL
@@ -18,15 +18,15 @@ from ..result_utils import (
 )
 
 
-def val_assessment_data(test_data: pd.DataFrame) -> bool:
+def val_assessment_data(test_data: pl.DataFrame) -> bool:
     """Validate the input data for the assessment spreadsheet. The assessment spreadsheet should have either of the two (2) formats:
         - 2-column: Serial Number | Score
         - 3-column: Serial Number | Student Name | Score
     Note: Student names must match existing data in spelling and casing.
     If the assessment spreadsheet does not match the above formats, return False.
 
-    :param test_data: (pd.DataFrame) - The input data to validate
-    :type test_data: pd.DataFrame
+    :param test_data: (pl.DataFrame) - The input data to validate
+    :type test_data: pl.DataFrame
 
     :return: (bool) - True if the input data is valid, False otherwise
     :rtype: bool
@@ -35,8 +35,8 @@ def val_assessment_data(test_data: pd.DataFrame) -> bool:
     columns_list: list[str] = test_data.columns.tolist()
     match len(columns_list):
         case 2:
-            scores: pd.DataFrame = test_data.select_dtypes(include=[np.number])
-            names: pd.DataFrame = test_data.select_dtypes(exclude=[np.number])
+            scores: pl.DataFrame = test_data.select_dtypes(include=[np.number])
+            names: pl.DataFrame = test_data.select_dtypes(exclude=[np.number])
             score_cols = scores.columns.tolist()
             name_cols = names.columns.tolist()
             if len(score_cols) != 1:
@@ -88,7 +88,7 @@ def collate_assessment(history: History) -> Result[Unit]:
         return attendance_data.propagate()
     attendance_data = attendance_data.unwrap()
     attendance = DataStream(attendance_data, val_attendance_data)
-    data: pd.DataFrame = attendance()
+    data: pl.DataFrame = attendance()
 
     # Prompt the user to enter the path to the assessment spreadsheet
     msg: str = """Please enter the (absolute) path to the Excel file in one of the following formats:
@@ -110,9 +110,7 @@ Enter the path:  """
         return assessment_df.propagate()
     assessment_df = assessment_df.unwrap()
 
-    assessment_stream: DataStream[pd.DataFrame] = DataStream(
-        assessment_df, val_assessment_data
-    )
+    assessment_stream: DataStream = DataStream(assessment_df, val_assessment_data)
     assessment_df = assessment_stream()
 
     # Prompt the user to enter the assessment requirement

@@ -1,12 +1,15 @@
 from datetime import datetime
 
-import pandas as pd
+import numpy as np
+import polars as pl
+
+from pylms.data import datamap
 
 from ..constants import TIME, TIME_FMT
-from ..data import DataStream
 from ..date import format_date
 
 
+@np.vectorize
 def _clean_time(entry: str | datetime) -> str:
     """Format a single time entry according to the project's time format.
 
@@ -23,19 +26,17 @@ def _clean_time(entry: str | datetime) -> str:
     return format_date(entry, TIME_FMT)
 
 
-def clean_time(data_stream: DataStream[pd.DataFrame]) -> None:
-    """Normalize the `TIME` column values in a DataStream's DataFrame.
+def clean_time(data: pl.DataFrame) -> pl.DataFrame:
+    """Normalize the `TIME` column values in a pl.DataFrame's DataFrame.
 
     Applies the `_clean_time` helper to every entry in the column named by the
     `TIME` constant to produce a consistent, formatted time string for each
     row.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
-            DataFrame whose `TIME` column should be normalized.
+        data (pl.DataFrame): The DataFrame whose `TIME` column should be normalized.
 
     Returns:
-        None
+        pl.DataFrame: The processed DataFrame
     """
-    data: pd.DataFrame = data_stream.as_ref()
-    data[TIME] = data[TIME].apply(_clean_time)  # pyright: ignore[reportUnknownMemberType]
+    return datamap(data, TIME, _clean_time, np.str_, pl.String())

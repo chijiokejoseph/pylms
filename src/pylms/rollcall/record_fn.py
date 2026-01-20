@@ -1,20 +1,16 @@
-import pandas as pd
-
 from ..constants import DATE, NAME
 from ..data import DataStore, DataStream
 from ..record import RecordStatus
 from .names_filter import filter_names
 
 
-def record(
-    ds: DataStore, turnout_stream: DataStream[pd.DataFrame], fill_value: RecordStatus
-) -> None:
-    pretty: pd.DataFrame = ds.to_pretty()
-    data_ref: pd.DataFrame = ds.as_ref()
+def record(ds: DataStore, turnout_stream: DataStream, fill_value: RecordStatus) -> None:
+    pretty: pl.DataFrame = ds.to_pretty()
+    data_ref: pl.DataFrame = ds.as_ref()
     all_names = pretty.loc[:, NAME].astype(str)
 
     turnout_stream = filter_names(turnout_stream)
-    turnout_data: pd.DataFrame = turnout_stream()
+    turnout_data: pl.DataFrame = turnout_stream()
     present_names = turnout_data.loc[:, NAME].astype(str)
     class_date: str = turnout_data[DATE].iloc[0]
 

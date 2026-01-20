@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import cast
 
 import numpy as np
-import pandas as pd
 
 from ..constants import GROUP, NAME, SERIAL
 from ..data import DataStream, read
@@ -26,9 +25,9 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
 
     for grp_num in range(1, num_groups + 1):
         mask: np.ndarray = cast(np.ndarray, groups_arr == grp_num)
-        grp_num_data: pd.DataFrame = group_data.loc[mask, :]
+        grp_num_data: pl.DataFrame = group_data.loc[mask, :]
         placeholder: list[str] = ["" for _ in range(grp_num_data.shape[0])]
-        grp_grade_data: pd.DataFrame = pd.DataFrame(
+        grp_grade_data: pl.DataFrame = pl.DataFrame(
             data={
                 SERIAL: grp_num_data[SERIAL],
                 NAME: grp_num_data[NAME],
@@ -40,7 +39,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
             }
         )
 
-        grp_grade_stream: DataStream[pd.DataFrame] = DataStream(grp_grade_data)
+        grp_grade_stream: DataStream = DataStream(grp_grade_data)
         grp_grade_path: Path = get_grade_path(grp_num)
 
         result = grp_grade_stream.to_excel(grp_grade_path)
@@ -52,7 +51,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         GROUP: [i + 1 for i in range(num_groups)],
     }
     placeholder = ["" for _ in range(num_groups)]
-    code_df: pd.DataFrame = pd.DataFrame(
+    code_df: pl.DataFrame = pl.DataFrame(
         data={
             **common,
             "Documentation (15mks)": placeholder,
@@ -69,7 +68,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
     grading_path: Path = get_grade_path()
     group_path = get_group_dir() / grading_path.name
 
-    presentation_df: pd.DataFrame = pd.DataFrame(
+    presentation_df: pl.DataFrame = pl.DataFrame(
         data={
             **common,
             "Presentation Score (100mks)": placeholder,
@@ -81,7 +80,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         }
     )
 
-    total_df: pd.DataFrame = pd.DataFrame(
+    total_df: pl.DataFrame = pl.DataFrame(
         data={
             **common,
             "Code (100mks)": placeholder,
@@ -106,7 +105,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
     return Result.unit()
 
 
-def _write_sheets(path: Path, *dfs: tuple[pd.DataFrame, str]) -> None:
+def _write_sheets(path: Path, *dfs: tuple[pl.DataFrame, str]) -> None:
     with pd.ExcelWriter(path) as file:
         for df, sheet_name in dfs:
             df.to_excel(file, index=False, sheet_name=sheet_name)  # pyright: ignore[reportUnknownMemberType]

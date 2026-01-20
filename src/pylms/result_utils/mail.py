@@ -4,7 +4,6 @@ from pathlib import Path
 from smtplib import SMTP
 from typing import Any
 
-import pandas as pd
 
 from ..cli import input_option
 from ..config import read_course_name
@@ -55,11 +54,11 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     result = result.unwrap()
 
     # Wrap the DataFrame in a DataStream for further processing
-    result_stream: DataStream[pd.DataFrame] = DataStream(result)
+    result_stream: DataStream = DataStream(result)
     result = result_stream()
 
     # Get the data from the DataStore
-    data: pd.DataFrame = ds.as_ref()
+    data: pl.DataFrame = ds.as_ref()
 
     # Find the relevant column names for each required field
     assessment_score_col: str = find_col(result_stream, "Assessment", "Score").unwrap()

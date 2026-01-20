@@ -1,6 +1,5 @@
 from typing import Literal
 
-import pandas as pd
 
 from ..constants import (
     FAIL,
@@ -151,9 +150,9 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
         return result.propagate()
 
     pass_logic_idx: pd.Series = attendance_score_pass & assessment_pass
-    pretty_data: pd.DataFrame = ds.pretty()
-    passed_data: pd.DataFrame = pretty_data.loc[pass_logic_idx, :]
-    passed_stream: DataStream[pd.DataFrame] = DataStream(passed_data)
+    pretty_data: pl.DataFrame = ds.pretty()
+    passed_data: pl.DataFrame = pretty_data.loc[pass_logic_idx, :]
+    passed_stream: DataStream = DataStream(passed_data)
 
     result = collate_awardees(passed_stream)
     if result.is_err():

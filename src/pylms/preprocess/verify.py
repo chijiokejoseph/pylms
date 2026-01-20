@@ -1,13 +1,12 @@
 import re
 
 import numpy as np
-import pandas as pd
 
 from ..constants import REGISTRATION_COLS
 from ..errors import eprint
 
 
-def verify(test_data: pd.DataFrame) -> bool:
+def verify(test_data: pl.DataFrame) -> bool:
     cols: list[str] = test_data.columns.tolist()
     # reject data if it has duplicates
     if test_data.columns.has_duplicates:

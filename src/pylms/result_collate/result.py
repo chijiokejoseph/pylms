@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from ..data import DataStream, read
 from ..errors import Result, Unit, eprint
@@ -101,7 +100,7 @@ def collate_result(history: History) -> Result[Unit]:
     collated_data[passmark_col] = pass_mark
 
     # Save the collated result data to an Excel file
-    result_stream: DataStream[pd.DataFrame] = DataStream(collated_data)
+    result_stream: DataStream = DataStream(collated_data)
     result_path: Path = get_paths_excel()["Result"]
 
     result = result_stream.to_excel(result_path)

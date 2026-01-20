@@ -26,9 +26,9 @@ def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> Result[Unit]:
         Result[Unit]: a Unit Result if successful or `Result.err` for any
         caught errors
     """
-    unique_week_nums: list[int] = to_unique_week_nums(dates_list)
+    unique_week_nums = to_unique_week_nums(dates_list)
     for each_week_num in unique_week_nums:
-        result = new_ds.to_excel(get_paths_weeks() / f"DataStore{each_week_num}.xlsx")
+        result = new_ds.write(get_paths_weeks() / f"DataStore{each_week_num}.xlsx")
         if result.is_err():
             return result.propagate()
 

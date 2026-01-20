@@ -1,6 +1,5 @@
 import re
 
-import pandas as pd
 
 from ..data import DataStream
 from ..errors import Result
@@ -18,8 +17,8 @@ def _rename_date_col(col: str) -> str:
     return col
 
 
-def rename_date_col(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.DataFrame]:
-    data: pd.DataFrame = data_stream()
+def rename_date_col(data_stream: DataStream) -> DataStream:
+    data: pl.DataFrame = data_stream()
     for column in data.columns:
         new_column = _rename_date_col(column)
         if new_column != column:
@@ -31,7 +30,7 @@ def rename_date_col(data_stream: DataStream[pd.DataFrame]) -> DataStream[pd.Data
 
 def retrieve_update_form(
     history: History,
-) -> Result[tuple[DataStream[pd.DataFrame], UpdateFormInfo]]:
+) -> Result[tuple[DataStream, UpdateFormInfo]]:
     info = select_form(history, "update")
     if info.is_err():
         return info.propagate()

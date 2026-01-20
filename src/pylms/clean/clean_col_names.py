@@ -1,15 +1,13 @@
 import re
 
-import pandas as pd
-
-from ..data import DataStream
+import polars as pl
 
 
-def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
-    """Clean and normalize column names in a DataStream.
+def clean_col_names(data: pl.DataFrame) -> pl.DataFrame:
+    """Clean and normalize column names in a pl.DataFrame.
 
     This function formats the column names of the DataFrame contained in the
-    provided `DataStream`. The following transformations are applied to each
+    provided `pl.DataFrame`. The following transformations are applied to each
     column name:
 
     - Strip leading and trailing whitespace and convert to title case.
@@ -19,13 +17,11 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
       column data.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
-            DataFrame whose column names should be cleaned.
+        data (DataFrame): The DataFrame whose column names should be cleaned.
 
     Returns:
-        None
+        (DataFrame): The cleaned DataFrame
     """
-    data: pd.DataFrame = data_stream.as_ref()
     for old_column in data.columns:
         new_column: str = old_column.strip().title()
 
@@ -46,6 +42,6 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
         data[new_column] = data[old_column]
         # drop the old column if the new column name `new_column` is different from the old column name `old_column`
         if new_column != old_column:
-            data.drop(old_column, inplace=True)
+            data = data.drop(old_column)
 
-    return
+    return data

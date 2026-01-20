@@ -2,7 +2,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, TypedDict
 
-import pandas as pd
 
 PARENT_PATH: Path = Path(__file__).resolve().parents[2]
 ENV_PATH: Path = PARENT_PATH / ".env"
@@ -43,7 +42,7 @@ class Json(TypedDict):
 
 RESULT_UPDATE: str = "Result Update"
 
-type ValidateDataFn = Callable[[pd.DataFrame | pd.Series], bool]
+type ValidateDataFn = Callable[[pl.DataFrame | pd.Series], bool]
 
 
 class AwardeesDict(TypedDict):

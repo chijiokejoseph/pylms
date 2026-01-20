@@ -1,46 +1,36 @@
 from typing import Any
 
-import pandas as pd
+import numpy as np
+import polars as pl
+
+from pylms.data import datamap
 
 from ..constants import NA
-from ..data import DataStream
 
 
-def _clean_str(data: pd.Series, fill: str) -> pd.Series:
-    """Convert series entries to strings, using `fill` for failures.
-
-    Helper that ensures every element in `data` is represented as a string.
-    If an element is already a `str` it is preserved; otherwise the function
-    attempts to convert the element using `str()`. If conversion raises a
-    `ValueError`, the provided `fill` value is used instead.
+def str_conv(entry: Any, default: str) -> str:
+    """convert entry to python strings
 
     Args:
-        data (pd.Series): Series whose elements should be normalized to
-            strings.
-        fill (str): Replacement string to use when conversion fails.
+        entry (Any): any value
+        default (str): the default to use in the hypothetical 
+            case that string converstion fails
 
     Returns:
-        pd.Series: A new Series where every element is a string.
+        str: string form of `entry` or default if the string
+            conversion should actually fail
     """
-
-    def str_conv(entry: Any, default: str) -> str:
-        try:
-            return str(entry)
-        except ValueError:
-            return default
-
-    new_value: list[str] = [
-        item if isinstance(item, str) else str_conv(item, fill)
-        for item in data.tolist()
-    ]
-    return pd.Series(new_value)
+    try:
+        return str(entry)
+    except ValueError:
+        return default
 
 
 def clean_str(
-    data_stream: DataStream[pd.DataFrame],
+    data: pl.DataFrame,
     target_cols: str | list[str],
     fill: str = NA,
-) -> None:
+) -> pl.DataFrame:
     """Ensure specified DataFrame columns contain string values.
 
     Converts non-string entries in the specified column(s) to strings using
@@ -49,7 +39,7 @@ def clean_str(
     single column name or a list of column names.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+        data (pl.DataFrame): The
             DataFrame to process.
         target_cols (str | list[str]): Column name or list of column names to
             normalize to strings.
@@ -59,9 +49,15 @@ def clean_str(
         None
     """
 
-    data: pd.DataFrame = data_stream.as_ref()
+    def _clean_str(entry: Any):
+        return str_conv(entry, fill)
+
     if isinstance(target_cols, str):
-        data[target_cols] = _clean_str(data[target_cols], fill)
+        data = datamap(
+            data, target_cols, np.vectorize(_clean_str), np.str_, pl.String()
+        )
     else:
         for col in target_cols:
-            data[col] = _clean_str(data[col], fill)
+            data = datamap(data, col, np.vectorize(_clean_str), np.str_, pl.String())
+
+    return data

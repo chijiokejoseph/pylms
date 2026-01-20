@@ -1,4 +1,3 @@
-import pandas as pd
 from dateutil.parser import parse
 
 from ..constants import TIME, TIME_FMT
@@ -20,7 +19,7 @@ def _retrieve_form_responses(
     class_type: ClassType | None = None,
     *,
     service: FormsService,
-) -> Result[DataStream[pd.DataFrame]]:
+) -> Result[DataStream]:
     """
     Retrieves form responses from a form whose details are stored at the specified form path.
 
@@ -37,7 +36,7 @@ def _retrieve_form_responses(
     :type service: FormResource
 
     :return: A DataStream that yields a DataFrame with the form responses.
-    :rtype: DataStream[pd.DataFrame]
+    :rtype: DataStream
     """
 
     # get the response resource
@@ -115,7 +114,7 @@ def _retrieve_form_responses(
             response_data_dict[column].append(answer)
 
     # create a DataFrame from the response data dictionary
-    new_data: pd.DataFrame = pd.DataFrame(data=response_data_dict)
+    new_data: pl.DataFrame = pl.DataFrame(data=response_data_dict)
 
     # return a DataStream that yields the DataFrame
     return Result.ok(DataStream(new_data))
@@ -125,7 +124,7 @@ def retrieve_form_responses(
     question_id_map: dict[str, str],
     info: AllFormInfo,
     class_type: ClassType | None,
-) -> Result[DataStream[pd.DataFrame]]:
+) -> Result[DataStream]:
     """
     Retrieves responses to a form.
 
@@ -139,11 +138,11 @@ def retrieve_form_responses(
     :param class_type - (ClassType | None): The class type of the form.
     :type class_type: ClassType | None
 
-    :return: (DataStream[pd.DataFrame]) - A DataStream that yields a DataFrame with the form responses.
-    :rtype: DataStream[pd.DataFrame]
+    :return: (DataStream) - A DataStream that yields a DataFrame with the form responses.
+    :rtype: DataStream
     """
 
-    def _run_service(service: FormsService) -> Result[DataStream[pd.DataFrame]]:
+    def _run_service(service: FormsService) -> Result[DataStream]:
         return _retrieve_form_responses(
             question_id_map,
             info,

@@ -1,8 +1,6 @@
 from math import floor, log10
 from typing import NamedTuple
 
-import pandas as pd
-
 from ..cli_utils import parse_class_nums
 from ..constants import NAME
 from ..data import DataStore
@@ -154,10 +152,10 @@ def select_student(ds: DataStore) -> Result[list[int]]:
             or an Err propagated from input/validation helpers.
     """
     # Get a pretty formatted DataFrame of the data store
-    pretty_data: pd.DataFrame = ds.to_pretty()
+    pretty = ds.pretty()
 
     # Extract the list of student names
-    names: list[str] = pretty_data[NAME].astype(str).tolist()
+    names: list[str] = pretty[NAME].to_list()
 
     # Instruction message for the user
     instruction: str = """

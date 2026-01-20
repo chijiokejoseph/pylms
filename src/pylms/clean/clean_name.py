@@ -1,27 +1,35 @@
-import pandas as pd
+import numpy as np
+import polars as pl
+
+from ..data import datamap
 
 from ..constants import ARABIC_APOSTROPHE, COMMA_DELIM, NAME, SPACE_DELIM
-from ..data import DataStream
 
 
-def clean_name(data_stream: DataStream[pd.DataFrame]) -> None:
-    """Format the `NAME` column entries in a DataStream's DataFrame.
+def clean_name(data: pl.DataFrame) -> pl.DataFrame:
+    """Format the `NAME` column entries in a pl.DataFrame's DataFrame.
 
-    Reads the DataFrame from `data_stream`, applies the helper `_clean_name`
+    Reads the DataFrame from `data`, applies the helper `_clean_name`
     to each value in the column identified by the `NAME` constant and mutates
     the DataFrame
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
-            DataFrame whose `NAME` column will be formatted.
+        data (pl.DataFrame): The DataFrame whose `NAME` column will be formatted.
 
     Returns:
         None
     """
-    data: pd.DataFrame = data_stream().copy()
-    data[NAME] = data[NAME].apply(_clean_name)  # pyright: ignore [reportUnknownMemberType]
+    # name: np.ndarray = data[NAME].to_numpy()
+    # name = _clean_name(name)
+    # name = np.array(name, dtype=pl.String)
+    # data = data.with_columns(
+    #     pl.Series(NAME, data, dtype=pl.String)
+    # )
+    data = datamap(data, NAME, _clean_name, np.str_, pl.String())
+    return data
 
 
+@np.vectorize
 def _clean_name(entry: str) -> str:
     """Normalize an individual's name string.
 

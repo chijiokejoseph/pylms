@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import cast
 
 import numpy as np
-import pandas as pd
 
 from ..cli import input_bool, input_num
 from ..constants import GROUP, NAME, SERIAL
@@ -36,7 +35,7 @@ def group(ds: DataStore, history: History) -> Result[Unit]:
             return Result.unit()
 
     group_dir.mkdir(exist_ok=True)
-    pretty_data: pd.DataFrame = ds.pretty()
+    pretty_data: pl.DataFrame = ds.pretty()
 
     msg: str = "Please enter the number of groups [Must be between 3 - 100]: "
     num_result = input_num(msg, 1, lambda x: 3 <= x <= 100)
@@ -49,9 +48,9 @@ def group(ds: DataStore, history: History) -> Result[Unit]:
         num_groups if serial % num_groups == 0 else serial % num_groups
         for serial in range(1, pretty_data.shape[0] + 1)
     ]
-    group_data: pd.DataFrame = pretty_data.loc[:, [SERIAL, NAME]]
+    group_data: pl.DataFrame = pretty_data.loc[:, [SERIAL, NAME]]
     group_data[GROUP] = groups
-    group_stream: DataStream[pd.DataFrame] = DataStream(group_data)
+    group_stream: DataStream = DataStream(group_data)
 
     result = group_stream.to_excel(group_data_path)
     if result.is_err():
@@ -61,8 +60,8 @@ def group(ds: DataStore, history: History) -> Result[Unit]:
 
     for grp_num in range(1, num_groups + 1):
         mask: np.ndarray = cast(np.ndarray, groups_arr == grp_num)
-        grp_num_data: pd.DataFrame = group_data.loc[mask, :]
-        grp_num_stream: DataStream[pd.DataFrame] = DataStream(grp_num_data)
+        grp_num_data: pl.DataFrame = group_data.loc[mask, :]
+        grp_num_stream: DataStream = DataStream(grp_num_data)
         grp_num_path: Path = get_group_path(grp_num)
 
         result = grp_num_stream.to_excel(grp_num_path)

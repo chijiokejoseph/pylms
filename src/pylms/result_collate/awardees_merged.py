@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 from ..constants import AWARDEES, COHORT
 from ..data import DataStore, DataStream, read
@@ -7,7 +6,7 @@ from ..errors import Result, Unit
 from ..paths import get_fast_track_path, get_merged_path, get_merit_path
 
 
-def _val_awardees(test_data: pd.DataFrame) -> bool:
+def _val_awardees(test_data: pl.DataFrame) -> bool:
     required_cols: list[str] = [
         AWARDEES["Batch"],
         AWARDEES["BatchID"],
@@ -65,7 +64,7 @@ def collate_merge(ds: DataStore) -> Result[Unit]:
 
     fast_track_data = DataStream(fast_track_data, _val_awardees)()
 
-    merged_data: pd.DataFrame = pd.concat((merit_data, fast_track_data))
+    merged_data: pl.DataFrame = pd.concat((merit_data, fast_track_data))
     merged_data.dropna(inplace=True, how="all")  # pyright:ignore[reportUnknownMemberType]
     merged_data = merged_data.astype("str")
     merged_data = merged_data.replace("nan", "")  # pyright:ignore[reportUnknownMemberType]

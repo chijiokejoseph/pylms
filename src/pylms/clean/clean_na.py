@@ -1,52 +1,70 @@
 from typing import Callable
 
-import numpy as np
-import pandas as pd
+import polars as pl
 
-from pylms.errors import Result, Unit
-
-from ..constants import DATA_COLUMNS, NA_COLUMNS_FILL
+from ..constants import COMMA_DELIM, DATA_COLUMNS, NA_COLUMNS_FILL
 from ..data import DataStream
+from ..errors import Result
 
-type Validator = Callable[[pd.DataFrame], bool]
+type Validator = Callable[[pl.DataFrame], tuple[bool, str]]
 
 
 def clean_na(
-    data_stream: DataStream[pd.DataFrame], validate_na_removal: Validator | None = None
-) -> Result[Unit]:
-    """Fill missing values and return a DataStream with a validator.
+    data: pl.DataFrame, validate_na_removal: Validator | None = None
+) -> Result[pl.DataFrame]:
+    """Fill missing values and return a pl.DataFrame with a validator.
 
-    Fill missing or N/A entries in the DataFrame contained in `data_stream`
+    Fill missing or N/A entries in the DataFrame contained in `data`
     using the module-level `NA_COLUMNS_FILL` mapping. The function returns a
-    `DataStream` that carries a validator which ensures the processed DataFrame
+    `pl.DataFrame` that carries a validator which ensures the processed DataFrame
     contains no missing values and only the expected columns defined in
     `DATA_COLUMNS`. A custom `validate_na_removal` function may be supplied to
     override the default validator.
 
     Args:
-        data_stream (DataStream[pd.DataFrame]): DataStream containing the
+        data (pl.DataFrame): The
             DataFrame to be processed.
         validate_na_removal (Validator | None): Optional custom validator that
             accepts the processed DataFrame and returns True if validation
             succeeds. If None, a default validator is attached.
 
     Returns:
-        Result[Unit]: A Unit Result if the cleaning operation was successful
+        Result[pl.DataFrame]: A Unit Result if the cleaning operation was successful
         or an `Result.err` value containing the validation error
     """
 
-    data: pd.DataFrame = data_stream.as_ref()
-    data = data.fillna(NA_COLUMNS_FILL)  # pyright: ignore [reportUnknownMemberType]
+    data = data.with_columns(
+        [pl.col(col).fill_null(fill).alias(col) for col, fill in NA_COLUMNS_FILL]
+    )
 
-    def validate(test_data: pd.DataFrame) -> bool:
-        test1: np.bool = test_data.isna().any().any()
-        if test1:
-            return False
-        columns_list: list[str] = test_data.columns.tolist()
-        test2: bool = all([each_col in DATA_COLUMNS for each_col in columns_list])
-        return test2
+    def validate(test_data: pl.DataFrame) -> tuple[bool, str]:
+        test1 = test_data.filter(
+            [pl.col(col).is_null().sum() > 0 for col in test_data.columns]
+        )
+        if test1.shape[0] > 0:
+            return False, "Your data contains null values"
+        columns: list[str] = test_data.columns
+
+        missing_cols = [
+            each_col for each_col in DATA_COLUMNS if each_col not in columns
+        ]
+
+        if len(missing_cols) == 0:
+            return True, ""
+        else:
+            missing_print = COMMA_DELIM.join(missing_cols)
+            return (
+                False,
+                f"The following columns: {missing_print} are required but are absent from your data",
+            )
 
     if validate_na_removal is None:
         validate_na_removal = validate
 
-    return DataStream.verify(data, validate_na_removal)
+    stream = DataStream.new(data, validate_na_removal)
+    if stream.is_err():
+        stream.print_if_err()
+
+    stream = stream.unwrap().as_ref()
+
+    return Result.ok(stream)

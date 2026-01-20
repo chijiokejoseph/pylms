@@ -1,13 +1,12 @@
 import re
 
-import pandas as pd
 
 from ..constants import NAME, SERIAL, SPACE_DELIM, UNIQUE_COLUMNS
 from ..data import DataStore
 from ..record import RecordStatus
 
 
-def _clean_date(data: pd.DataFrame):
+def _clean_date(data: pl.DataFrame):
     def fill_space(entry: str) -> str:
         if entry != SPACE_DELIM:
             return entry
@@ -29,7 +28,7 @@ def _clean_date(data: pd.DataFrame):
 
 
 def clean_after_ops(ds: DataStore) -> None:
-    data_ref: pd.DataFrame = ds.as_ref()
+    data_ref: pl.DataFrame = ds.as_ref()
     data_ref.drop_duplicates(subset=UNIQUE_COLUMNS, keep="first", inplace=True)
     data_ref.sort_values(by=[NAME], inplace=True)
     data_ref.reset_index(drop=True, inplace=True)

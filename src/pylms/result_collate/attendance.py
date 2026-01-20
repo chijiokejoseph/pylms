@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
+import polars as pl
 
 from ..constants import COMMA_DELIM, NAME, SERIAL
 from ..data import DataStore, DataStream
@@ -53,7 +53,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     # Retrieve and filter the relevant data for the held classes
     pretty = ds.to_pretty()
     data = ds.as_ref()
-    dates_data: pd.DataFrame = data.loc[:, held_dates]
+    dates_data: pl.DataFrame = data.loc[:, held_dates]
 
     # Prompt the user to enter attendance requirement
     req = input_marks_req("Enter the Attendance Requirement [1 - 100]: ")
@@ -72,7 +72,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
                 return 1
 
     # Map attendance data to integers and calculate the total count per student
-    count_data: pd.DataFrame = dates_data.map(map_to_int)  # pyright: ignore[reportUnknownMemberType]
+    count_data: pl.DataFrame = dates_data.map(map_to_int)  # pyright: ignore[reportUnknownMemberType]
     count_arr: np.ndarray = count_data.to_numpy()
     count_arr = count_arr.sum(axis=1)
     count_arr = count_arr.flatten()
@@ -95,7 +95,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     req_col: str = det_attendance_req_col()
 
     # Create a DataFrame with collated attendance data
-    collated_data: pd.DataFrame = pd.DataFrame(
+    collated_data: pl.DataFrame = pl.DataFrame(
         data={
             SERIAL: data[SERIAL],
             NAME: pretty[NAME],
