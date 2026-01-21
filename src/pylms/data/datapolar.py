@@ -1,10 +1,10 @@
 from collections.abc import Callable
 from pathlib import Path
-from typing import Self, override
+from typing import Self, final, override
 
 import polars as pl
 
-from pylms.constants import COMMA, COMMA_DELIM, NAME, PHONE, SEMI, DATA_COLUMNS
+from pylms.constants import COMMA, DATA_COLUMNS, NAME, PHONE, SEMI
 from pylms.errors import Result, Unit, eprint
 
 type Stream = DataStream
@@ -122,15 +122,11 @@ def validate(test_data: pl.DataFrame) -> tuple[bool, str]:
     if len(data_columns) > len(DATA_COLUMNS):
         # Too many columns might indicate the user is attempting to reinitialize
         # an already-initialized DataStore or provided an unexpected file layout.
-        msg = (
-            f"data argument has more columns than the expected number of columns required for the first initialization of the DataStore. These required columns are {DATA_COLUMNS}. \nCheck it is possible that you are trying to reinitialize a DataStore that has already been initialized."
-        )
+        msg = f"data argument has more columns than the expected number of columns required for the first initialization of the DataStore. These required columns are {DATA_COLUMNS}. \nCheck it is possible that you are trying to reinitialize a DataStore that has already been initialized."
         return False, msg
     elif len(data_columns) < len(DATA_COLUMNS):
         # Not enough columns — cannot initialize.
-        msg = (
-            f"data argument has less columns than the expected number of columns required for the first initialization of the DataStore. These required columns are {DATA_COLUMNS}. \nCheck it is possible that you are trying to reinitialize a DataStore that has already been initialized."
-        )
+        msg = f"data argument has less columns than the expected number of columns required for the first initialization of the DataStore. These required columns are {DATA_COLUMNS}. \nCheck it is possible that you are trying to reinitialize a DataStore that has already been initialized."
         return False, msg
     else:
         # Length matches expected count; proceed to verify names and order.
@@ -144,10 +140,12 @@ def validate(test_data: pl.DataFrame) -> tuple[bool, str]:
 
     if len(mismatched_cols) > 0:
         cols_print = "\n".join(mismatched_cols)
-        msg = (f"Data contains mismatched cols\n{cols_print}")
+        msg = f"Data contains mismatched cols\n{cols_print}"
         return False, msg
     return True, ""
 
+
+@final
 class DataStore(DataStream):
     def __init__(self, value: pl.DataFrame | DataStream) -> None:
         self._prefilled: bool = True
@@ -169,21 +167,14 @@ class DataStore(DataStream):
 
     @classmethod
     def from_data(cls, data: pl.DataFrame) -> Result[Self]:
-        missing_cols = [col for col in DATA_COLUMNS if col not in data.columns]
-        if len(missing_cols) > 0:
-            cols = COMMA_DELIM.join(missing_cols)
-            msg = f"Columns: '{cols}' are required but missing"
-            return Result.err(msg)
-        
-        subset = data[DATA_COLUMNS]
-        ds = cls.init(subset)
+        ds = cls.init(data)
         if ds.is_err():
             return ds.propagate()
 
         ds = ds.unwrap()
         ds._value = (data,)
+        ds._prefilled = False
         return Result.ok(ds)
-
 
     def pretty(self) -> pl.DataFrame:
         return (
@@ -195,6 +186,15 @@ class DataStore(DataStream):
             )
             .collect()
         )
+
+    def copy_from(self, data: pl.DataFrame | DataStream) -> Result[Unit]:
+        valid = DataStream.new(data, validate)
+        if valid.is_err():
+            return valid.propagate()
+
+        valid = valid.unwrap().as_ref()
+        self._value = (valid,)
+        return Result.unit()
 
     @override
     def write(
