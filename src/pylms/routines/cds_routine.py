@@ -48,9 +48,7 @@ def handle_cds(ds: DataStore, history: History) -> None:
 
                 cds_form_stream, info = result.unwrap()
 
-                result = record_cds(ds, cds_form_stream)
-                if result.is_err():
-                    continue
+                record_cds(ds, cds_form_stream)
 
                 add_recorded_cds_form(history, info)
                 printpass("Marked CDS Records")

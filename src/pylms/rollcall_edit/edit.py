@@ -54,7 +54,7 @@ def edit_record(ds: DataStore, history: History) -> Result[Unit]:
 
     for date in edited_dates_to_mark:
         data[date] = data[date].astype(str)
-        data.loc[:, date] = data[date].replace("nan", "Absent")  # pyright: ignore[reportUnknownMemberType]
+        data.loc[:, date] = data[date].replace("nan", "Absent")
 
         result = add_held_class(history, date)
         if result.is_err():

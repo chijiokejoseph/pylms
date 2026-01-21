@@ -1,5 +1,4 @@
 import re
-from typing import cast
 
 import pandas as pd
 
@@ -15,13 +14,11 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> None
     data_ref = ds.as_ref()
     cds_data = cds_data_stream()
 
-    cds_names = cds_data[NAME].tolist()
+    cds_names = cds_data[NAME].astype(str).tolist()
     cds_names = [name.title() for name in cds_names]
-    cds_days = cds_data[CDS].tolist()
+    cds_days = cds_data[CDS].astype(str).tolist()
 
-    for idx, row in data_ref.iterrows():
-        idx = cast(int, idx)
-        new_row = row.copy()
+    for idx in range(data_ref.shape[0]):
         each_name = names.iloc[idx]
 
         if each_name not in cds_names:
@@ -35,16 +32,15 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream[pd.DataFrame]) -> None
 
         cds_day_num: int = to_day_num(cds_day)
 
-        for index in row.index:
-            if re.fullmatch(r"^\d{2}/\d{2}/\d{4}", index) is None:
+        for col in data_ref.columns:
+            if re.fullmatch(r"^\d{2}/\d{2}/\d{4}", col) is None:
                 continue
-            date_col: str = index
-            date_day_num: int = to_day_num(date_col)
-            if cds_day_num == date_day_num and new_row.at[date_col] != str(
+            data_ref[col] = data_ref[col].astype(str)
+            data_ref[col] = data_ref[col].replace("nan", "")
+            date_day_num: int = to_day_num(col)
+            if cds_day_num == date_day_num and data_ref.at[idx, col] != str(
                 RecordStatus.NO_CLASS
             ):
-                new_row.at[date_col] = str(RecordStatus.CDS)
-
-        data_ref.loc[idx, :] = new_row
+                data_ref.at[idx, col] = str(RecordStatus.CDS)
 
     return None
