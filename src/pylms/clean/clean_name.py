@@ -18,7 +18,7 @@ def clean_name(data_stream: DataStream[pd.DataFrame]) -> None:
     Returns:
         None
     """
-    data: pd.DataFrame = data_stream().copy()
+    data: pd.DataFrame = data_stream()
     data[NAME] = data[NAME].apply(_clean_name)  # pyright: ignore [reportUnknownMemberType]
 
 
@@ -34,9 +34,16 @@ def _clean_name(entry: str) -> str:
     Returns:
         str: The formatted name string.
     """
+    entry = entry.strip()
     if entry.find(COMMA_DELIM) == -1:
-        entries: list[str] = entry.split(SPACE_DELIM)
-        entry = COMMA_DELIM.join(entries)
+        delim = SPACE_DELIM
+    else:
+        delim = COMMA_DELIM
+
+    entries = entry.split(delim)
+    entries = [entry.title() for entry in entries]
+    entry = COMMA_DELIM.join(entries)
+
     entry = entry.title()
 
     idx = entry.find(ARABIC_APOSTROPHE)
