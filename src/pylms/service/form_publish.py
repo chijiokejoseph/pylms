@@ -17,7 +17,7 @@ def _publish_form(form: Form, service: FormsService) -> Form | None:
     )
 
     try:
-        _ = request.execute()  # pyright: ignore[reportUnknownMemberType]
+        _ = request.execute()
         print_info(
             f"Form with \nName = {emphasis(form.name)}\nTitle = {emphasis(form.title)}"
         )

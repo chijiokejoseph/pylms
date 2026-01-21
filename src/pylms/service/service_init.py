@@ -12,7 +12,7 @@ def load_creds() -> ServiceCredentials:
     :return: (ServiceCredentials) - The credentials loaded from the file at SECRETS_PATH
     :rtype: ServiceCredentials
     """
-    creds = ServiceCredentials.from_service_account_file(str(SECRETS_PATH))  # pyright: ignore[reportUnknownMemberType]
+    creds = ServiceCredentials.from_service_account_file(str(SECRETS_PATH))
     return creds
 
 
@@ -45,5 +45,5 @@ def run_service[T: FormsService | DriveResource, K](
     :return: The result of calling the provided function with the created service as an argument.
     """
     creds: ServiceCredentials = load_creds()
-    with discovery.build(api, version, credentials=creds) as service:  # pyright: ignore[reportUnknownMemberType]
+    with discovery.build(api, version, credentials=creds) as service:
         return func(service)

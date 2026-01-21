@@ -32,7 +32,7 @@ def _share_form(form: Form, email: str, *, service: DriveResource) -> Form | Non
         share_request: HttpRequest = drive_resource.create(
             fileId=form.uuid, body=user_permission
         )
-        share_request.execute()  # pyright: ignore[reportUnknownMemberType]
+        share_request.execute()
         printpass(
             f"Success, form {emphasis(form.name)} has been shared to {email}. SUCCESS\n"
         )

@@ -38,4 +38,4 @@ def clean_time(data_stream: DataStream[pd.DataFrame]) -> None:
         None
     """
     data: pd.DataFrame = data_stream.as_ref()
-    data[TIME] = data[TIME].apply(_clean_time)  # pyright: ignore[reportUnknownMemberType]
+    data[TIME] = data[TIME].apply(_clean_time)

@@ -59,7 +59,7 @@ def register(ds: DataStore, history: History) -> None:
                 data_stream, info = result.unwrap()
                 data_stream, cds_data_stream = extract_cds(data_stream)
 
-                result = append_update(ds, data_stream, info)
+                result = append_update(ds, data_stream)
                 if result.is_err():
                     continue
 

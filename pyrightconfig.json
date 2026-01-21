@@ -3,4 +3,5 @@
   "reportAny": false,
   "reportExplicitAny": false,
   "reportUnknownArgumentType": false,
+  "reportUnknownMemberType": "information"
 }

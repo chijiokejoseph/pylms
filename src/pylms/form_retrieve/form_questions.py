@@ -34,13 +34,13 @@ def _retrieve_form_questions(
     # get the form response based on the form info
     match info:
         case _ if isinstance(info, ClassFormInfo) and class_type == ClassType.PRESENT:
-            form_response: dict[Any, Any] = resource.get(  # pyright: ignore[reportUnknownMemberType]
+            form_response: dict[Any, Any] = resource.get(
                 formId=info.present_id
             ).execute()
         case _ if isinstance(info, ClassFormInfo) and class_type == ClassType.EXCUSED:
-            form_response = resource.get(formId=info.excused_id).execute()  # pyright: ignore[reportUnknownMemberType]
+            form_response = resource.get(formId=info.excused_id).execute()
         case _ if not isinstance(info, ClassFormInfo):
-            form_response = resource.get(formId=info.uuid).execute()  # pyright: ignore[reportUnknownMemberType]
+            form_response = resource.get(formId=info.uuid).execute()
         case _:
             msg = f"specified form_info type {type(info).__name__} and class type {class_type} are invalid"
             eprint(msg)

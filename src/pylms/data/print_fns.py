@@ -49,7 +49,7 @@ def print_df(data: pd.DataFrame, serials: list[int]) -> None:
     """
     indices = [i - 1 for i in serials]
     subset = data.loc[indices, :]
-    dataset = subset.to_dict(orient="records")  # pyright: ignore[reportUnknownMemberType]
+    dataset = subset.to_dict(orient="records")
     for entry in dataset:
         max_key = _max_print(entry.keys())
         max_value = _max_print(entry.values())

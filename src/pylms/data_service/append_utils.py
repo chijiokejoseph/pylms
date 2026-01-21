@@ -17,10 +17,6 @@ def _clean_date(data: pd.DataFrame):
         if re.fullmatch(r"^\d{2}/\d{2}/\d{4}$", column) is None:
             continue
         unique_values: list[str] = data[column].unique().flatten().tolist()
-        if RecordStatus.EXCUSED in unique_values:
-            continue
-        if RecordStatus.ABSENT in unique_values:
-            continue
         if RecordStatus.NO_CLASS in unique_values:
             data[column] = RecordStatus.NO_CLASS
             continue

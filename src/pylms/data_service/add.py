@@ -1,26 +1,24 @@
 import pandas as pd
 
-from ..constants import DATA_COLUMNS, SPACE_DELIM
+from ..constants import COMMA_DELIM, DATA_COLUMNS, SPACE_DELIM
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
 from .append_utils import clean_after_ops
 
 
 def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
-    superset_ref: pd.DataFrame = superset.as_ref()
-    subset_ref: pd.DataFrame = subset.as_ref()
-    superset_cols: list[str] = superset_ref.columns.tolist()
-    subset_cols: list[str] = subset_ref.columns.tolist()
+    superset_ref = superset.as_ref()
+    subset_ref = subset.as_ref()
+    superset_cols = superset_ref.columns.tolist()
+    subset_cols = subset_ref.columns.tolist()
 
     def validate_subset() -> Result[Unit]:
-        superset_extras: list[str] = [
-            col for col in superset_cols if col not in DATA_COLUMNS
-        ]
-        subset_extras: list[str] = [
-            col for col in subset_cols if col not in DATA_COLUMNS
-        ]
-        if any([extra_col not in superset_extras for extra_col in subset_extras]):
-            msg = f"The following columns in the subset {[col for col in subset_extras if col not in superset_extras]} are not found in the superset DataStore. \nPlease rerun the program with the correct inputs and try again."
+        superset_extras = [col for col in superset_cols if col not in DATA_COLUMNS]
+        subset_extras = [col for col in subset_cols if col not in DATA_COLUMNS]
+        mismatched_cols = [col for col in subset_extras if col not in superset_extras]
+        if len(mismatched_cols) > 0:
+            cols_print = COMMA_DELIM.join(mismatched_cols)
+            msg = f"The following columns in the subset {cols_print} are not found in the superset DataStore. \nPlease rerun the program with the correct inputs and try again."
             eprint(msg)
             return Result.err(msg)
         return Result.unit()

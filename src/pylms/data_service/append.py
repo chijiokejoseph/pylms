@@ -2,31 +2,22 @@ import pandas as pd
 
 from ..data import DataStore, DataStream
 from ..date import det_week_num
-from ..errors import Result, Unit, eprint
-from ..models import UpdateFormInfo
-from ..paths import ret_update_path
+from ..errors import Result, Unit
 from ..preprocess import clean_new_data
 from .add import add
 
 
 def append_update(
-    ds: DataStore, update_stream: DataStream[pd.DataFrame], info: UpdateFormInfo
+    ds: DataStore, update_stream: DataStream[pd.DataFrame]
 ) -> Result[Unit]:
     week_num: int = det_week_num()
-    update_form_path, update_record_path = ret_update_path(info.timestamp)
 
-    if update_record_path.exists():
-        msg = f"Entries in the Data Form whose metadata is located at {update_form_path.resolve()} have already been appended."
-        eprint(msg)
-        return Result.err(msg)
+    add_ds = clean_new_data(update_stream)
+    if add_ds.is_err():
+        return add_ds.propagate()
 
-    ds_result: Result[DataStore] = clean_new_data(update_stream)
-    if ds_result.is_err():
-        msg = f"Error cleaning new data: {ds_result.unwrap_err()}"
-        eprint(msg)
-        return Result.err(msg)
-    ds_to_add: DataStore = ds_result.unwrap()
-    new_ds = add(ds, ds_to_add)
+    add_ds = add_ds.unwrap()
+    new_ds = add(ds, add_ds)
 
     if new_ds.is_err():
         return new_ds.propagate()

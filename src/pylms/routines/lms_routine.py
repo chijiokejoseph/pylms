@@ -47,20 +47,17 @@ def run_lms(ds: DataStore, history: History) -> None:
 
                 printpass("Students have been grouped successfully\n")
 
-                if history.has_group:
-                    num_groups: int = get_num_groups(history)
+                result = prepare_grading(history)
+                if result.is_err():
+                    continue
 
-                    result = prepare_grading(num_groups)
-                    if result.is_err():
-                        continue
+                printpass("Grading sheets generated successfully")
 
-                    printpass("Grading sheets generated successfully")
+                result = select_leaders(ds, history)
+                if result.is_err():
+                    continue
 
-                    result = select_leaders(ds, history)
-                    if result.is_err():
-                        continue
-
-                    printpass("Leaders have been selected successfully\n")
+                printpass("Leaders have been selected successfully\n")
             case 2:
                 result = request_assessment_form(ds)
                 if result.is_err():

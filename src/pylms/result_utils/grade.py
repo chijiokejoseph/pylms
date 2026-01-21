@@ -7,10 +7,17 @@ import pandas as pd
 from ..constants import GROUP, NAME, SERIAL
 from ..data import DataStream, read
 from ..errors import Result, Unit, eprint
+from ..history import History, get_num_groups
 from ..paths import get_grade_path, get_group_dir, get_group_path
 
 
-def prepare_grading(num_groups: int) -> Result[Unit]:
+def prepare_grading(history: History) -> Result[Unit]:
+    if not history.has_group:
+        msg = "No groups found"
+        eprint(msg)
+        return Result.err(msg)
+
+    num_groups = get_num_groups(history)
     path: Path = get_group_path()
     if not path.exists():
         msg = f"path: {path} does not exist."
@@ -109,4 +116,4 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
 def _write_sheets(path: Path, *dfs: tuple[pd.DataFrame, str]) -> None:
     with pd.ExcelWriter(path) as file:
         for df, sheet_name in dfs:
-            df.to_excel(file, index=False, sheet_name=sheet_name)  # pyright: ignore[reportUnknownMemberType]
+            df.to_excel(file, index=False, sheet_name=sheet_name)

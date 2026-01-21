@@ -72,7 +72,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
                 return 1
 
     # Map attendance data to integers and calculate the total count per student
-    count_data: pd.DataFrame = dates_data.map(map_to_int)  # pyright: ignore[reportUnknownMemberType]
+    count_data: pd.DataFrame = dates_data.map(map_to_int)
     count_arr: np.ndarray = count_data.to_numpy()
     count_arr = count_arr.sum(axis=1)
     count_arr = count_arr.flatten()

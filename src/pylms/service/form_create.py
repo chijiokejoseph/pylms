@@ -39,9 +39,9 @@ def _create_form(
     form_resource: FormResource = service.forms()
     try:
         create_request: HttpRequest = form_resource.create(body=request_body)
-        response: dict[Any, Any] = create_request.execute()  # pyright: ignore[reportUnknownMemberType]
-        form_url: str | None = response.get(url_key)  # pyright: ignore[reportUnknownMemberType]
-        form_id: str | None = response.get(form_key)  # pyright: ignore[reportUnknownMemberType]
+        response: dict[Any, Any] = create_request.execute()
+        form_url: str | None = response.get(url_key)
+        form_id: str | None = response.get(form_key)
         if form_url is None or form_id is None:
             return None
         print_info(
