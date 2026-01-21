@@ -14,8 +14,8 @@ from ..paths import get_group_dir, get_group_path
 
 
 def group(ds: DataStore, history: History) -> Result[Unit]:
-    if len(history.recorded_update_forms) == 0 and len(history.update_forms) > 0:
-        msg = "You need to record at least one of the update forms you created for the cohort before grouping students\n"
+    if len(history.recorded_update_forms) < len(history.update_forms):
+        msg = "You need to record all of the update forms you created for the cohort before grouping students\n"
         eprint(msg)
         return Result.err(msg)
 
