@@ -12,6 +12,7 @@ def datamap(
     func: np.vectorize,
     np_type: DTypeLike,
     pl_type: pl.DataType,
+    new_col: str | None = None,
 ) -> pl.DataFrame:
     pass
 
@@ -23,6 +24,7 @@ def datamap(
     func: np.vectorize,
     np_type: DTypeLike,
     pl_type: pl.DataType,
+    new_col: str | None = None,
 ) -> pl.Series:
     pass
 
@@ -33,6 +35,7 @@ def datamap(
     func: np.vectorize,
     np_type: DTypeLike,
     pl_type: pl.DataType,
+    new_col: str | None = None
 ) -> pl.Series | pl.DataFrame | pl.LazyFrame:
     if isinstance(data, pl.DataFrame):
         series = data[col].to_numpy()
@@ -43,7 +46,10 @@ def datamap(
     if isinstance(data, pl.Series):
         return pl.Series(col, series, pl_type)
 
-    return data.with_columns(pl.Series(col, series, dtype=pl_type).alias(col))
+    if new_col is None:
+        new_col = col
+
+    return data.with_columns(pl.Series(new_col, series, dtype=pl_type).alias(new_col))
 
 
 def map_(

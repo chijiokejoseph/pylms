@@ -1,11 +1,13 @@
+from pathlib import Path
 import random
 import re
-from pathlib import Path
 from typing import Literal, NamedTuple
 
+import numpy as np
+import polars as pl
 
 from ..constants import GENDER, GROUP, NAME, SERIAL
-from ..data import DataStore, DataStream, read
+from ..data import DataStore, datamap, read, write
 from ..errors import Result, Unit, eprint
 from ..history import History, get_num_groups
 from ..paths import (
@@ -30,38 +32,43 @@ class LeaderMap(NamedTuple):
 
 
 def get_present_count(ds: DataStore, serial: int) -> int:
-    data: pl.DataFrame = ds.as_ref()
-    columns: list[str] = data.columns.tolist()
+    data = ds.as_ref()
+    columns: list[str] = data.columns
     date_columns: list[str] = [
         col for col in columns if re.match(r"\d{2}/\d{2}/\d{4}", col) is not None
     ]
-    data_row = data.loc[:, date_columns].iloc[serial - 1].astype(str)
-    return sum(1 for entry in data_row if entry.lower() == "present")
+    row = data.select(pl.col(date_columns)).row(serial - 1)
+    return sum(
+        1 for entry in row if isinstance(entry, str) and entry.lower() == "present"
+    )
 
 
 def get_nominations(
     ds: DataStore, serials: list[int], gender_type: Literal["Male", "Female"]
 ) -> Nominations:
-    genders: list[str] = [
-        ds.as_ref()[GENDER].astype(str).iloc[serial - 1] for serial in serials
-    ]
-    gender_serials: list[tuple[Literal["Male", "Female"], int]] = [
-        (gender_type, serial)
-        for gender, serial in zip(genders, serials)
-        if gender == gender_type
-    ]
+    data = ds.as_ref()
+    genders = (
+        data.select(pl.col(GENDER, SERIAL))
+        .filter(pl.col(SERIAL).is_in(serials))
+        .filter(pl.col(GENDER) == gender_type)
+    )
 
-    present_counts: list[int] = [
-        get_present_count(ds, serial) for _, serial in gender_serials
-    ]
+    @np.vectorize
+    def get_gender_serials(serial: int):
+        return get_present_count(ds, serial)
 
-    max_count: int = max(present_counts)
+    present = datamap(
+        genders, SERIAL, get_gender_serials, np.int64, pl.Int64(), new_col="Count"
+    )
 
-    nominees: list[int] = [
-        gender_serials[idx][1]
-        for idx, count in enumerate(present_counts)
-        if count == max_count
-    ]
+    max_count: int = present.select(pl.col("Count").max()).item()
+
+    nominees: list[int] = (
+        present.select(pl.col(SERIAL))
+        .filter(pl.col("Count") == max_count)[SERIAL]
+        .to_list()
+    )
+    present_counts: list[int] = present["Count"].to_list()
 
     return Nominations(present_counts=present_counts, nominees=nominees)
 
@@ -101,6 +108,8 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
+    data = ds.as_ref()
+
     groups = get_num_groups(history)
     leader_serials: list[int] = []
     assistant_serials: list[int] = []
@@ -115,18 +124,16 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
             eprint(msg)
             return Result.err(msg)
 
-        group_data = read(group_path)
+        group_df = read(group_path)
 
-        if group_data.is_err():
-            return group_data.propagate()
+        if group_df.is_err():
+            return group_df.propagate()
 
-        group_data = group_data.unwrap()
+        group_df = group_df.unwrap()
 
-        serials: list[int] = group_data[SERIAL].tolist()
+        serials: list[int] = group_df[SERIAL].to_list()
 
-        genders: list[str] = [
-            ds.as_ref()[GENDER].astype(str).iloc[serial - 1] for serial in serials
-        ]
+        genders = data[GENDER].to_numpy()
 
         male_nominations: Nominations = get_nominations(ds, serials, "Male")
         female_nominations: Nominations = get_nominations(ds, serials, "Female")
@@ -134,15 +141,15 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         leader, assistant, leaders, assistants = choose_leader(
             male_nominations, female_nominations, group
         )
-
         leader_name: str = (
-            group_data.loc[group_data[SERIAL] == leader, NAME].astype(str).iloc[0]
+            group_df.select(pl.col(NAME)).filter(pl.col(SERIAL) == leader).item()
         )
+
         present_counts: list[int] = [
             get_present_count(ds, serial) for serial in serials
         ]
         assistant_name: str = (
-            group_data.loc[group_data[SERIAL] == assistant, NAME].astype(str).iloc[0]
+            group_df.select(pl.col(NAME)).filter(pl.col(SERIAL) == assistant).item()
         )
 
         leader_serials.append(leader)
@@ -152,23 +159,39 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         assistant_serials.append(assistant)
         assistant_names.append(assistant_name)
 
-        group_data["Count"] = present_counts
-        group_data[GENDER] = genders
-        group_data["Potential Leader"] = [
-            "True" if serial in leaders else "False" for serial in serials
-        ]
-        group_data["Potential Assistant Leader"] = [
-            "True" if serial in assistants else "False" for serial in serials
-        ]
-        group_data["Leader"] = [
-            "Leader" if serial == leader else "" for serial in serials
-        ]
-        group_data["Assistant"] = [
-            "Assistant Leader" if serial == assistant else "" for serial in serials
-        ]
+        group_df = (
+            group_df.lazy()
+            .with_columns(
+                pl.Series("Count", present_counts),
+                pl.Series(GENDER, genders),
+                pl.Series(
+                    "Potential Leader",
+                    ["True" if serial in leaders else "False" for serial in serials],
+                ),
+                pl.Series(
+                    "Potential Assistant Leader",
+                    ["True" if serial in assistants else "False" for serial in serials],
+                ),
+                pl.Series(
+                    "Leader",
+                    ["Leader" if serial == leader else "" for serial in serials],
+                ),
+                pl.Series(
+                    "Assistant",
+                    [
+                        "Assistant Leader" if serial == assistant else ""
+                        for serial in serials
+                    ],
+                ),
+            )
+            .collect()
+        )
         criterion_path = get_criterion_path()
         criterion_path.mkdir(exist_ok=True)
-        return DataStream(group_data).to_excel(get_group_criterion_path(group))
+        group_criterion_path = get_group_criterion_path(group)
+        result = write(group_df, group_criterion_path)
+        if result.is_err():
+            return result.propagate()
 
     leaders = pl.DataFrame(
         data={SERIAL: leader_serials, "Leader Name": leader_names, GROUP: leader_groups}
@@ -182,22 +205,20 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         }
     )
 
-    leaders = DataStream(leaders)
-    result = leaders.to_excel(get_leader_path("Leader"))
+    result = write(leaders, get_leader_path("Leader"))
     if result.is_err():
         return result.propagate()
 
-    result = leaders.to_excel(get_grading_leader("Leader"))
+    result = write(leaders, get_grading_leader("Leader"))
     if result.is_err():
         return result.propagate()
 
-    assistants = DataStream(assistants)
-    result = assistants.to_excel(get_leader_path("Assistant"))
+    result = write(assistants, get_leader_path("Assistant"))
     if result.is_err():
         return result.propagate()
 
-    result = assistants.to_excel(get_grading_leader("Assistant"))
+    result = write(assistants, get_grading_leader("Assistant"))
     if result.is_err():
         return result.propagate()
 
-    return Result[Unit].unit()
+    return Result.unit()
