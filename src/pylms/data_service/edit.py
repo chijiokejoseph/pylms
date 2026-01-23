@@ -1,9 +1,8 @@
 from typing import Any
 
 import numpy as np
+import polars as pl
 from dateutil.parser import ParserError, parse
-
-from pylms.info import print_info
 
 from ..cli import input_bool, input_option, input_str, provide_serials
 from ..cli_utils import verify_email
@@ -26,6 +25,7 @@ from ..constants import (
 )
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
+from ..info import print_info
 from ..re_phone import match_and_clean
 
 type Array[K: np.generic] = np.ndarray[tuple[int, ...], np.dtype[K]]
@@ -153,7 +153,7 @@ def edit(ds: DataStore) -> Result[Unit]:
         proc_value: Any | None = None
         column: str = ""
 
-        name = data_ref[NAME].astype(str).iloc[idx]
+        name: str = data_ref[idx, NAME]
         print_info(f"You are editing the record of {name} with serial {serial}")
 
         # Loop until a valid value is entered
@@ -163,7 +163,7 @@ def edit(ds: DataStore) -> Result[Unit]:
                 return result.propagate()
             _, column = result.unwrap()
 
-            old_value = data_ref[column].astype(str).iloc[idx]
+            old_value = data_ref[idx, column]
 
             print_info(
                 f"Existing Record\nSerial: {serial}\nStudent {name}\n{column}: {old_value}\n"
@@ -189,12 +189,15 @@ def edit(ds: DataStore) -> Result[Unit]:
                 break
 
         # Convert new value to correct dtype
-        column_type = data_ref.loc[:, column].dtype.type
-        new_value: Array[Any] = np.array(proc_value).astype(column_type)
+        # column_type = data_ref.loc[:, column].dtype.type
+        # new_value: Array[Any] = np.array(proc_value).astype(column_type)
         # For DATE and COHORT, update entire column; otherwise, update single row
         if column in [DATE, COHORT]:
-            data_ref.loc[:, column] = new_value
+            data_ref = data_ref.with_columns(pl.lit(proc_value).alias(column))
         else:
-            data_ref.loc[idx, column] = new_value
+            data_ref[idx, column] = proc_value
         print()
-    return Result.unit()
+
+    
+    return ds.copy_from(data_ref)
+

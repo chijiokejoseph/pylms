@@ -214,3 +214,6 @@ secrets.json
 
 # Test Html files
 src/html/
+
+# Tests
+test.py
