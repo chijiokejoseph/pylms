@@ -10,25 +10,24 @@ from .load import load
 
 def new(history: History) -> Result[DataStore]:
     if get_paths_excel()["DataStore"].exists():
-        app_ds = load()
-        if app_ds.is_err():
-            return app_ds.propagate()
+        ds = load()
+        if ds.is_err():
+            return ds.propagate()
 
-        app_ds = app_ds.unwrap()
+        ds = ds.unwrap()
         print_info(
             "Preprocessing already performed before. Hence data is not preprocessed again"
         )
-        return Result.ok(app_ds)
+        return Result.ok(ds)
 
-    app_ds = clean_reg_data()
-    if app_ds.is_err():
-        return app_ds.propagate()
-    app_ds = app_ds.unwrap()
+    ds = clean_reg_data()
+    if ds.is_err():
+        return ds.propagate()
+    ds = ds.unwrap()
 
-    result = normalize(app_ds, history)
+    result = normalize(ds, history)
     if result.is_err():
         return result.propagate()
 
-    app_ds.prefilled = False
     printpass("Preprocessing operation completed successfully.")
-    return Result.ok(app_ds)
+    return Result.ok(ds)

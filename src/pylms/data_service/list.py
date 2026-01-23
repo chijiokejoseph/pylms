@@ -1,22 +1,20 @@
 from pathlib import Path
 
-
 from ..constants import COHORT, DATA_COLUMNS
-from ..data import DataStore, DataStream
+from ..data import DataStore, write
 from ..errors import Result, Unit
 from ..info import printpass
 from ..paths import get_list_path
 
 
 def list_ds(ds: DataStore) -> Result[Unit]:
-    data: pl.DataFrame = ds.pretty()
-    cohort: int = data[COHORT].iloc[0]
-    records: pl.DataFrame = data[DATA_COLUMNS]
-    record_stream = DataStream(records)
+    pretty = ds.pretty()
+    cohort: int = pretty[0, COHORT]
+    records = pretty[DATA_COLUMNS]
 
     save_path: Path = get_list_path(cohort)
 
-    result = record_stream.to_excel(save_path)
+    result = write(records, save_path)
     if result.is_err():
         return result.propagate()
 

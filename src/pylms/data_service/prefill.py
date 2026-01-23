@@ -1,3 +1,5 @@
+import polars as pl
+
 from ..constants import (
     COHORT,
     COMPLETION,
@@ -15,7 +17,7 @@ from ..data import DataStore
 
 
 def prefill_ds() -> DataStore:
-    dummy_data: pl.DataFrame = pl.DataFrame(
+    dummy_data = pl.DataFrame(
         data={
             SERIAL: [0, 0],
             TIME: ["00:00", "00:00"],
@@ -31,5 +33,4 @@ def prefill_ds() -> DataStore:
         }
     )
     ds: DataStore = DataStore(dummy_data)
-    ds.prefilled = True
     return ds

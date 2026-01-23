@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from pylms.cli_utils import emphasis
-
+from ..cli_utils import emphasis
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
 from ..info import printpass
@@ -17,7 +16,7 @@ def save(ds: DataStore) -> Result[Unit]:
     data_path = get_data_path()
     ds_path: Path = get_paths_excel()["DataStore"]
 
-    result = ds.to_excel(ds_path)
+    result = ds.write(ds_path)
     if result.is_err():
         return result.propagate()
 
