@@ -40,7 +40,7 @@ def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
 
         # Execute the provided mail function, passing the authenticated SMTP server object
         _ = mail_fn(server)
-        return Result[Unit].unit()
+        return Result.unit()
     except (TimeoutError, SMTPException):
         # Create an SMTP connection to Gmail's SMTP server on port 465 using SSL
         server = SMTP_SSL("smtp.gmail.com", 465)
@@ -53,10 +53,10 @@ def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
 
         # Execute the provided mail function, passing the authenticated SMTP server object
         _ = mail_fn(server)
-        return Result[Unit].unit()
+        return Result.unit()
     except Exception as e:
         # Raise a custom error if any SMTP-related exception occurs
-        return Result[Unit].err(e)
+        return Result.err(e)
     finally:
         # Close the SMTP connection to free resources
         if server is not None and server.sock is not None:
