@@ -1,3 +1,4 @@
+import polars as pl
 from dateutil.parser import parse
 
 from ..constants import TIME, TIME_FMT
@@ -114,7 +115,7 @@ def _retrieve_form_responses(
             response_data_dict[column].append(answer)
 
     # create a DataFrame from the response data dictionary
-    new_data: pl.DataFrame = pl.DataFrame(data=response_data_dict)
+    new_data = pl.DataFrame(data=response_data_dict)
 
     # return a DataStream that yields the DataFrame
     return Result.ok(DataStream(new_data))

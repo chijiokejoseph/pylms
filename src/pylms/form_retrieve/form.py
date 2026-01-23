@@ -60,5 +60,5 @@ def retrieve_form(
         eprint(msg)
         return Result.err(msg)
 
-    result = clean_duplicates_with_cols(result, [NAME])
-    return Result.ok(result)
+    result = clean_duplicates_with_cols(result.as_ref(), [NAME])
+    return Result.ok(DataStream(result))

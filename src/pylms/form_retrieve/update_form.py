@@ -1,5 +1,6 @@
 import re
 
+import polars as pl
 
 from ..data import DataStream
 from ..errors import Result
@@ -18,12 +19,11 @@ def _rename_date_col(col: str) -> str:
 
 
 def rename_date_col(data_stream: DataStream) -> DataStream:
-    data: pl.DataFrame = data_stream()
+    data = data_stream.as_ref()
     for column in data.columns:
         new_column = _rename_date_col(column)
         if new_column != column:
-            data[new_column] = data[column]
-            data = data.drop(columns=[column])
+            data = data.with_columns(pl.col(column).alias(new_column))
 
     return DataStream(data)
 
