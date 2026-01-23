@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import polars as pl
 
 from ..cli import input_email
 from ..constants import CDS, COHORT, INTERNSHIP, NAME, TIMESTAMP_FMT, WORK_DAYS
@@ -29,11 +30,10 @@ from ..service import (
 
 
 def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
-    data: pl.DataFrame = ds.pretty()
-    nysc_selector: pd.Series = data[INTERNSHIP] == "NYSC"
-    corpers: pd.Series = data[NAME].loc[nysc_selector]
-    corper_names: list[str] = corpers.tolist()
-    cohort_no: int = data[COHORT].iloc[0]
+    pretty = ds.pretty()
+    corpers = pretty.filter(pl.col(INTERNSHIP) == "NYSC")
+    corper_names: list[str] = corpers[INTERNSHIP].to_list()
+    cohort_no: int = pretty[0, COHORT]
     timestamp: str = datetime.now().strftime(TIMESTAMP_FMT)
 
     head = return_name(cohort_no, "CDS")
@@ -106,12 +106,13 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
-    email_result = input_email(
+    recipient_email = input_email(
         "Enter an email address to share the form with: ",
     )
-    if email_result.is_err():
-        return email_result.propagate()
-    recipient_email: str = email_result.unwrap()
+    if recipient_email.is_err():
+        return recipient_email.propagate()
+    recipient_email = recipient_email.unwrap()
+
     cds_form = run_share_form(cds_form, recipient_email)
     if cds_form is None:
         msg = f"Form sharing failed when sharing the form with {recipient_email}. \n\nPlease restart the program and try again."

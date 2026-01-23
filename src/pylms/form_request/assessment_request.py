@@ -13,18 +13,20 @@ def init_assessment_form(ds: DataStore) -> Result[Unit]:
         "Midterm Assessment",
         "Final Assessment",
     ]
-    option_result = input_option(options, prompt="Select the assessment type")
-    if option_result.is_err():
-        return option_result.propagate()
-    _, assessment_type = option_result.unwrap()
-    id_result = input_str("Enter the Assessment ID: ", lower_case=False)
-    if id_result.is_err():
-        return id_result.propagate()
-    assessment_id: str = id_result.unwrap()
-    names: list[str] = ds.pretty()[NAME].tolist()
-    emails: list[str] = ds.pretty()[EMAIL].tolist()
+    option = input_option(options, prompt="Select the assessment type")
+    if option.is_err():
+        return option.propagate()
+    _, assessment_type = option.unwrap()
+    assessment_id = input_str("Enter the Assessment ID: ", lower_case=False)
+    if assessment_id.is_err():
+        return assessment_id.propagate()
+    assessment_id = assessment_id.unwrap()
+
+    pretty = ds.pretty()
+    names: list[str] = pretty[NAME].to_list()
+    emails: list[str] = pretty[EMAIL].to_list()
     emails.sort()
-    cohort: int = ds.as_ref()[COHORT].tolist()[0]
+    cohort: int = pretty[0, COHORT]
 
     head = return_name(cohort, f"{assessment_type} {assessment_id}")
     form_title, form_name = head.title, head.name
@@ -50,11 +52,11 @@ def init_assessment_form(ds: DataStore) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
-    email_result: Result[list[str]] = provide_emails()
+    share_to_emails = provide_emails()
 
     email_default: str = must_get_env("EMAIL")
 
-    share_to_emails: list[str] = email_result.unwrap_or([email_default])
+    share_to_emails = share_to_emails.unwrap_or([email_default])
 
     failed_emails: list[str] = []
 

@@ -6,7 +6,7 @@ from ..form_utils import (
     new_complaint_form,
     return_name,
 )
-from ..models import ContentBody, Form
+from ..models import ContentBody
 from ..service import (
     run_create_form,
     run_publish_form,
@@ -16,10 +16,10 @@ from ..service import (
 
 
 def init_complaint_form(ds: DataStore) -> Result[Unit]:
-    cohort: int = ds.as_ref()[COHORT].tolist()[0]
+    cohort: int = ds.as_ref()[0, COHORT]
     head = return_name(cohort, "Complaint")
     form_title, form_name = head.title, head.name
-    form: Form | None = run_create_form(form_title, form_name)
+    form = run_create_form(form_title, form_name)
 
     if form is None:
         msg = "Form creation failed when creating complaint form. Please try again."
