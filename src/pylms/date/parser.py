@@ -16,18 +16,20 @@ def to_date(date: datetime) -> Result[str]:
 
 
 def to_date(date: str | datetime) -> Result[datetime] | Result[str]:
-    """Converts a date string to a datetime object.
-
-    :param date_str: (str) - The date string to convert.
-    :type date_str: str
-
-    :return: (datetime) - The converted datetime object.
-    :rtype: datetime
+    """Convert between date string and datetime object.
+    
+    Args:
+        date (str | datetime): Date string in DATE_FMT format or datetime object.
+        
+    Returns:
+        Result[datetime] | Result[str]: Success with converted value or error message.
     """
     try:
         if isinstance(date, str):
+            # Convert string to datetime
             return Result.ok(datetime.strptime(date, DATE_FMT))
 
+        # Convert datetime to string
         return Result.ok(date.strftime(DATE_FMT))
     except ValueError:
         msg = f"Invalid date format: {date}. Expected format is {DATE_FMT}."
@@ -48,9 +50,21 @@ def parse_dates(dates: list[datetime]) -> Result[list[str]]:
 def parse_dates(
     dates: list[str] | list[datetime],
 ) -> Result[list[datetime]] | Result[list[str]]:
+    """Convert list of dates between string and datetime formats.
+    
+    Args:
+        dates (list[str] | list[datetime]): List of date strings or datetime objects.
+        
+    Returns:
+        Result[list[datetime]] | Result[list[str]]: Success with converted list or error.
+        
+    Note:
+        All items in the list must be the same type (all strings or all datetimes).
+    """
     datetimes: list[datetime] = []
     dates_str: list[str] = []
 
+    # Convert each date and collect results
     for date in dates:
         value = to_date(date)
         if value.is_err():
@@ -61,6 +75,7 @@ def parse_dates(
         else:
             dates_str.append(value)
 
+    # Return appropriate result based on what was converted
     if len(datetimes) == 0 and len(dates_str) > 0:
         return Result.ok(dates_str)
     elif len(datetimes) > 0 and len(dates_str) == 0:
