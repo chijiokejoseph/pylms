@@ -19,6 +19,14 @@ def retrieve_dates(sample: datetime) -> Result[list[datetime]]:
 def retrieve_dates(
     sample: str | datetime,
 ) -> Result[list[str]] | Result[list[datetime]]:
+    """Retrieve dates from history based on sample type.
+    
+    Args:
+        sample (str | datetime): Sample to determine return type.
+        
+    Returns:
+        Result[list[str]] | Result[list[datetime]]: Success with dates list or error.
+    """
     history = load_history()
     if history.is_err():
         return history.propagate()

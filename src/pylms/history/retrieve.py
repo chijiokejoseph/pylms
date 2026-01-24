@@ -10,6 +10,15 @@ from .history import History
 
 
 def match_date_index(history: History, date: str) -> Result[int]:
+    """Get the class number (1-based index) for a given date.
+
+    Args:
+        history (History): History instance containing dates.
+        date (str): Date to find index for.
+
+    Returns:
+        Result[int]: Success with 1-based class number or error message.
+    """
     dates = all_dates(history, "")
     if date not in dates:
         msg = f"{date} not in src: '{dates}'"
@@ -20,13 +29,14 @@ def match_date_index(history: History, date: str) -> Result[int]:
 
 
 def match_info_by_date(history: History, class_date: str) -> Result[ClassFormInfo]:
-    """
-    Returns a Class Form that matches the given date.
+    """Find ClassFormInfo that matches the given date.
 
-    :param class_date: (str) - The date to match the Class Form to.
-    :type class_date: str
-    :return: (ClassFormInfo) - The Class Form that matches the given date.
-    :rtype: ClassFormInfo
+    Args:
+        history (History): History instance containing class forms.
+        class_date (str): Date to match class form to.
+
+    Returns:
+        Result[ClassFormInfo]: Success with matching form or error message.
     """
     matched_forms = [form for form in history.class_forms if form.date == class_date]
     if len(matched_forms) == 0:
@@ -38,11 +48,13 @@ def match_info_by_date(history: History, class_date: str) -> Result[ClassFormInf
 
 
 def get_available_class_forms(history: History) -> list[ClassFormInfo]:
-    """
-    Returns a list of Class Forms that have not been previously retrieved or recorded
+    """Get list of class forms that have not been recorded yet.
 
-    :return: (list[ClassFormInfo]) - A list of Class Forms that are available to retrieve.
-    :rtype: list[ClassFormInfo]
+    Args:
+        history (History): History instance containing form information.
+
+    Returns:
+        list[ClassFormInfo]: List of available class forms.
     """
     return [
         form for form in history.class_forms if form not in history.recorded_class_forms
@@ -50,11 +62,13 @@ def get_available_class_forms(history: History) -> list[ClassFormInfo]:
 
 
 def get_available_cds_forms(history: History) -> list[CDSFormInfo]:
-    """
-    Returns a list of CDS Forms that have not been previously retrieved or recorded
+    """Get list of CDS forms that have not been recorded yet.
 
-    :return: (list[CDSFormInfo]) - A list of CDS Forms that are available to retrieve.
-    :rtype: list[CDSFormInfo]
+    Args:
+        history (History): History instance containing form information.
+
+    Returns:
+        list[CDSFormInfo]: List of available CDS forms.
     """
     return [
         form for form in history.cds_forms if form not in history.recorded_cds_forms
@@ -62,12 +76,13 @@ def get_available_cds_forms(history: History) -> list[CDSFormInfo]:
 
 
 def get_available_update_forms(history: History) -> list[UpdateFormInfo]:
-    """
-    Returns a list of Update Forms that have not been previously retrieved
-    or recorded
+    """Get list of update forms that have not been recorded yet.
 
-    :return: (list[UpdateFormInfo]) - A list of Update Forms that are available to retrieve.
-    :rtype: list[UpdateFormInfo]
+    Args:
+        history (History): History instance containing form information.
+
+    Returns:
+        list[UpdateFormInfo]: List of available update forms.
     """
     return [
         form
@@ -82,6 +97,17 @@ def get_classes(
     sample: str | datetime,
     present: bool,
 ) -> list[str] | list[datetime]:
+    """Get classes based on property and presence criteria.
+
+    Args:
+        history (History): History instance containing class information.
+        prop (Literal["held", "marked"]): Property to check (held or marked).
+        sample (str | datetime): Sample to determine return type.
+        present (bool): Whether to return present or absent classes.
+
+    Returns:
+        list[str] | list[datetime]: List of classes matching criteria.
+    """
     if prop == "held":
         dates = history.held_classes
     else:
@@ -103,113 +129,101 @@ def get_classes(
 
 @overload
 def get_unheld_classes(history: History, sample: datetime) -> list[datetime]:
-    """
-    Returns a list of unheld classes i.e., classes that are not part of the held_classes list.
-
-    :return: (list[datetime]) - A list of datetime objects representing the unheld classes.
-    :rtype: list[datetime]
-    """
     pass
 
 
 @overload
 def get_unheld_classes(history: History, sample: str) -> list[str]:
-    """
-    Returns a list of unheld classes i.e., classes that are not part of the held_classes list.
-
-    :return: (list[str]) - A list of datetime objects representing the unheld classes.
-    :rtype: list[str]
-    """
     pass
 
 
 def get_unheld_classes(
     history: History, sample: str | datetime
 ) -> list[str] | list[datetime]:
+    """Get list of classes that have not been held yet.
+
+    Args:
+        history (History): History instance containing class information.
+        sample (str | datetime): Sample to determine return type.
+
+    Returns:
+        list[str] | list[datetime]: List of unheld classes.
+    """
     return get_classes(history, "held", sample, False)
 
 
 @overload
-def get_held_classes(history: History, sample: datetime) -> list[datetime]:
-    """
-    Returns a list of held classes i.e., classes that are part of the held_classes list.
-
-    :return: (list[datetime]) - A list of datetime objects representing the unheld classes.
-    :rtype: list[datetime]
-    """
+def get_held_classes(history: History, sample: str) -> list[str]:
     pass
 
 
 @overload
-def get_held_classes(history: History, sample: str) -> list[str]:
-    """
-    Returns a list of held classes i.e., classes that are part of the held_classes list.
-
-    :return: (list[str]) - A list of datetime objects representing the unheld classes.
-    :rtype: list[str]
-    """
+def get_held_classes(history: History, sample: datetime) -> list[datetime]:
     pass
 
 
 def get_held_classes(
     history: History, sample: str | datetime
 ) -> list[str] | list[datetime]:
+    """Get list of classes that have been held.
+
+    Args:
+        history (History): History instance containing class information.
+        sample (str | datetime): Sample to determine return type.
+
+    Returns:
+        list[str] | list[datetime]: List of held classes.
+    """
     return get_classes(history, "held", sample, True)
 
 
 @overload
-def get_unmarked_classes(history: History, sample: datetime) -> list[datetime]:
-    """
-    Returns a list of unmarked classes i.e., classes that are not part of the marked_classes list.
-
-    :return: (list[datetime]) - A list of datetime objects representing the unmarked classes.
-    :rtype: list[datetime]
-    """
+def get_unmarked_classes(history: History, sample: str) -> list[str]:
     pass
 
 
 @overload
-def get_unmarked_classes(history: History, sample: str) -> list[str]:
-    """
-    Returns a list of unmarked classes i.e., classes that are not part of the marked_classes list.
-
-    :return: (list[str]) - A list of datetime objects representing the unmarked classes.
-    :rtype: list[str]
-    """
+def get_unmarked_classes(history: History, sample: datetime) -> list[datetime]:
     pass
 
 
 def get_unmarked_classes(
     history: History, sample: str | datetime
 ) -> list[str] | list[datetime]:
+    """Get list of classes that have not been marked for attendance.
+
+    Args:
+        history (History): History instance containing class information.
+        sample (str | datetime): Sample to determine return type.
+
+    Returns:
+        list[str] | list[datetime]: List of unmarked classes.
+    """
     return get_classes(history, "marked", sample, False)
 
 
 @overload
-def get_marked_classes(history: History, sample: datetime) -> list[datetime]:
-    """
-    Returns a list of marked classes i.e., classes that are part of the marked_classes list.
-
-    :return: (list[datetime]) - A list of datetime objects representing the marked classes.
-    :rtype: list[datetime]
-    """
+def get_marked_classes(history: History, sample: str) -> list[str]:
     pass
 
 
 @overload
-def get_marked_classes(history: History, sample: str) -> list[str]:
-    """
-    Returns a list of marked classes i.e., classes that are part of the marked_classes list.
-
-    :return: (list[str]) - A list of date strings representing the marked classes.
-    :rtype: list[str]
-    """
+def get_marked_classes(history: History, sample: datetime) -> list[datetime]:
     pass
 
 
 def get_marked_classes(
     history: History, sample: str | datetime
 ) -> list[str] | list[datetime]:
+    """Get list of classes that have been marked for attendance.
+
+    Args:
+        history (History): History instance containing class information.
+        sample (str | datetime): Sample to determine return type.
+
+    Returns:
+        list[str] | list[datetime]: List of marked classes.
+    """
     return get_classes(history, "marked", sample, True)
 
 
@@ -226,6 +240,15 @@ def get_unrecorded_classes(history: History, sample: datetime) -> list[datetime]
 def get_unrecorded_classes(
     history: History, sample: str | datetime
 ) -> list[str] | list[datetime]:
+    """Get list of classes that have been held but not marked for attendance.
+
+    Args:
+        history (History): History instance containing class information.
+        sample (str | datetime): Sample to determine return type.
+
+    Returns:
+        list[str] | list[datetime]: List of unrecorded classes (held but not marked).
+    """
     if isinstance(sample, datetime):
         held_dates = get_held_classes(history, sample)
         unmarked_dates = get_unmarked_classes(history, sample)
@@ -235,11 +258,13 @@ def get_unrecorded_classes(
         held_dates = get_held_classes(history, sample)
         unmarked_dates = get_unmarked_classes(history, sample)
 
+    # Find intersection of held and unmarked classes
     held_dates = set(held_dates)
     unmarked_dates = set(unmarked_dates)
     result = held_dates.intersection(unmarked_dates)
     result = list(result)
     result.sort()
+
     if isinstance(sample, str):
         return result
 

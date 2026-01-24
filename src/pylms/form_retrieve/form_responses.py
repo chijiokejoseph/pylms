@@ -21,29 +21,21 @@ def _retrieve_form_responses(
     *,
     service: FormsService,
 ) -> Result[DataStream]:
+    """Retrieve form responses from Google Forms API.
+    
+    Args:
+        question_id_map (dict[str, str]): Mapping of question IDs to column names.
+        form_info (AllFormInfo): Form information containing IDs.
+        class_type (ClassType | None): Type of class form if applicable.
+        service (FormsService): Google Forms service instance.
+        
+    Returns:
+        Result[DataStream]: Success with response data or error message.
     """
-    Retrieves form responses from a form whose details are stored at the specified form path.
-
-    :param question_id_map: A dictionary mapping question IDs to the column names
-        in the output DataFrame.
-    :type question_id_map: dict[str, str]
-    :param form_path: The path to a JSON file that holds the form's details.
-    :type form_path: Path
-    :param cls: The class type used to instantiate the form data.
-    :type cls: Type
-    :param class_type: The class type indicating the form type.
-    :type class_type: ClassType | None
-    :param service: The FormResource object used to make API calls.
-    :type service: FormResource
-
-    :return: A DataStream that yields a DataFrame with the form responses.
-    :rtype: DataStream
-    """
-
-    # get the response resource
+    # Get response resource
     response_resource: ResponseResource = service.forms().responses()
 
-    # determine which form to retrieve responses from based on the class type
+    # Determine which form to retrieve responses from
     match form_info:
         case _ if (
             isinstance(form_info, ClassFormInfo) and class_type == ClassType.PRESENT
@@ -60,64 +52,45 @@ def _retrieve_form_responses(
             eprint(msg)
             return Result.err(msg)
 
-    # execute the request and load its response
+    # Execute request and load response
     response_dict: dict[str, list[Response]] = request.execute()  # pyright: ignore [reportUnknownMemberType]
     response_model: ResponseModel = ResponseModel(**response_dict)
 
-    # create a dictionary with the column names and an empty list for each
+    # Create dictionary with column names and empty lists
     response_data_dict: dict[str, list[str]] = {
         column: [] for _, column in question_id_map.items()
     }
-
-    # add a key for the timestamp column
     response_data_dict.update({TIME: []})
 
-    # if there are no responses,
-    # set the `responses` field to an empty list
+    # Handle case with no responses
     if response_model.responses is None:
         response_model.responses = []
 
-    # iterate over each form response
+    # Process each form response
     for form_response in response_model.responses:
-        # get the timestamp of the form response
+        # Parse and format timestamp
         timestamp: str = form_response.lastSubmittedTime
-
-        # parse the timestamp using the date library
         parsed_timestamp = parse(timestamp, dayfirst=True)
-
-        # format the parsed timestamp as a string
         timestamp_str = parsed_timestamp.strftime(TIME_FMT)
-
-        # append the timestamp to the response data dictionary
         response_data_dict[TIME].append(f"{timestamp_str}")
 
-        # iterate over each question and its column name
+        # Process each question answer
         for question_id, column in question_id_map.items():
-            # get the answer model for the question
             answer_model = form_response.answers[question_id]
-
-            # get the text answers for the question
             text_answer = answer_model.textAnswers
-
-            # get the list of answers
             answers = text_answer.answers
 
-            # assert that there is only one answer
+            # Validate single answer per question
             if len(answers) != 1:
                 msg = f"length of answers expected is 1, actual: {len(answers)}"
                 eprint(msg)
                 return Result.err(msg)
 
-            # get the answer
             answer: str = answers[0].value
-
-            # append the answer to the response data dictionary
             response_data_dict[column].append(answer)
 
-    # create a DataFrame from the response data dictionary
+    # Create DataFrame from response data
     new_data = pl.DataFrame(data=response_data_dict)
-
-    # return a DataStream that yields the DataFrame
     return Result.ok(DataStream(new_data))
 
 
@@ -126,23 +99,16 @@ def retrieve_form_responses(
     info: AllFormInfo,
     class_type: ClassType | None,
 ) -> Result[DataStream]:
+    """Retrieve responses to a form using Google Forms service.
+    
+    Args:
+        question_id_map (dict[str, str]): Mapping of question IDs to column names.
+        info (AllFormInfo): Form information containing IDs.
+        class_type (ClassType | None): Type of class form if applicable.
+        
+    Returns:
+        Result[DataStream]: Success with form response data or error message.
     """
-    Retrieves responses to a form.
-
-    :param question_id_map: (dict[str, str]) - A dictionary mapping question IDs to the column names
-        in the output DataFrame.
-    :type question_id_map: dict[str, str]
-    :param form_path: (Path) - The path to a JSON file containing the form's information.
-    :type form_path: Path
-    :param cls: (Type) - The class type used to instantiate the form information.
-    :type cls: Type
-    :param class_type - (ClassType | None): The class type of the form.
-    :type class_type: ClassType | None
-
-    :return: (DataStream) - A DataStream that yields a DataFrame with the form responses.
-    :rtype: DataStream
-    """
-
     def _run_service(service: FormsService) -> Result[DataStream]:
         return _retrieve_form_responses(
             question_id_map,

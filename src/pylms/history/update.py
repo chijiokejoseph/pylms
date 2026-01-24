@@ -19,6 +19,15 @@ def add_held_class(history: History, class_id: str) -> Result[Unit]:
 
 
 def add_held_class(history: History, class_id: int | str) -> Result[Unit]:
+    """Add a class to the held classes list.
+    
+    Args:
+        history (History): History instance to update.
+        class_id (int | str): Class number or date to add.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     return add_prop_class(history, "held", class_id)
 
 
@@ -33,51 +42,52 @@ def add_marked_class(history: History, class_id: str) -> Result[Unit]:
 
 
 def add_marked_class(history: History, class_id: int | str) -> Result[Unit]:
+    """Add a class to the marked classes list.
+    
+    Args:
+        history (History): History instance to update.
+        class_id (int | str): Class number or date to add.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     return add_prop_class(history, "marked", class_id)
 
 
 def add_prop_class(
     history: History, prop: Literal["held", "marked"], class_id: int | str
 ) -> Result[Unit]:
-    """Adds a marked class based on the class number. Either class_num or class_date must be specified, else an error will be raised.
-
-    :param class_num: (int | None) - The
-        class number to add as a held class. Defaults to None.
-    :type class_num: int | None
-
-    :param class_date: (str | None) - The
-        class date to add as a held class. Defaults to None.
-    :type class_date: str | None
-
-    :return: (Result[Unit]) - a result object.
-    :rtype: Result[Unit]
-
-
+    """Add a class to held or marked classes list based on class number or date.
+    
+    Args:
+        history (History): History instance to update.
+        prop (Literal["held", "marked"]): Property to update (held or marked).
+        class_id (int | str): Class number (1-based) or date string.
+        
+    Returns:
+        Result[Unit]: Success or error message.
     """
-    # Ensure that dates have been updated before adding marked classes
+    # Ensure dates have been updated
     if not history.updated:
         msg = "Dates must be updated before adding marked classes."
         eprint(msg)
         return Result.err(msg)
 
-    # Check if the class number is within the valid range
+    # Convert class_id to class number
     if isinstance(class_id, int):
         if class_id < 1 or class_id > len(history.dates):
             msg = f"Class number {class_id} is out of range."
             eprint(msg)
             return Result.err(msg)
-        else:
-            class_num: int = class_id
-
+        class_num: int = class_id
     else:
         if class_id not in all_dates(history, ""):
             msg = f"Class Date: {class_id} is not part of the valid dates list for this program."
             eprint(msg)
             return Result.err(msg)
-        else:
-            class_num = all_dates(history, "").index(class_id) + 1
+        class_num = all_dates(history, "").index(class_id) + 1
 
-    # Get the date corresponding to the class number and add it to held classes
+    # Get target date
     target_date: datetime = history.dates[class_num - 1]
     target_date_str: str = all_dates(history, "")[class_num - 1]
 
@@ -85,6 +95,7 @@ def add_prop_class(
         history.held_classes.append(target_date)
         history.held_classes.sort()
     else:
+        # Check if class has been held before marking
         held_classes = parse_dates(history.held_classes)
         if held_classes.is_err():
             return held_classes.propagate()
@@ -102,78 +113,66 @@ def add_prop_class(
 
 
 def add_cds_form(history: History, form: CDSFormInfo) -> None:
-    """
-    Adds a CDS Form to the list of CDS forms.
-
-    :param form: (CDSFormInfo) - The CDS Form to add.
-    :type form: CDSFormInfo
-    :return: (None) - This method does not return anything.
-    :rtype: None
+    """Add CDS form to the list of CDS forms.
+    
+    Args:
+        history (History): History instance to update.
+        form (CDSFormInfo): CDS form to add.
     """
     history.cds_forms.append(form)
     history.cds_forms.sort(key=sort_form)
 
 
 def add_recorded_cds_form(history: History, form: CDSFormInfo) -> None:
-    """
-    Adds a recorded CDS Form to the list of recorded CDS forms.
-
-    :param form: (CDSFormInfo) - The recorded CDS Form to add.
-    :type form: CDSFormInfo
-    :return: (None) - This method does not return anything.
-    :rtype: None
+    """Add recorded CDS form to the list of recorded CDS forms.
+    
+    Args:
+        history (History): History instance to update.
+        form (CDSFormInfo): Recorded CDS form to add.
     """
     history.recorded_cds_forms.append(form)
     history.recorded_cds_forms.sort(key=sort_form)
 
 
 def add_update_form(history: History, form: UpdateFormInfo) -> None:
-    """
-    Adds an Update Form to the list of Update forms.
-
-    :param form: (UpdateFormInfo) - The Update Form to add.
-    :type form: UpdateFormInfo
-    :return: (None) - This method does not return anything.
-    :rtype: None
+    """Add update form to the list of update forms.
+    
+    Args:
+        history (History): History instance to update.
+        form (UpdateFormInfo): Update form to add.
     """
     history.update_forms.append(form)
     history.update_forms.sort(key=sort_form)
 
 
 def add_recorded_update_form(history: History, form: UpdateFormInfo) -> None:
-    """
-    Adds a recorded Update Form to the list of recorded Update forms.
-
-    :param form: (UpdateFormInfo) - The recorded Update Form to add.
-    :type form: UpdateFormInfo
-    :return: (None) - This method does not return anything.
-    :rtype: None
+    """Add recorded update form to the list of recorded update forms.
+    
+    Args:
+        history (History): History instance to update.
+        form (UpdateFormInfo): Recorded update form to add.
     """
     history.recorded_update_forms.append(form)
     history.recorded_update_forms.sort(key=sort_form)
 
 
 def add_class_form(history: History, form: ClassFormInfo) -> None:
-    """
-    Adds a Class Form to the list of Class forms.
-
-    :param form: (ClassFormInfo) - The Class Form to add.
-    :type form: ClassFormInfo
-    :return: (None) - This method does not return anything.
-    :rtype: None
+    """Add class form to the list of class forms.
+    
+    Args:
+        history (History): History instance to update.
+        form (ClassFormInfo): Class form to add.
     """
     history.class_forms.append(form)
     history.class_forms.sort(key=sort_form)
 
 
 def add_recorded_class_form(history: History, form: ClassFormInfo) -> None:
-    """
-    Adds a recorded Class Form to the list of recorded Class forms.
-
-    :param form: (ClassFormInfo) - The recorded Class Form to add.
-    :type form: ClassFormInfo
-    :return: (None) - This method does not return anything.
-    :rtype: None
+    """Add recorded class form to the list of recorded class forms.
+    
+    Args:
+        history (History): History instance to update.
+        form (ClassFormInfo): Recorded class form to add.
     """
     history.recorded_class_forms.append(form)
     history.recorded_class_forms.sort(key=sort_form)

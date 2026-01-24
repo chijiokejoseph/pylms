@@ -9,55 +9,40 @@ type MailError = dict[str, tuple[int, bytes]]
 
 
 def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
+    """Establish SMTP connection, authenticate, execute mail function, and close connection.
+    
+    Args:
+        mail_fn (Callable[[SMTP], Result[Unit]]): Function that performs email operations
+            using the authenticated SMTP object.
+            
+    Returns:
+        Result[Unit]: Success or error message from email operation.
     """
-    Establish an SMTP connection, authenticate, execute a mail function, and close the connection.
-
-    :param mail_fn: (Callable[[SMTP], Result[Unit]]) - A function that takes an SMTP object and performs email operations.
-    :type mail_fn: Callable[[SMTP], Result[Unit]]
-
-    :return: (Result[Unit]) - returns a Result object indicating success or failure.
-    :rtype: Result[Unit]
-    """
-    # Retrieve the sender's email address from environment variables
+    # Retrieve email credentials from environment variables
     email: str = must_get_env("EMAIL")
-
-    # Retrieve the sender's email password from environment variables
     password: str = must_get_env("PASSWORD")
 
     server: SMTP | None = None
     try:
-        # Create an SMTP connection to Gmail's SMTP server on port 587 using STARTTLS
+        # Create SMTP connection to Gmail on port 587 with STARTTLS
         server = SMTP("smtp.gmail.com", 587)
-
-        # Disable debug logging
         server.set_debuglevel(False)
-
-        # Start TLS encryption
         _ = server.starttls()
-
-        # Log in to the SMTP server using the provided credentials
         _ = server.login(email, password)
 
-        # Execute the provided mail function, passing the authenticated SMTP server object
+        # Execute the mail function with authenticated server
         _ = mail_fn(server)
         return Result.unit()
     except (TimeoutError, SMTPException):
-        # Create an SMTP connection to Gmail's SMTP server on port 465 using SSL
+        # Fallback to SSL connection on port 465
         server = SMTP_SSL("smtp.gmail.com", 465)
-
-        # Disable debug logging
         server.set_debuglevel(False)
-
-        # Log in to the SMTP server using the provided credentials
         _ = server.login(email, password)
-
-        # Execute the provided mail function, passing the authenticated SMTP server object
         _ = mail_fn(server)
         return Result.unit()
     except Exception as e:
-        # Raise a custom error if any SMTP-related exception occurs
         return Result.err(e)
     finally:
-        # Close the SMTP connection to free resources
+        # Close SMTP connection to free resources
         if server is not None and server.sock is not None:
             _ = server.quit()

@@ -12,26 +12,20 @@ def _retrieve_form_questions(
     *,
     service: FormsService,
 ) -> Result[dict[str, str]]:
+    """Retrieve form questions from Google Forms API.
+    
+    Args:
+        info (AllFormInfo): Form information containing IDs.
+        class_type (ClassType | None): Type of class form if applicable.
+        service (FormsService): Google Forms service instance.
+        
+    Returns:
+        Result[dict[str, str]]: Success with question ID to title mapping or error.
     """
-    Retrieves form questions from a form whose details are stored at the specified form path.
-
-    :param form_path: (Path) - The path to a JSON file that holds the form's details.
-    :type form_path: Path
-    :param cls: (type) - The class type used to instantiate the form data.
-    :type cls: type
-    :param class_type: (ClassType | None) - The class type indicating the form type.
-    :type class_type: ClassType | None
-    :param service: (FormsService) - The FormResource object used to make API calls.
-    :type service: FormsService
-
-    :return: (dict[str, str]) - A dictionary mapping question IDs to their titles.
-    :rtype: dict[str, str]
-    """
-
-    # get the form resource
+    # Get form resource
     resource: FormResource = service.forms()
 
-    # get the form response based on the form info
+    # Get form response based on form info and class type
     match info:
         case _ if isinstance(info, ClassFormInfo) and class_type == ClassType.PRESENT:
             form_response: dict[Any, Any] = resource.get(  # pyright: ignore[reportUnknownMemberType]
@@ -46,10 +40,10 @@ def _retrieve_form_questions(
             eprint(msg)
             return Result.err(msg)
 
-    # create an instance of the form model from the form response
+    # Create form model from response
     form_model: FormModel = FormModel(**form_response)
 
-    # create a dictionary mapping question IDs to their titles
+    # Create mapping of question IDs to titles
     question_id_dict: dict[str, str] = {
         form_item.questionItem.question.questionId: form_item.title
         for form_item in form_model.items
@@ -61,20 +55,15 @@ def retrieve_form_questions(
     info: AllFormInfo,
     class_type: ClassType | None = None,
 ) -> Result[dict[str, str]]:
+    """Retrieve form questions using Google Forms service.
+    
+    Args:
+        info (AllFormInfo): Form information containing IDs.
+        class_type (ClassType | None): Type of class form if applicable.
+        
+    Returns:
+        Result[dict[str, str]]: Success with question ID to title mapping or error.
     """
-    Retrieves form questions from a form whose details are stored at the specified form path.
-
-    :param form_path: (Path) - The path to a JSON file that holds the form's details.
-    :type form_path: Path
-    :param cls: (type) - The class type used to instantiate the form data.
-    :type cls: type
-    :param class_type: (ClassType | None) - The class type indicating the form type.
-    :type class_type: ClassType | None
-
-    :return: (dict[str, str]) - A dictionary mapping question IDs to their titles.
-    :rtype: dict[str, str]
-    """
-
     def _run_service(service: FormsService) -> Result[dict[str, str]]:
         return _retrieve_form_questions(info, class_type, service=service)
 

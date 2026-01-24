@@ -7,91 +7,78 @@ from .history import History
 
 
 def sync_classes(history: History) -> Result[Unit]:
+    """Update class dates based on orientation date and class days.
+    
+    Calculates dates for classes based on class days and orientation date,
+    generating a list of dates for the entire course duration. Handles
+    interludes by splitting the course into pre and post-interlude periods.
+    
+    Args:
+        history (History): History instance to update.
+        
+    Returns:
+        Result[Unit]: Success or error message.
     """
-    Updates the dates based on the class dates and orientation date.
-
-    This method calculates the dates for the classes based on the class dates and the orientation date.
-    It generates a list of dates for the entire duration of the course, ensuring that only the
-    weekdays specified in ``class_dates`` are included.
-
-    :param history: (History) - The instance of the History class.
-    :type history: History
-
-    :return: Result[Unit]
-    :rtype: Result[Unit]
-    """
-    # Validate that exactly three class weekdays are specified
+    # Validate exactly three class weekdays
     if len(history.class_days) != 3:
         msg = "Class days must contain exactly 3 integers corresponding to the weekdays on which classes are held."
         eprint(msg)
         return Result.err(msg)
 
-    # Ensure the orientation date is set before proceeding
+    # Ensure orientation date is set
     if history.orientation_date is None:
         msg = "Orientation date must be set before updating dates."
         eprint(msg)
         return Result.err(msg)
 
-    # Generate all dates for the course duration, starting from the day after orientation
+    # Generate all dates starting from day after orientation
     dates = [
         history.orientation_date + timedelta(days=i)
         for i in range(1, 7 * history.weeks)
     ]
 
-    # Identify the last date in the generated range
+    # Complete the final week to Sunday
     last_date = dates[-1]
-
-    # Calculate how many days remain in the final week to reach the next Sunday
     diff = 6 - last_date.weekday()
-
-    # Generate the remaining dates to complete the final week
     dates_left: list[datetime] = [
         last_date + timedelta(days=i) for i in range(1, diff + 1)
     ]
-
-    # Extend the list of all dates to include the remaining days in the final week
     dates.extend(dates_left)
 
-    # Check for interlude
-
+    # Handle interlude if present
     interlude = history.interlude
 
     if interlude is None:
-        # Filter all dates to include only those that match the specified class weekdays
+        # No interlude - filter by class weekdays
         history.dates = [date for date in dates if date.weekday() in history.class_days]
         history._updated = True  # pyright: ignore[reportPrivateUsage]
-
         return Result.unit()
 
+    # Split course around interlude
     gap_start = interlude.start
-
     pre_dates = [date for date in dates if date <= gap_start]
 
+    # Calculate remaining weeks after interlude
     held_days = (gap_start - pre_dates[0]).days
     held_weeks = held_days // 7
-
     if held_days % 7 != 0:
         held_weeks += 1
 
     rem_weeks = history.weeks - held_weeks
-
     gap_end = interlude.end
 
+    # Generate post-interlude dates
     shifted_dates = [gap_end + timedelta(i) for i in range(7 * rem_weeks)]
-
     last_date = shifted_dates[-1]
-
     diff = 6 - last_date.weekday()
-
-    # Generate the remaining dates to complete the final week
     dates_left = [last_date + timedelta(days=i) for i in range(1, diff + 1)]
 
+    # Combine all dates and filter by class weekdays
     dates = pre_dates + shifted_dates + dates_left
     dates = [date for date in dates if date.weekday() in history.class_days]
 
     history.dates = dates
     history._updated = True  # pyright: ignore[reportPrivateUsage]
-
     return Result.unit()
 
 
@@ -111,28 +98,21 @@ def set_class_days(
     *,
     start: int | None,
 ) -> Result[Unit]:
+    """Set class days for the schedule.
+    
+    Validates and sets the days of the week on which classes are held.
+    Days must contain exactly three unique elements, either as integers
+    (weekday indices) or strings (weekday names).
+    
+    Args:
+        history (History): History instance to update.
+        days (list[int] | list[str]): Exactly 3 unique weekdays as integers or strings.
+        start (int | None): Starting weekday index (required if days are integers).
+        
+    Returns:
+        Result[Unit]: Success or error message.
     """
-    Sets the class days for the schedule.
-
-    This method validates and sets the days of the week on which classes are held.
-    The days parameter must contain exactly three unique elements, either as integers
-    (weekday indices) or as strings (weekday names). If integers are provided, a start
-    index must also be specified. If strings are provided, they must match entries in
-    the WEEK_DAYS list.
-
-    :param history: (History) - The instance of the History class.
-    :type history: History
-    :param days: (SupportsLenGetitem[int] | SupportsLenGetitem[str]) - A sequence of exactly 3 elements, each representing a weekday.
-        If elements are integers, they represent weekday indices (e.g., 0 for Monday).
-        If elements are strings, they must match entries in WEEK_DAYS (e.g., "Monday").
-    :type days: SupportsLenGetitem[int] | SupportsLenGetitem[str]
-    :param start: (int | None) - The starting weekday index. Required if `days` contains integers.
-    :type start: int | None
-
-    :return: (Result[Unit]) - returns a result object
-    :rtype: Result[Unit]
-    """
-    # Ensure exactly three days are provided
+    # Ensure exactly three days
     if len(days) != 3:
         msg = "Class days must contain exactly 3 integers corresponding to the weekdays on which classes are held."
         eprint(msg)
@@ -144,15 +124,14 @@ def set_class_days(
         eprint(msg)
         return Result.err(msg)
 
-    # Determine the type of input and process accordingly
+    # Process based on input type
     match True:
-        # If integers are provided and a start index is given, calculate weekday indices
+        # Integer days with start index
         case _ if all(isinstance(day, int) for day in days) and start is not None:
             days = [day for day in days if isinstance(day, int)]
-            # Subtract start from each integer to normalize to weekday indices
             history.class_days = [i - start for i in days]
 
-        # If strings are provided and all are valid weekday names, convert to indices
+        # String days (weekday names)
         case _ if all(isinstance(day, str) for day in days):
             days = [day for day in days if isinstance(day, str)]
             missing = [day for day in days if day.title() not in WEEK_DAYS]
@@ -161,17 +140,15 @@ def set_class_days(
                 msg = ", ".join(messages) + f" not in {WEEK_DAYS}"
                 eprint(msg)
                 return Result.err(msg)
-
-            # Map weekday names to their indices
             history.class_days = [WEEK_DAYS.index(day) for day in days]
 
-        # If integers are provided but no start index, raise an error
+        # Integer days without start index
         case _ if all(isinstance(day, int) for day in days) and start is None:
             msg = "Start must be provided if first is an integer."
             eprint(msg)
             return Result.err(msg)
 
-        # If strings are provided but not all are valid weekday names, raise an error
+        # Invalid string days
         case _ if all(isinstance(day, str) for day in days) and not all(
             day in WEEK_DAYS for day in days
         ):
@@ -179,7 +156,7 @@ def set_class_days(
             eprint(msg)
             return Result.err(msg)
 
-        # For any other invalid input, raise an error
+        # Any other invalid input
         case _:
             msg = f"Days must be a list of integers or strings corresponding to the weekdays on which classes are held, and must match the following list {WEEK_DAYS}."
             eprint(msg)
@@ -189,15 +166,14 @@ def set_class_days(
 
 
 def extend_weeks(history: History, additional_weeks: int) -> Result[Unit]:
-    """Extends the number of weeks in the history.
-
-    :param additional_weeks: (int) - The number of additional weeks to extend.
-    :type additional_weeks: int
-
-    :return: (Result[Unit]) - a result object.
-    :rtype: Result[Unit]
-
-
+    """Extend the number of weeks in the history.
+    
+    Args:
+        history (History): History instance to update.
+        additional_weeks (int): Number of additional weeks to extend.
+        
+    Returns:
+        Result[Unit]: Success or error message.
     """
     if additional_weeks < 0:
         msg = "Additional weeks must be a non-negative integer."
@@ -208,20 +184,18 @@ def extend_weeks(history: History, additional_weeks: int) -> Result[Unit]:
 
 
 def replan_weeks(history: History, new_weeks: int) -> Result[Unit]:
-    """Replans the number of weeks in the history.
-
-    This method sets a new number of weeks for the course and updates the relevant dates
+    """Replan the number of weeks in the history.
+    
+    Sets a new number of weeks for the course and updates relevant dates
     based on the new duration.
-
-    :param new_weeks: (int) - The new number of weeks for the course.
-    :type new_weeks: int
-
-    :return: (Result[Unit]) - a result object.
-    :rtype: Result[Unit]
-
-
+    
+    Args:
+        history (History): History instance to update.
+        new_weeks (int): New number of weeks for the course.
+        
+    Returns:
+        Result[Unit]: Success or error message.
     """
-
     if new_weeks <= 1:
         msg = "Number of weeks must be greater than 1."
         eprint(msg)

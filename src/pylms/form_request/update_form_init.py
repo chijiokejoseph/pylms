@@ -22,28 +22,45 @@ from ..service import (
 
 
 def init_update_form(ds: DataStore, history: History) -> Result[Unit]:
+    """Initialize update form for students to fill attendance for past dates.
+    
+    Creates a form allowing students to update their attendance for held classes
+    within the current week number. Filters dates to only include those from
+    weeks equal to or below the current week.
+    
+    Args:
+        ds (DataStore): DataStore containing student data.
+        history (History): History object for tracking operations.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     msg: str = """
 You'll now select the dates for which the fillers of this form can fill their attendance.
 Please select all the dates for which attendance can be filled using the instructions below.
     """
     dates = get_held_classes(history, "")
-
     dates = select_class_date(msg, dates)
 
     if dates.is_err():
         return dates.propagate()
 
     dates = dates.unwrap()
+    
+    # Extract form details and filter dates by week number
     result: UpdateFormDetails = extract_update_details(ds)
     form_title: str = result.title
     form_name: str = result.name
     week_num: int = result.week_num
     timestamp: str = result.timestamp
 
+    # Only allow dates from current week or earlier
     dates = [each_date for each_date in dates if to_week_num(each_date) <= week_num]
     print_info(
         f"The current week number of the year {result.year_num} is {result.week_num} \nHence, only dates: {dates} which belong to weeks equal to or below {result.week_num} are allowed"
     )
+    
+    # Create and setup form
     data_form: Form | None = run_create_form(form_title, form_name)
     if data_form is None:
         msg = "Form creation failed when creating data form. \nPlease restart the program and try again."
@@ -57,8 +74,8 @@ Please select all the dates for which attendance can be filled using the instruc
         eprint(msg)
         return Result.err(msg)
 
+    # Share form with specified email
     email = input_email("Enter email to share the form with: ")
-
     if email.is_err():
         return email.propagate()
 
@@ -69,6 +86,7 @@ Please select all the dates for which attendance can be filled using the instruc
         eprint(msg)
         return Result.err(msg)
 
+    # Save form info to history
     info: UpdateFormInfo = UpdateFormInfo(
         week_num=week_num,
         year_num=result.year_num,

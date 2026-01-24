@@ -23,17 +23,33 @@ from ..service import (
 
 
 def init_present_form(ds: DataStore, input_date: str, email: str) -> Result[Form]:
+    """Initialize present attendance form for a specific date.
+    
+    Creates a form for students to mark their attendance as present with
+    name selection and date confirmation.
+    
+    Args:
+        ds (DataStore): DataStore containing student data.
+        input_date (str): Date for the attendance form.
+        email (str): Email address to share the form with.
+        
+    Returns:
+        Result[Form]: Success with created form or error message.
+    """
     pretty = ds.pretty()
     names: list[str] = pretty[NAME].to_list()
     cohort_no: int = pretty[0, COHORT]
     head = return_name(cohort_no, "Attendance", input_date)
     form_title, form_name = head.title, head.name
+    
+    # Create form
     present_form: Form | None = run_create_form(form_title, form_name)
     if present_form is None:
         msg = f"Form creation failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
         eprint(msg)
         return Result.err(msg)
 
+    # Setup form content with name dropdown and date selection
     form_content: ContentBody = ContentBody(
         requests=[
             Content(
@@ -74,17 +90,15 @@ def init_present_form(ds: DataStore, input_date: str, email: str) -> Result[Form
             ),
         ]
     )
-    present_form = run_setup_form(
-        present_form,
-        form_content,
-    )
+    
+    # Setup, publish, and share form
+    present_form = run_setup_form(present_form, form_content)
     if present_form is None:
         msg = f"Form setup failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
         eprint(msg)
         return Result.err(msg)
 
     present_form = run_publish_form(present_form)
-
     if present_form is None:
         msg = "Failed to publish form. Please try again."
         eprint(msg)

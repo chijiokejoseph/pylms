@@ -15,21 +15,19 @@ class RunEmailTest(unittest.TestCase):
         _ = load_dotenv()
 
     def test_run_email(self) -> None:
+        """Test run_email function with mock mail function that verifies email address.
+        
+        Uses a mock function to verify email address through SMTP connection
+        and tests the run_email wrapper functionality.
         """
-        Test the run_email function by passing a mock mail function that verifies an email address.
-
-        :return: (None) - This method does not return a value.
-        :rtype: None
-        """
-
         def mock_mail_fn(smtp: SMTP) -> Result[Unit]:
-            """
-            Mock mail function that retrieves an email address from the environment and verifies it using the provided SMTP instance.
-
-            :param smtp: (SMTP) - The SMTP instance used to verify the email address.
-            :type smtp: SMTP
-            :return: (Result[Unit]) - This function does not return a value.
-            :rtype: Result[Unit]
+            """Mock mail function that verifies email address using SMTP.
+            
+            Args:
+                smtp (SMTP): SMTP instance for email verification.
+                
+            Returns:
+                Result[Unit]: Success or error from verification.
             """
             email: str = must_get_env("EMAIL")
             try:

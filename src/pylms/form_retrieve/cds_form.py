@@ -9,6 +9,14 @@ from .form import retrieve_form
 def retrieve_cds_form(
     history: History,
 ) -> Result[tuple[DataStream, CDSFormInfo]]:
+    """Retrieve CDS form data from history.
+    
+    Args:
+        history (History): History object containing form information.
+        
+    Returns:
+        Result[tuple[DataStream, CDSFormInfo]]: Success with form data and info or error.
+    """
     info = select_form(history, "cds")
 
     if info.is_err():

@@ -10,12 +10,30 @@ from ..models import CDSFormInfo, UpdateFormInfo
 
 
 def str_form(form: CDSFormInfo | UpdateFormInfo) -> str:
+    """Format form information as string.
+    
+    Args:
+        form (CDSFormInfo | UpdateFormInfo): Form information to format.
+        
+    Returns:
+        str: Formatted string with title, timestamp, and ID.
+    """
     return f"{form.title}\n{' ' * 3}Timestamp: {form.timestamp}, ID: {form.uuid}"
 
 
 def select[T](
     choices: list[T], prompt: str, func: Callable[[T], str] = str
 ) -> Result[T]:
+    """Select item from list of choices using interactive menu.
+    
+    Args:
+        choices (list[T]): List of items to choose from.
+        prompt (str): Prompt message for selection.
+        func (Callable[[T], str]): Function to convert choice to string.
+        
+    Returns:
+        Result[T]: Success with selected item or error message.
+    """
     menu = [func(choice) for choice in choices]
     result = input_option(menu, prompt)
     if result.is_err():
@@ -38,6 +56,15 @@ def select_form(history: History, kind: Literal["update"]) -> Result[UpdateFormI
 def select_form(
     history: History, kind: Literal["cds", "update"]
 ) -> Result[CDSFormInfo] | Result[UpdateFormInfo]:
+    """Select form from available CDS or update forms in history.
+    
+    Args:
+        history (History): History object containing form information.
+        kind (Literal["cds", "update"]): Type of form to select.
+        
+    Returns:
+        Result[CDSFormInfo] | Result[UpdateFormInfo]: Success with selected form or error.
+    """
     available_forms: list[CDSFormInfo] | list[UpdateFormInfo] = (
         get_available_cds_forms(history)
         if kind == "cds"
@@ -47,6 +74,7 @@ def select_form(
     cds_forms: list[CDSFormInfo] = []
     update_forms: list[UpdateFormInfo] = []
 
+    # Separate forms by type
     for form in available_forms:
         if isinstance(form, CDSFormInfo):
             cds_forms.append(form)
@@ -55,11 +83,13 @@ def select_form(
 
     forms_list: list[str] = [str_form(form) for form in available_forms]
     title: str = kind.upper() if kind == "cds" else kind.title()
+    
     if len(forms_list) == 0:
         msg: str = f"list of {title} forms is empty"
         eprint(f"{msg}\n")
         return Result.err(msg)
 
+    # Select appropriate form type
     if len(cds_forms) > 0 and len(update_forms) == 0:
         result = select(
             cds_forms, "Select the CDS Form to retrieve its metadata", str_form

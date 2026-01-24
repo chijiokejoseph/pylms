@@ -13,6 +13,19 @@ from .present_class_form import init_present_form
 def init_class_form(
     ds: DataStore, history: History, form_dates: list[str]
 ) -> Result[Unit]:
+    """Initialize class forms for attendance tracking on specified dates.
+    
+    Creates both present and excused forms for each date, then adds the form
+    information to history and marks classes as held.
+    
+    Args:
+        ds (DataStore): DataStore containing student data.
+        history (History): History object for tracking operations.
+        form_dates (list[str]): List of dates to create forms for.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     email = input_email(
         "Enter an email address to share the form with: ",
     )
@@ -20,17 +33,21 @@ def init_class_form(
         return email.propagate()
     email = email.unwrap()
 
+    # Create forms for each specified date
     for date in form_dates:
+        # Create present form
         present_form = init_present_form(ds, date, email)
         if present_form.is_err():
             return present_form.propagate()
         present_form = present_form.unwrap()
 
+        # Create excused form
         excused_form = init_excused_form(ds, date, email)
         if excused_form.is_err():
             return excused_form.propagate()
         excused_form = excused_form.unwrap()
 
+        # Create form info record
         form_info: ClassFormInfo = ClassFormInfo(
             date=date,
             present_name=present_form.name,
@@ -43,6 +60,8 @@ def init_class_form(
             excused_id=excused_form.uuid,
             timestamp=datetime.now().strftime(TIMESTAMP_FMT),
         )
+        
+        # Update history with held class and form info
         result = add_held_class(history, date)
         if result.is_err():
             return result.propagate()

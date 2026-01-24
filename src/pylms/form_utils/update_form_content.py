@@ -28,11 +28,19 @@ from .update_form_dates import new_content_from_date
 
 
 def new_update_content(dates_list: list[str]) -> ContentBody:
+    """Create content body for update form with student information and attendance fields.
+    
+    Args:
+        dates_list (list[str]): List of dates to create attendance fields for.
+        
+    Returns:
+        ContentBody: Form content with student info and attendance fields for each date.
+    """
     counter: Generator[int, None, None] = counter_setup()
 
     content_body: ContentBody = ContentBody(
         requests=[
-            # Name
+            # Name field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -48,7 +56,7 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
-            # Gender
+            # Gender selection
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -67,12 +75,10 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
                         ),
                         title=GENDER,
                     ),
-                    location=Location(
-                        index=next(counter),
-                    ),
+                    location=Location(index=next(counter)),
                 )
             ),
-            # Email
+            # Email field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -88,7 +94,7 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
-            # Phone
+            # Phone field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -104,7 +110,7 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
-            # Internship
+            # Internship selection
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -123,12 +129,10 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
                         ),
                         title=INTERNSHIP,
                     ),
-                    location=Location(
-                        index=next(counter),
-                    ),
+                    location=Location(index=next(counter)),
                 )
             ),
-            # Completion
+            # Completion date
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -144,7 +148,7 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
-            # CDS
+            # CDS day selection
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -170,6 +174,8 @@ def new_update_content(dates_list: list[str]) -> ContentBody:
         ]
     )
 
+    # Add attendance fields for each date
     for date in dates_list:
         content_body.requests.append(new_content_from_date(date, next(counter)))
+    
     return content_body

@@ -6,7 +6,14 @@ from .name import return_name
 
 
 class TestName(TestCase):
+    """Test cases for form name generation functionality."""
+    
     def test_name(self) -> None:
+        """Test return_name function with different function types and dates.
+        
+        Tests form title and name generation for assessment forms (no date)
+        and attendance forms (with specific dates).
+        """
         cohort = 31
         samples: list[tuple[str, str | None]] = [
             ("Assessment", None),

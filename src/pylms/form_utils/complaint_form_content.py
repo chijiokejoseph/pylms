@@ -42,14 +42,25 @@ from ..models import (
 
 
 def new_complaint_form(ds: DataStore) -> ContentBody:
-    cohort = ds.as_ref()[COHORT].astype(int).iloc[0]
-    orientation = ds.as_ref()[DATE].astype(str).iloc[0]
+    """Create content body for complaint form with student information fields.
+    
+    Args:
+        ds (DataStore): DataStore containing cohort and orientation date information.
+        
+    Returns:
+        ContentBody: Form content with complaint form fields.
+    """
+    data_ref = ds.as_ref()
+    cohort = data_ref[0, COHORT]
+    orientation = data_ref[0, DATE]
     orientation = datetime.strptime(orientation, DATE_FMT)
     day, year = orientation.day, orientation.year
 
     def get_last(day: int) -> str:
+        """Get last digit of day for ordinal suffix."""
         return str(day)[-1]
 
+    # Determine ordinal suffix
     last = get_last(day)
     match last:
         case "1":
@@ -61,6 +72,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
         case _:
             ext = "th"
 
+    # Format date components
     month = orientation.strftime(MONTH_STR_FMT)
     weekday = orientation.strftime(WEEK_DAY_FMT)
     confirm_reg_stmt = (
@@ -71,6 +83,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
     counter: Generator[int, None, None] = counter_setup()
     return ContentBody(
         requests=[
+            # Name field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -86,6 +99,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Email field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -101,6 +115,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Phone field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -116,6 +131,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Program selection
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -138,6 +154,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Course selection
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -160,6 +177,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Issue selection
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -181,6 +199,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Reason field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -196,6 +215,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Explanation field
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -211,6 +231,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Registration confirmation
             Content(
                 createItem=CreateItem(
                     item=Item(
@@ -233,6 +254,7 @@ def new_complaint_form(ds: DataStore) -> ContentBody:
                     location=Location(index=next(counter)),
                 )
             ),
+            # Completed courses
             Content(
                 createItem=CreateItem(
                     item=Item(

@@ -16,6 +16,15 @@ from ..models import (
 
 
 def new_assessment_content(names: list[str], emails: list[str]) -> ContentBody:
+    """Create content body for assessment form with name and email dropdowns.
+    
+    Args:
+        names (list[str]): List of student names for dropdown.
+        emails (list[str]): List of student emails for dropdown.
+        
+    Returns:
+        ContentBody: Form content with name and email selection fields.
+    """
     counter: Generator[int, None, None] = counter_setup()
     return ContentBody(
         requests=[
@@ -54,7 +63,7 @@ def new_assessment_content(names: list[str], emails: list[str]) -> ContentBody:
                                 required=True,
                             )
                         ),
-                        description="Select your name from the dropdown",
+                        description="Select your email from the dropdown",
                     ),
                     location=Location(index=next(counter)),
                 )

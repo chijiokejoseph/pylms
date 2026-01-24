@@ -30,12 +30,23 @@ from ..service import (
 
 
 def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
+    """Initialize and create CDS form for NYSC corpers.
+    
+    Args:
+        ds (DataStore): DataStore containing student data.
+        history (History): History object for tracking operations.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     pretty = ds.pretty()
+    # Filter for NYSC corpers only
     corpers = pretty.filter(pl.col(INTERNSHIP) == "NYSC")
-    corper_names: list[str] = corpers[INTERNSHIP].to_list()
+    corper_names: list[str] = corpers[NAME].to_list()  # Fixed: should be NAME not INTERNSHIP
     cohort_no: int = pretty[0, COHORT]
     timestamp: str = datetime.now().strftime(TIMESTAMP_FMT)
 
+    # Create form with CDS title
     head = return_name(cohort_no, "CDS")
     form_title, form_name = head.title, head.name
 
@@ -46,6 +57,7 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
+    # Setup form content with name dropdown and CDS day selection
     cds_content: ContentBody = ContentBody(
         requests=[
             Content(
@@ -93,6 +105,7 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
         ]
     )
 
+    # Setup and publish form
     cds_form = run_setup_form(cds_form, cds_content)
     if cds_form is None:
         msg = f"Form setup failed when setting up CDS Entry Forms for students for cohort {cohort_no}. \n\nPlease restart the program and try again."
@@ -106,6 +119,7 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
+    # Share form with recipient
     recipient_email = input_email(
         "Enter an email address to share the form with: ",
     )
@@ -119,6 +133,7 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
+    # Save form info to history
     info: CDSFormInfo = CDSFormInfo(
         name=cds_form.name,
         title=cds_form.title,

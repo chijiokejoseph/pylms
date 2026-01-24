@@ -96,52 +96,46 @@ class History:
 
     @property
     def has_collated_attendance(self) -> bool:
-        """
-        Property indicating whether the attendance records have been collated.
-
-        :return: (bool) - A boolean indicating whether the attendance records have been collated.
-        :rtype: bool
+        """Check if attendance records have been collated.
+        
+        Returns:
+            bool: True if attendance records have been collated.
         """
         return self.attendance[0]
 
     @property
     def has_collated_assessment(self) -> bool:
-        """
-        Property indicating whether the assessment scores have been collated.
-
-        :return: (bool) - A boolean indicating whether the assessment scores have been collated.
-        :rtype: bool
+        """Check if assessment scores have been collated.
+        
+        Returns:
+            bool: True if assessment scores have been collated.
         """
         return self.assessment[0]
 
     @property
     def has_collated_project(self) -> bool:
-        """
-        Property indicating whether the project scores have been collated.
-
-        :return: (bool) - A boolean indicating whether the project scores have been collated.
-        :rtype: bool
+        """Check if project scores have been collated.
+        
+        Returns:
+            bool: True if project scores have been collated.
         """
         return self.project[0]
 
     @property
     def has_collated_merit(self) -> bool:
-        """
-        Property indicating whether the merit scores have been collated.
-
-        :return: (bool) - A boolean indicating whether the merit scores have been collated.
-        :rtype: bool
+        """Check if merit scores have been collated.
+        
+        Returns:
+            bool: True if merit scores have been collated.
         """
         return self.merit[0]
 
     @property
     def has_collated_all(self) -> bool:
-        """
-        Property indicating whether all necessary records (attendance, assessment, and project)
-        have been collated.
-
-        :return: (bool) - A boolean indicating whether all necessary records have been collated.
-        :rtype: bool
+        """Check if all necessary records have been collated.
+        
+        Returns:
+            bool: True if attendance, assessment, and project have all been collated.
         """
         return (
             self.has_collated_attendance
@@ -151,21 +145,18 @@ class History:
 
     @property
     def has_collated_result(self) -> bool:
-        """
-        Property indicating whether the result has been collated.
-
-        :return: (bool) - A boolean indicating whether the result has been collated.
-        :rtype: bool
+        """Check if result has been collated.
+        
+        Returns:
+            bool: True if result has been collated.
         """
         return self.result[0]
 
     @property
     def has_group(self) -> bool:
+        """Check if students have been grouped for projects.
+        
+        Returns:
+            bool: True if students have been grouped.
         """
-        Returns True if the students have been grouped. False if not
-
-        :return: (bool) - indicates if the students have been grouped for their projects or not
-        :rtype: bool
-        """
-
         return self.group[0]
