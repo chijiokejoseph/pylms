@@ -3,13 +3,12 @@ from typing import NamedTuple
 
 
 class MessageRecord(NamedTuple):
-    """
-    Represents an email message record containing recipient information, 
-    the email content and the recipient's name if provided.
-
-    :ivar name: (str | None) - The name of the recipient, or None if not provided.
-    :ivar email: (str) - The email address of the recipient.
-    :ivar message: (EmailMessage) - The email message content to be sent.
+    """Email message record containing recipient information and content.
+    
+    Attributes:
+        name (str | None): Recipient name, or None if not provided.
+        email (str): Recipient email address.
+        message (EmailMessage): Email message content to be sent.
     """
     name: str | None
     email: str

@@ -7,12 +7,12 @@ from .utils import TextBody
 
 
 def build_custom_select_msg() -> Result[TextBody]:
-    """
-    Build a list of MessageRecord objects for sending a select message to multiple recipients.
-
-    :return: (Result[list[MessageRecord]]) - A Result object containing a list of MessageRecord objects if successful,
-             or an error if the cohort is None.
-    :rtype: Result[list[MessageRecord]]
+    """Build custom message content for selected recipients.
+    
+    Prompts user for message title and body, then formats as HTML.
+    
+    Returns:
+        Result[TextBody]: Success with formatted HTML message or error.
     """
 
     # Prompt for the title of the message for each recipient
@@ -42,6 +42,14 @@ def build_custom_select_msg() -> Result[TextBody]:
 
 
 def build_update_msg(history: History) -> Result[TextBody]:
+    """Build update message content for new cohort members.
+    
+    Args:
+        history (History): History object containing cohort and form information.
+        
+    Returns:
+        Result[TextBody]: Success with update message or error.
+    """
     # Retrieve the URL for the update form from the history object
     result = select_form(history, "update")
     if result.is_err():

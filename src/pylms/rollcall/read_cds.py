@@ -5,7 +5,15 @@ from ..data import DataStream
 def extract_cds(
     data_form_stream: DataStream,
 ) -> tuple[DataStream, DataStream]:
-    data: pl.DataFrame = data_form_stream.as_clone()
-    cds_data: pl.DataFrame = data.loc[:, [NAME, CDS]]
-    new_data = data.drop(columns=[CDS])
+    """Extract CDS information from form data stream.
+
+    Args:
+        data_form_stream (DataStream): Stream containing form data with CDS column.
+
+    Returns:
+        tuple[DataStream, DataStream]: Tuple of (data without CDS, CDS data only).
+    """
+    data = data_form_stream.as_ref()
+    cds_data = data.select([NAME, CDS])
+    new_data = data.drop(CDS)
     return DataStream(new_data), DataStream(cds_data)

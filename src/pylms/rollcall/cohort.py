@@ -1,10 +1,12 @@
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
+import polars as pl
 
 from ..cli import input_bool
 from ..constants import COHORT, DATA_COLUMNS, DATE_FMT
-from ..data import DataStore, DataStream
+from ..data import DataStore, datamap, write
 from ..errors import Result, eprint
 from ..history import (
     History,
@@ -17,9 +19,15 @@ from ..paths import get_cohort_path
 from ..record import RecordStatus
 
 
-# return a more appropriate output for use by the NCAIR team that
-# scrutinize the half-cohort attendance
 def fill_norm_records(record_input: str) -> RecordStatus:
+    """Normalize attendance records for NCAIR team review.
+
+    Args:
+        record_input (str): Input attendance record.
+
+    Returns:
+        RecordStatus: PRESENT for valid attendance, ABSENT otherwise.
+    """
     if record_input in [
         RecordStatus.CDS,
         RecordStatus.EXCUSED,
@@ -30,53 +38,68 @@ def fill_norm_records(record_input: str) -> RecordStatus:
         return RecordStatus.ABSENT
 
 
-def fill_records(record_input: str) -> RecordStatus:
+@np.vectorize
+def fill_records(record_input: str) -> str:
+    """Convert string input to appropriate RecordStatus.
+
+    Args:
+        record_input (str): String representation of attendance status.
+
+    Returns:
+        RecordStatus: Corresponding RecordStatus enum value.
+    """
     match str(record_input):
         case RecordStatus.PRESENT:
-            return RecordStatus.PRESENT
+            return str(RecordStatus.PRESENT)
         case RecordStatus.EXCUSED:
-            return RecordStatus.EXCUSED
+            return str(RecordStatus.EXCUSED)
         case RecordStatus.CDS:
-            return RecordStatus.CDS
+            return str(RecordStatus.CDS)
         case RecordStatus.NO_CLASS:
-            return RecordStatus.NO_CLASS
+            return str(RecordStatus.NO_CLASS)
         case _:
-            return RecordStatus.ABSENT
+            return str(RecordStatus.ABSENT)
 
 
 def record_cohort(ds: DataStore, history: History) -> Result[Path]:
-    # get DataStore data in its pretty form
-    pretty: pl.DataFrame = ds.pretty()
+    """Generate half-cohort attendance record for NCAIR review.
 
-    # get cohort no
-    cohort_no: int = pretty[COHORT].astype(int).iloc[0]
+    Args:
+        ds (DataStore): DataStore containing student attendance data.
+        history (History): History object with class and form information.
 
-    # get class dates
+    Returns:
+        Result[Path]: Success with path to generated file or error.
+    """
+    # Get DataStore data in its pretty form
+    pretty = ds.pretty()
+
+    # Get cohort number
+    cohort_no = pretty[0, COHORT]
+
+    # Get class dates
     dates = retrieve_dates("")
     if dates.is_err():
         return dates.propagate()
 
     dates = dates.unwrap()
 
-    today: datetime = datetime.now()
-    past_classes: list[str] = [
+    today = datetime.now()
+    past_classes = [
         each_date
         for each_date in dates
         if datetime.strptime(each_date, DATE_FMT) <= today
     ]
-    last_class: str = past_classes[-1]
+    last_class = past_classes[-1]
 
-    # check that the CDS days of the NYSC students in the cohort
-    # have been recorded before taking cohort attendance
-    # this is done by checking that at least one cds form has been generated and retrieved
-    # and that there are no cds forms unretrieved.
+    # Check CDS forms status
     available_cds_forms = get_available_cds_forms(history)
     if len(available_cds_forms) != 0 and len(history.recorded_cds_forms) > 0:
         msg = "Cannot record half cohort attendance since the CDS days of the NYSC students has not yet been recorded. Please record the CDS days then try again."
         print_info(msg)
         return Result.err(msg)
 
-    required_records: int = 3
+    required_records = 3
     marked_dates = get_marked_classes(history, "")
     gotten_records = len(marked_dates)
 
@@ -85,7 +108,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
         eprint(msg)
         return Result.err(msg)
 
-    # if the half-cohort attendance has already been generated, return early
+    # Check if cohort attendance already exists
     cohort_path = get_cohort_path(cohort_no)
     if cohort_path.exists():
         print_info(
@@ -100,35 +123,24 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
         if not choice:
             return Result.ok(cohort_path)
 
-    # get all the columns in the data
-    data_cols: list[str] = pretty.columns.tolist()
+    # Get all columns and find last class index
+    data_cols = pretty.columns
+    last_date_idx = data_cols.index(last_class)
+    required_cols = data_cols[: last_date_idx + 1]
 
-    # get the index of the column that corresponds to the `last_class_date` of the half-cohort week
-    last_date_idx: int = data_cols.index(last_class)
+    # Extract cohort data
+    cohort_data = pretty.select(required_cols)
 
-    # extract all the columns from the beginning of the dataset to the `last_class_date` column
-    required_cols: list[str] = data_cols[: last_date_idx + 1]
-
-    # extract the entries for the half-cohort attendance
-    cohort_data: pl.DataFrame = pretty.loc[:, required_cols]
-
-    _ = fill_norm_records("Excused")
-
+    # Process attendance records
     for column in cohort_data.columns:
-        # if `column` is in `DATA_COLUMNS` i.e., it is not a date column skip
         if column in DATA_COLUMNS:
             continue
-        # format column by using fill_record on all its entries
-        class_record = cohort_data.loc[:, column].astype(str)
-        new_class_record = [fill_records(record) for record in class_record]
-        new_class_record = [str(record) for record in new_class_record]
-        # update the column data with the `new_class_record`
-        cohort_data.loc[:, column] = new_class_record
 
-    # output the data to local file storage
-    cohort_stream = DataStream(cohort_data)
+        # Apply fill_records to each entry in the column
+        cohort_data = datamap(cohort_data, column, fill_records, np.str_, pl.String())
 
-    result = cohort_stream.to_excel(cohort_path)
+    # Output to Excel file
+    result = write(cohort_data, cohort_path)
     if result.is_err():
         return result.propagate()
 

@@ -3,16 +3,18 @@ from ..errors import Result
 
 
 def construct_msg(prompt: str | None = None) -> Result[str]:
+    """Construct multi-line message by prompting user for input.
+    
+    User enters lines one at a time until 'DONE' is entered. Provides options
+    to continue adding lines, clear and restart, or proceed with the message.
+    
+    Args:
+        prompt (str | None): Optional custom prompt message.
+        
+    Returns:
+        Result[str]: Success with constructed message or error.
     """
-    Constructs a multi-line message by prompting the user to enter lines one at a time.
-
-    The user is repeatedly asked to input a new line, which is appended to the message.
-    Input ends when the user enters 'DONE' (case-insensitive).
-
-    :return: The constructed multi-line message as a string.
-    :rtype: str
-    """
-    message: str = ""  # Initialize the message as an empty string
+    message: str = ""  # Initialize empty message
 
     confirm_menu: list[str] = [
         "Continue Adding Lines",
@@ -24,7 +26,7 @@ def construct_msg(prompt: str | None = None) -> Result[str]:
     print("\n" + prompt_str + "\n")
 
     while True:
-        # Prompt the user for a new line to add to the message
+        # Prompt user for new line
         result = input_str(
             "Enter a new line to add to the message (Enter 'DONE' to finish): ",
             lower_case=False,
@@ -32,6 +34,7 @@ def construct_msg(prompt: str | None = None) -> Result[str]:
         if result.is_err():
             return result.propagate()
         newline: str = result.unwrap()
+        
         if newline.upper() == "DONE":
             print(f"Message = \n\n{message}\n")
             option_result = input_option(
@@ -46,10 +49,10 @@ def construct_msg(prompt: str | None = None) -> Result[str]:
                 case 2:  # Clear Message and Restart
                     message = ""
                     continue
-                case _:  # Exit the loop if the user is done entering lines
+                case _:  # Proceed with message
                     break
 
-        # Append the new line to the message, followed by a newline character
+        # Append new line to message
         message += f"{newline}\n"
 
     return Result.ok(message)

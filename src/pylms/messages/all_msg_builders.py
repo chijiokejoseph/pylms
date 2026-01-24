@@ -7,11 +7,12 @@ from .utils import TextBody
 
 # Define a builder function to create the list of messages to send
 def build_custom_all_msg() -> Result[TextBody]:
-    """
-    custom builder function that returns the text of a string
-
-    :return: (str) - The main text a message is to hold
-    :rtype: str
+    """Build custom message content for all recipients.
+    
+    Prompts user for email title and message body content.
+    
+    Returns:
+        Result[TextBody]: Success with title and body or error.
     """
 
     # Prompt user for the email subject title
@@ -31,6 +32,14 @@ def build_custom_all_msg() -> Result[TextBody]:
 
 
 def build_assessment_all_msg(history: History) -> Result[TextBody]:
+    """Build assessment message content for all students.
+    
+    Args:
+        history (History): History object containing cohort information.
+        
+    Returns:
+        Result[TextBody]: Success with assessment message or error.
+    """
     options: list[str] = [
         "Midterm Assessment",
         "Final Assessment",
