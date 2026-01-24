@@ -5,6 +5,7 @@ from ..info import print_info
 from ..record import RecordStatus
 
 RECORDS = [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.EXCUSED]
+RECORDS_ALL = [RecordStatus.PRESENT, RecordStatus.EXCUSED, RecordStatus.NO_CLASS]
 
 
 def input_record(

@@ -6,8 +6,110 @@ from ..data import DataStore
 from ..errors import Result, Unit
 from ..history import History, all_dates
 from ..info import print_info
-from ..record import RecordStatus
-from .record_input import RECORDS, input_record
+from ..record import RecordStatus, retrieve_record
+from .record_input import RECORDS, RECORDS_ALL, input_record
+
+
+def _fill(existing_record: RecordStatus, fill_record: RecordStatus) -> RecordStatus:
+    # If no class is held that day return no class
+    if fill_record == RecordStatus.NO_CLASS:
+        return fill_record
+
+    # If the student's record indicates that that day is his CDS, then prefer the CDS record
+    if existing_record == RecordStatus.CDS:
+        return existing_record
+
+    # If all the students are marked absent but a student is marked excused, prefer his excused record
+    if fill_record == RecordStatus.ABSENT and existing_record == RecordStatus.EXCUSED:
+        return existing_record
+
+    # Else unequivocally return the fill record set by the user.
+    return fill_record
+
+
+@overload
+def edit_all_serials(
+    ds: DataStore, history: History, dates: list[str], kind: Literal["private"]
+) -> Result[RecordStatus] | Result[list[RecordStatus]]:
+    pass
+
+
+@overload
+def edit_all_serials(
+    ds: DataStore,
+    history: History,
+    dates: list[str],
+    kind: Literal["public"],
+) -> Result[Unit]:
+    pass
+
+
+def edit_all_serials(
+    ds: DataStore,
+    history: History,
+    dates: list[str],
+    kind: Literal["private", "public"],
+) -> Result[RecordStatus] | Result[list[RecordStatus]] | Result[Unit]:
+    if len(dates) == 0:
+        raise Result.fail("dates argument cannot be empty")
+
+    bad_dates = [date for date in dates if date not in all_dates(history, "")]
+    if len(bad_dates) > 0:
+        dates_str = COMMA_DELIM.join(bad_dates)
+        msg = f"The following dates: '{dates_str}' do not correspond to any class dates"
+        raise Result.fail(msg)
+
+    if len(dates) == 1:
+        choice = True
+    else:
+        choice = input_bool(
+            f"Do you wish to make a single edit for every date in '{dates}'"
+        )
+        if choice.is_err():
+            return choice.propagate()
+        choice = choice.unwrap()
+
+    data = ds.as_ref()
+
+    print_info("You are editing the attendance record for all students")
+
+    if choice:
+        date = dates[0]
+        record = input_record(history, date, RECORDS_ALL)
+        if record.is_err():
+            return record.propagate()
+        record = record.unwrap()
+
+        for date in dates:
+            prev_records = data[date].astype(str).tolist()
+            class_record = [retrieve_record(record) for record in prev_records]
+            new_class_record = [
+                str(_fill(old_record, record)) for old_record in class_record
+            ]
+            data[date] = data[date].astype(str)
+            data[date] = new_class_record
+
+        print_info(f"Attendance record for dates: '{dates}' edited successfully")
+        if kind == "public":
+            return Result.unit()
+        else:
+            return Result.ok(record)
+
+    records: list[RecordStatus] = []
+    for date in dates:
+        record = input_record(history, date, RECORDS_ALL)
+        if record.is_err():
+            return record.propagate()
+        record = record.unwrap()
+
+        records.append(record)
+        print_info(f"Edited Attendance for {date}")
+
+    print_info(f"Attendance record for dates: '{dates}' edited successfully")
+    if kind == "public":
+        return Result.unit()
+    else:
+        return Result.ok(records)
 
 
 @overload
@@ -169,6 +271,7 @@ def edit_single_date(
     pretty = ds.to_pretty()
     names = pretty.loc[:, NAME].astype(str)
     data = ds.as_ref()
+    data[date] = data[date].astype(str)
 
     print_info(f"You are editing the attendance record for date: {date}")
 

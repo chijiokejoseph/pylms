@@ -54,9 +54,9 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                     continue
 
             case 3:
-                edit_result = edit_record(ds, history)
+                result = edit_record(ds, history)
 
-                if edit_result.is_err():
+                if result.is_err():
                     continue
             case 4:
                 record_path = record_cohort(ds, history)
