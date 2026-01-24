@@ -4,6 +4,14 @@ from ..errors import Result, Unit
 
 
 def view(ds: DataStore) -> Result[Unit]:
+    """Display selected students from DataStore.
+    
+    Args:
+        ds (DataStore): DataStore containing student data.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     student_serials = provide_serials(ds)
     if student_serials.is_err():
         return student_serials.propagate()

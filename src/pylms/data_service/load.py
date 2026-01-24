@@ -8,12 +8,16 @@ from .prefill import prefill_ds
 
 
 def load() -> Result[DataStore]:
-    # get DataStore path
+    """Load DataStore from file or return prefilled DataStore if not found.
+    
+    Returns:
+        Result[DataStore]: Success with loaded or prefilled DataStore.
+    """
+    # Get DataStore path
     path: Path = get_paths_excel()["DataStore"]
 
     ds = prefill_ds()
-    # load DataStore from path if it exists
-    # else return dummy DataStore
+    # Load DataStore from path if it exists, else return dummy DataStore
     if not path.exists():
         msg = "DataStore not found. Please register a new cohort first before performing any other operations."
         print_info(msg)

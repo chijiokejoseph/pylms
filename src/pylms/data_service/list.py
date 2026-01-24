@@ -8,6 +8,14 @@ from ..paths import get_list_path
 
 
 def list_ds(ds: DataStore) -> Result[Unit]:
+    """Export DataStore to file for listing students.
+    
+    Args:
+        ds (DataStore): DataStore containing student data.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     pretty = ds.pretty()
     cohort: int = pretty[0, COHORT]
     records = pretty[DATA_COLUMNS]

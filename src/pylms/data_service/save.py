@@ -8,6 +8,14 @@ from ..paths import get_data_path, get_paths_excel
 
 
 def save(ds: DataStore) -> Result[Unit]:
+    """Save DataStore to file.
+    
+    Args:
+        ds (DataStore): DataStore to save.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     if ds.prefilled:
         msg = "Error: DataStore is prefilled and has no actual data"
         eprint(msg)
@@ -20,6 +28,7 @@ def save(ds: DataStore) -> Result[Unit]:
     if result.is_err():
         return result.propagate()
 
+    # Display save path with abbreviated format
     path_display = str(ds_path).replace(str(data_path), "...DATA")
     path_display = emphasis(path_display)
     printpass(f'DataStore saved at path "{path_display}"')

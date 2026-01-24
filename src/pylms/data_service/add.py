@@ -7,12 +7,22 @@ from .append_utils import clean_after_ops
 
 
 def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
+    """Add subset DataStore to superset DataStore with column validation.
+    
+    Args:
+        superset (DataStore): Target DataStore to add data to.
+        subset (DataStore): Source DataStore to add from.
+        
+    Returns:
+        Result[DataStore]: Success with new combined DataStore or error message.
+    """
     superset_ref = superset.as_ref()
     subset_ref = subset.as_ref()
     superset_cols: list[str] = superset_ref.columns
     subset_cols: list[str] = subset_ref.columns
 
     def validate_subset() -> Result[Unit]:
+        """Validate that subset columns exist in superset."""
         superset_extras: list[str] = [
             col for col in superset_cols if col not in DATA_COLUMNS
         ]
@@ -30,7 +40,7 @@ def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
     if result.is_err():
         return result.propagate()
 
-
+    # Align subset columns with superset, filling missing columns with spaces
     subset_ref = subset_ref.lazy().select(
         [
             pl.when(col in superset_ref.columns)
@@ -42,6 +52,7 @@ def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
         ]
     ).collect()
 
+    # Combine DataFrames vertically
     new = superset_ref.vstack(subset_ref)
     new = DataStore.from_data(new)
 

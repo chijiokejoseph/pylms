@@ -8,11 +8,14 @@ from ..record import RecordStatus
 
 
 def _clean_date(data: pl.DataFrame):
-    # def fill_space(entry: str) -> str:
-    #     if entry != SPACE_DELIM:
-    #         return entry
-    #     return RecordStatus.PRESENT
-
+    """Clean date columns by standardizing attendance status values.
+    
+    Args:
+        data (pl.DataFrame): DataFrame with date columns to clean.
+        
+    Returns:
+        pl.DataFrame: DataFrame with cleaned date columns.
+    """
     reg = re.compile(r"^\d{2}/\d{2}/\d{4}$")
     data = data.with_columns(
         [
@@ -32,13 +35,19 @@ def _clean_date(data: pl.DataFrame):
     return data
 
 
-
 def clean_after_ops(ds: DataStore) -> None:
+    """Clean DataStore after operations by updating serials and sorting.
+    
+    Args:
+        ds (DataStore): DataStore to clean and update.
+    """
     data_ref = ds.as_ref()
+    # Update unique columns, sort by name, and reset serial numbers
     data_ref = data_ref.with_columns(
         pl.col(UNIQUE_COLUMNS).unique(),
         pl.col(NAME).sort(),
         pl.Series(SERIAL, [i + 1 for i in range(data_ref.shape[0])]).alias(SERIAL),
     )
+    # Clean date columns
     data_ref = _clean_date(data_ref)
     _ = ds.copy_from(data_ref).unwrap()

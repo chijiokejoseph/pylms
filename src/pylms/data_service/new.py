@@ -9,6 +9,14 @@ from .load import load
 
 
 def new(history: History) -> Result[DataStore]:
+    """Create new DataStore from registration data with preprocessing.
+    
+    Args:
+        history (History): History object for tracking operations.
+        
+    Returns:
+        Result[DataStore]: Success with new DataStore or error message.
+    """
     if get_paths_excel()["DataStore"].exists():
         ds = load()
         if ds.is_err():
@@ -20,6 +28,7 @@ def new(history: History) -> Result[DataStore]:
         )
         return Result.ok(ds)
 
+    # Clean and preprocess registration data
     ds = clean_reg_data()
     if ds.is_err():
         return ds.propagate()

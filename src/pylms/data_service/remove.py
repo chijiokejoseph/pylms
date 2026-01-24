@@ -5,12 +5,19 @@ from .sub import sub
 
 
 def remove_students(ds: DataStore) -> Result[Unit]:
+    """Remove selected students from DataStore.
+    
+    Args:
+        ds (DataStore): DataStore to remove students from.
+        
+    Returns:
+        Result[Unit]: Success or error message.
+    """
     student_serials = provide_serials(ds)
     if student_serials.is_err():
         return student_serials.propagate()
 
     student_serials = student_serials.unwrap()
 
-    sub(ds, student_serials)
-
-    return Result.unit()
+    return sub(ds, student_serials)
+    

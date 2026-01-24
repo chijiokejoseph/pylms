@@ -32,15 +32,14 @@ type Array[K: np.generic] = np.ndarray[tuple[int, ...], np.dtype[K]]
 
 
 def _preprocess(col_name: str, value: str) -> Any | None:
-    """
-    Preprocesses and validates the input value for a given column name.
-
-    :param col_name: (str) - The name of the column to preprocess.
-    :type col_name: str
-    :param value: (str) - The value to preprocess and validate.
-    :type value: str
-    :return: (Any | None) - The processed value if valid, otherwise None.
-    :rtype: Any | None
+    """Preprocess and validate input value for a given column.
+    
+    Args:
+        col_name (str): Column name to preprocess for.
+        value (str): Input value to preprocess and validate.
+        
+    Returns:
+        Any | None: Processed value if valid, None otherwise.
     """
     value = value.strip()
     # Only process columns defined in DATA_COLUMNS
@@ -125,15 +124,16 @@ def _preprocess(col_name: str, value: str) -> Any | None:
 
 
 def edit(ds: DataStore) -> Result[Unit]:
-    """
-    Allows the user to edit records for selected students in the DataStore.
-    Prompts for student selection, attribute to edit, and new value.
-    Updates the DataStore with the new values and returns it.
-
-    :param ds: (DataStore) - The DataStore containing student records to edit.
-    :type ds: DataStore
-    :return: (Result[Unit]) - The updated DataStore after editing records.
-    :rtype: Result[Unit]
+    """Edit records for selected students in the DataStore.
+    
+    Prompts user to select students, choose attributes to edit, and enter new values.
+    Validates input and updates the DataStore with confirmed changes.
+    
+    Args:
+        ds (DataStore): DataStore containing student records to edit.
+        
+    Returns:
+        Result[Unit]: Success or error message.
     """
     print_info("Please select the students whose records you wish to edit")
 
@@ -188,16 +188,19 @@ def edit(ds: DataStore) -> Result[Unit]:
             if choice:
                 break
 
-        # Convert new value to correct dtype
-        # column_type = data_ref.loc[:, column].dtype.type
-        # new_value: Array[Any] = np.array(proc_value).astype(column_type)
-        # For DATE and COHORT, update entire column; otherwise, update single row
+        # Update DataFrame with new value
         if column in [DATE, COHORT]:
+            # For DATE and COHORT, update entire column
             data_ref = data_ref.with_columns(pl.lit(proc_value).alias(column))
         else:
-            data_ref[idx, column] = proc_value
+            # Update single row using with_columns and when condition
+            data_ref = data_ref.with_columns(
+                pl.when(pl.col(SERIAL) == serial)
+                .then(pl.lit(proc_value))
+                .otherwise(pl.col(column))
+                .alias(column)
+            )
         print()
 
-    
     return ds.copy_from(data_ref)
 

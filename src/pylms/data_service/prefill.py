@@ -17,6 +17,11 @@ from ..data import DataStore
 
 
 def prefill_ds() -> DataStore:
+    """Create prefilled DataStore with dummy data for initialization.
+    
+    Returns:
+        DataStore: DataStore with empty placeholder data.
+    """
     dummy_data = pl.DataFrame(
         data={
             SERIAL: [0, 0],
