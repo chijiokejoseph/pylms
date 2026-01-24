@@ -1,6 +1,6 @@
 from typing import Literal, NamedTuple, TypedDict
 
-COLOR = "\x1b["
+COLOR = "\x1b[;"
 COLOR_BRIGHT = "\x1b[1;"
 
 
