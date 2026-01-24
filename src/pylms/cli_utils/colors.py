@@ -1,6 +1,6 @@
 from typing import Literal, NamedTuple, TypedDict
 
-COLOR = "\x1b["
+COLOR = "\x1b[;"
 COLOR_BRIGHT = "\x1b[1;"
 
 
@@ -63,6 +63,6 @@ def emphasis(sample: str, part: str | None = None) -> str:
 
 
 if __name__ == "__main__":
-    result = emphasis("I am hungry")
+    result = emphasis("I am hungry", "am")
     print(f"{result = }")
     print(result)
