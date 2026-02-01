@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import numpy as np
+import polars as pl
 
-from ..data import DataStream, read
+from ..data import read, write
 from ..errors import Result, Unit, eprint
 from ..history import History, record_result
 from ..paths import get_paths_excel
@@ -63,47 +63,54 @@ def collate_result(history: History) -> Result[Unit]:
     assessment_req_col: str = det_assessment_req_col()
     project_score_col: str = det_project_score_col()
     passmark_col: str = det_passmark_col()
+    result_col = det_result_col()
 
     # Scale assessment and project scores by their respective ratios
-    collated_data.loc[
-        :, [assessment_score_col, assessment_req_col, project_score_col]
-    ] = collated_data.loc[
-        :, [assessment_score_col, assessment_req_col, project_score_col]
-    ].astype(float)
+    # collated_data.loc[
+    #     :, [assessment_score_col, assessment_req_col, project_score_col]
+    # ] = collated_data.loc[
+    #     :, [assessment_score_col, assessment_req_col, project_score_col]
+    # ].astype(float)
 
-    collated_data.loc[:, assessment_score_col] *= assessment_ratio
-    collated_data.loc[:, assessment_req_col] *= assessment_ratio
-    collated_data.loc[:, project_score_col] *= project_ratio
-
-    # Calculate overall scores by summing the scaled assessment and project scores
-    assessment_data: pd.Series = collated_data[assessment_score_col]
-    project_data: pd.Series = collated_data[project_score_col]
-    score_data: pd.Series = project_data + assessment_data
-    score_arr: np.ndarray = score_data.to_numpy()
-    score_arr = np.array(
-        [score if score <= 100 else 100 for score in score_arr.tolist()]
-    ).round(2)
+    collated_data = (
+        # scale assessment and project scores by their respective ratios
+        collated_data.with_columns(
+            (pl.col(assessment_score_col) * assessment_ratio).alias(
+                assessment_score_col
+            ),
+            (pl.col(assessment_req_col) * assessment_ratio).alias(assessment_req_col),
+            (pl.col(project_score_col) * project_ratio).alias(project_score_col),
+        )
+        # sum assessment and project scores to result and round for prettier display
+        .with_columns(
+            (pl.col(assessment_score_col) + pl.col(project_score_col))
+            .round(2)
+            .alias(result_col)
+        )
+        # truncate result scores (in case greater than 100) to 100 and then add passmark column
+        .with_columns(
+            pl.when(pl.col(result_col) > 100)
+            .then(pl.lit(100.0))
+            .otherwise(pl.col(result_col))
+            .alias(result_col),
+            pl.lit(pass_mark).alias(passmark_col),
+        )
+    )
 
     # Rename columns to reflect overall scores
     new_assessment_col: str = det_assessment_overall_col(assessment_ratio)
     new_project_col: str = det_project_overall_col(project_ratio)
     collated_data = collated_data.rename(
-        columns={
+        {
             assessment_score_col: new_assessment_col,
             project_score_col: new_project_col,
         }
     )
 
-    # Add overall scores and pass mark to the collated data
-    result_col: str = det_result_col()
-    collated_data[result_col] = score_arr
-    collated_data[passmark_col] = pass_mark
-
     # Save the collated result data to an Excel file
-    result_stream: DataStream = DataStream(collated_data)
     result_path: Path = get_paths_excel()["Result"]
 
-    result = result_stream.to_excel(result_path)
+    result = write(collated_data, result_path)
     if result.is_err():
         return result.propagate()
 

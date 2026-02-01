@@ -1,58 +1,62 @@
 from pathlib import Path
-from typing import cast
 
-import numpy as np
+import polars as pl
 
-from ..constants import GROUP, NAME, SERIAL
-from ..data import DataStream, read
+from ..constants import GROUP, SERIAL
+from ..data import read, write
 from ..errors import Result, Unit, eprint
 from ..paths import get_grade_path, get_group_dir, get_group_path
 
 
 def prepare_grading(num_groups: int) -> Result[Unit]:
-    path: Path = get_group_path()
+    """Prepare grading spreadsheets for project evaluation.
+
+    Creates individual group grading sheets and summary grading workbooks
+    for code evaluation, presentation scoring, and total calculations.
+
+    Args:
+        num_groups (int): Number of project groups to create sheets for.
+
+    Returns:
+        Result[Unit]: Success or error with message.
+    """
+    path = get_group_path()
     if not path.exists():
         msg = f"path: {path} does not exist."
         eprint(msg)
         return Result.err(msg)
 
-    group_data = read(path)
-    if group_data.is_err():
-        return group_data.propagate()
-    group_data = group_data.unwrap()
+    group = read(path)
+    if group.is_err():
+        return group.propagate()
+    group = group.unwrap()
 
-    groups_arr = group_data[GROUP].to_numpy()
-
-    for grp_num in range(1, num_groups + 1):
-        mask: np.ndarray = cast(np.ndarray, groups_arr == grp_num)
-        grp_num_data: pl.DataFrame = group_data.loc[mask, :]
-        placeholder: list[str] = ["" for _ in range(grp_num_data.shape[0])]
-        grp_grade_data: pl.DataFrame = pl.DataFrame(
-            data={
-                SERIAL: grp_num_data[SERIAL],
-                NAME: grp_num_data[NAME],
-                GROUP: grp_num_data[GROUP],
-                "Present": placeholder,
-                "Active": placeholder,
-                "Bonus (5mks)": placeholder,
-                "Penalty (10mks)": placeholder,
-            }
+    # Create individual group grading sheets
+    for num in range(1, num_groups + 1):
+        # Filter data for current group
+        grade_num = group.filter(pl.col(GROUP) == num).with_columns(
+            [
+                pl.lit("").alias("Present"),
+                pl.lit("").alias("Active"),
+                pl.lit("").alias("Bonus (5mks)"),
+                pl.lit("").alias("Penalty (10mks)"),
+            ]
         )
 
-        grp_grade_stream: DataStream = DataStream(grp_grade_data)
-        grp_grade_path: Path = get_grade_path(grp_num)
-
-        result = grp_grade_stream.to_excel(grp_grade_path)
+        grade_path = get_grade_path(num)
+        result = write(grade_num, grade_path)
         if result.is_err():
             return result.propagate()
 
+    # Create summary grading workbooks
     common = {
-        SERIAL: [i + 1 for i in range(num_groups)],
-        GROUP: [i + 1 for i in range(num_groups)],
+        SERIAL: list(range(1, num_groups + 1)),
+        GROUP: list(range(1, num_groups + 1)),
     }
     placeholder = ["" for _ in range(num_groups)]
-    code_df: pl.DataFrame = pl.DataFrame(
-        data={
+
+    code_df = pl.DataFrame(
+        {
             **common,
             "Documentation (15mks)": placeholder,
             "Naming (10mks)": placeholder,
@@ -65,11 +69,8 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         }
     )
 
-    grading_path: Path = get_grade_path()
-    group_path = get_group_dir() / grading_path.name
-
-    presentation_df: pl.DataFrame = pl.DataFrame(
-        data={
+    presentation_df = pl.DataFrame(
+        {
             **common,
             "Presentation Score (100mks)": placeholder,
             "Question (Presenters) -10mks": placeholder,
@@ -80,8 +81,8 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         }
     )
 
-    total_df: pl.DataFrame = pl.DataFrame(
-        data={
+    total_df = pl.DataFrame(
+        {
             **common,
             "Code (100mks)": placeholder,
             "Presentation (100mks)": placeholder,
@@ -89,23 +90,44 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         }
     )
 
-    _write_sheets(
+    grading_path = get_grade_path()
+    group_path = get_group_dir() / grading_path.name
+
+    # Write multi-sheet workbooks
+    result = write_sheets(
         grading_path,
         (code_df, "Code"),
         (presentation_df, "Presentation"),
         (total_df, "Total"),
     )
-    _write_sheets(
+    if result.is_err():
+        return result.propagate()
+
+    result = write_sheets(
         group_path,
         (code_df, "Code"),
         (presentation_df, "Presentation"),
         (total_df, "Total"),
     )
+    if result.is_err():
+        return result.propagate()
 
     return Result.unit()
 
 
-def _write_sheets(path: Path, *dfs: tuple[pl.DataFrame, str]) -> None:
-    with pd.ExcelWriter(path) as file:
-        for df, sheet_name in dfs:
-            df.to_excel(file, index=False, sheet_name=sheet_name)  # pyright: ignore[reportUnknownMemberType]
+def write_sheets(path: Path, *dfs: tuple[pl.DataFrame, str]) -> Result[Unit]:
+    """Write multiple DataFrames to Excel workbook with separate sheets.
+
+    Args:
+        path (Path): Output Excel file path.
+        *dfs: Tuples of (DataFrame, sheet_name) to write.
+
+    Returns:
+        Result[Unit]: Success or error with message.
+    """
+    for df, sheet in dfs:
+        result = write(df, path, worksheet=sheet)
+        if result.is_err():
+            return result.propagate()
+
+    return Result.unit()

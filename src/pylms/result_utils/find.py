@@ -12,24 +12,27 @@ def find_col(
     col_name: Literal["Assessment", "Attendance", "Project", "Result"],
     col_type: Literal["Score", "Count", "Req"],
 ) -> Result[str]:
+    """Find column name based on type and category.
+    
+    Locates specific column types (Score, Count, Req) for given categories
+    (Assessment, Attendance, Project, Result) in the data stream.
+    
+    Args:
+        stream (DataStream): DataStream containing columns to search.
+        col_name (Literal): Column category to search for.
+        col_type (Literal): Type of column within category.
+        
+    Returns:
+        Result[str]: Success with found column name or error.
+        
+    Note:
+        - Only "Attendance" supports "Count" type
+        - "Project" does not support "Req" type
     """
-    locates an "Assessment", "Attendance" or "Project" column based on the `col_name` argument, which is either a "Score", "Count", or "Req" column. At the last modification of this API, Only "Attendance" has a "Count" column, and only "Project" does not have a "Req" column.
-
-    Hence, specifying "Project" as the `col_name` argument alongside "Req" as the `col_type` argument raises an error. Moreover, specifying any other column asides "Attendance" as `col_name` with the `col_type` set to "Count" raises an error.
-
-    :param stream: (DataStream) - DataStream containing the columns on which the search is being made. This is a DataStream containing the results of students' data which has been generated during collation.
-    :type stream: DataStream
-
-    :param col_name: (Literal["Assessment", "Attendance", "Project", "Result"]) - "Assessment", "Attendance", "Project", "Result", literals indicating the main name of the column being searched for.
-    :type col_name: (Literal["Assessment", "Attendance", "Project"])
-
-    :param col_type: (Literal["Score", "Count", "Req"]) - "Score", "Count" or "Req" literals which indicate whether the columns to retrieve are score values like 75%, attendance counts, like 11 out of 12 or Cutoff / Requirement cols.
-    :return: (Result[str]) - a string result containing the name of the column which is being searched for.
-    """
-    result_data = stream()
-    column: str = col_name
-    target_cols: list[str] = [
-        col for col in result_data.columns.tolist() if col.startswith(column)
+    result_data = stream.as_ref()
+    column = col_name
+    target_cols = [
+        col for col in result_data.columns if col.startswith(column)
     ]
     if len(target_cols) == 0:
         msg = f"Expected some cols with the name '{column}'"
@@ -72,8 +75,18 @@ def find_col(
 
 
 def find_count(col_name: str) -> int | None:
-    item: re.Match[str] | None = re.search(r"(\d+)", col_name)
+    """Extract numeric count from column name.
+    
+    Searches for first numeric value in column name string.
+    
+    Args:
+        col_name (str): Column name to search for numeric count.
+        
+    Returns:
+        int | None: Extracted count or None if no number found.
+    """
+    item = re.search(r"(\d+)", col_name)
     if item is None:
         return None
-    item_str: str = item.group(0)
+    item_str = item.group(0)
     return int(item_str)

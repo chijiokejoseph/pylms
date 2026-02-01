@@ -1,6 +1,6 @@
-from pathlib import Path
 from typing import Literal
 
+import polars as pl
 
 from ..config import read_course_name
 from ..constants import (
@@ -12,7 +12,7 @@ from ..constants import (
     NAME,
     PHONE,
 )
-from ..data import DataStream
+from ..data import DataStream, new_validator
 from ..errors import Result, Unit
 from ..history import retrieve_dates
 from ..paths import (
@@ -25,44 +25,65 @@ from ..result_utils import (
 )
 
 type CollateType = Literal["merit", "fast track"]
+"""Type alias for awardees collation types.
+
+Specifies whether to collate merit-based or fast-track awardees.
+"""
 
 
 def collate_awardees(
-    stream: DataStream, collate_type: CollateType = "merit"
+    stream: DataStream, cohort_num: int, collate_type: CollateType = "merit"
 ) -> Result[Unit]:
-    def validate_fn(test_data: pl.DataFrame) -> bool:
-        columns: list[str] = test_data.columns.tolist()
-        req_cols: list[str] = [EMAIL, NAME, PHONE, COHORT]
-        return all([req_col in columns for req_col in req_cols])
+    """Collate awardees data for certificate generation.
 
-    stream = DataStream(stream(), validate_fn)
-    data: pl.DataFrame = stream()
+    Processes student data to create awardees list with formatted information
+    for certificate generation, supporting both merit and fast-track categories.
+
+    Args:
+        stream (DataStream): Stream containing student data.
+        cohort_num (int): The cohort number to collate awardees for.
+        collate_type (CollateType): Type of awardees to collate ("merit" or "fast track").
+
+    Returns:
+        Result[Unit]: Success or error with message.
+    """
+
+    validate_fn = new_validator([EMAIL, NAME, PHONE, COHORT])
+
+    result = DataStream.verify(stream.as_ref(), validate_fn)
+    if result.is_err():
+        return result.propagate()
+
+    data = stream.as_ref()
     dates_list = retrieve_dates("")
     if dates_list.is_err():
         return dates_list.propagate()
 
     dates_list = dates_list.unwrap()
 
-    end_date: str = dates_list[-1]
+    end_date = dates_list[-1]
     end_date = fmt_date(end_date)
-    cohort_num: int = data[COHORT].iloc[0]
 
     course_name = read_course_name()
     if course_name.is_err():
         return course_name.propagate()
+    course_name = course_name.unwrap()
 
-    awardees_data: pl.DataFrame = pl.DataFrame(
-        data={
+    awardees_data = pl.DataFrame(
+        {
             AWARDEES["Email"]: data[EMAIL],
-            AWARDEES["CourseTitle"]: course_name,
-            AWARDEES["Date"]: end_date,
+            AWARDEES["CourseTitle"]: pl.lit(course_name),
+            AWARDEES["Date"]: pl.lit(end_date),
             AWARDEES["Name"]: data[NAME],
-            AWARDEES["Phone"]: data[PHONE].map(fmt_phone),
-            AWARDEES["Batch"]: AWARDEES_BATCH,
-            AWARDEES["BatchID"]: AWARDEES_EMTPY,
-            AWARDEES["CertID"]: AWARDEES_EMTPY,
+            AWARDEES["Phone"]: data[PHONE].map_elements(
+                fmt_phone, return_dtype=pl.Utf8
+            ),
+            AWARDEES["Batch"]: pl.lit(AWARDEES_BATCH),
+            AWARDEES["BatchID"]: pl.lit(AWARDEES_EMTPY),
+            AWARDEES["CertID"]: pl.lit(AWARDEES_EMTPY),
         }
     )
+
     merit_path = get_merit_path(cohort_num)
     if merit_path.is_err():
         return merit_path.propagate()
@@ -73,11 +94,11 @@ def collate_awardees(
         return fast_track_path.propagate()
     fast_track_path = fast_track_path.unwrap()
 
-    awardees_path: Path = merit_path if collate_type == "merit" else fast_track_path
+    awardees_path = merit_path if collate_type == "merit" else fast_track_path
 
-    awardees_stream: DataStream = DataStream(awardees_data)
+    awardees_stream = DataStream(awardees_data)
 
-    result = awardees_stream.to_excel(awardees_path)
+    result = awardees_stream.write(awardees_path)
     if result.is_err():
         return result.propagate()
 

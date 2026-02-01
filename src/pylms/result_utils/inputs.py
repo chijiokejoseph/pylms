@@ -3,20 +3,17 @@ from ..errors import Result
 
 
 def input_marks_req(msg: str, min: int = 1, max: int = 100) -> Result[int]:
-    """
-    Prompts the user to enter a number between 1 and 100 and validates the input.
-
-    :param msg: the message to be used as a prompt to the user
-    :type msg: str
-
-    :param min: (int) - the minimum value allowed for the input. Defaults to 1.
-    :type min: int
-
-    :param max: (int) - the maximum value allowed for the input. Defaults to 100.
-    :type max: int
-
-    :return: the validated mark requirement
-    :rtype: int
+    """Prompt user for marks requirement within specified range.
+    
+    Validates that input is between min and max values (inclusive).
+    
+    Args:
+        msg (str): Prompt message to display to user.
+        min (int): Minimum allowed value. Defaults to 1.
+        max (int): Maximum allowed value. Defaults to 100.
+        
+    Returns:
+        Result[int]: Success with validated mark requirement or error.
     """
     return input_num(
         msg,
@@ -27,14 +24,15 @@ def input_marks_req(msg: str, min: int = 1, max: int = 100) -> Result[int]:
 
 
 def input_ratio_req(msg: str) -> Result[float]:
-    """
-    Prompts the user to enter a number between 0 and 1 and validates the input.
-
-    :param msg: the message to be used as a prompt to the user
-    :type msg: str
-
-    :return: the validated ratio requirement
-    :rtype: float
+    """Prompt user for ratio requirement between 0 and 1.
+    
+    Validates that input is a valid ratio (0.0 to 1.0 inclusive).
+    
+    Args:
+        msg (str): Prompt message to display to user.
+        
+    Returns:
+        Result[float]: Success with validated ratio requirement or error.
     """
     return input_num(
         msg,

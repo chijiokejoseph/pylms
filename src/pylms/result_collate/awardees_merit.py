@@ -1,13 +1,16 @@
 from typing import Literal
 
+import numpy as np
+import polars as pl
 
 from ..constants import (
+    COHORT,
     FAIL,
     PASS,
     REASON,
     REMARK,
 )
-from ..data import DataStore, DataStream, read
+from ..data import DataStore, DataStream, read, write
 from ..errors import Result, Unit, eprint
 from ..history import History, record_merit
 from ..paths import get_paths_excel
@@ -24,142 +27,135 @@ from ..result_utils import (
 from .awardees import collate_awardees
 
 type CollateType = Literal["merit", "fast track"]
-
-
-def remark(
-    assessment_pass: list[bool],
-    special_score_pass: list[bool],
-    special_attendance_pass: list[bool],
-    standard_attendance_pass: list[bool],
-    standard_score_pass: list[bool],
-) -> tuple[list[str], list[str]]:
-    remarks: list[str] = []
-    reasons: list[str] = []
-    for assessment, special_score, special_attendance, attendance, score in zip(
-        assessment_pass,
-        special_score_pass,
-        special_attendance_pass,
-        standard_attendance_pass,
-        standard_score_pass,
-    ):
-        score_pass: bool = special_score or special_attendance or (attendance and score)
-        passed: bool = assessment and score_pass
-        remark: str = PASS if passed else FAIL
-        reason: str = ""
-        if not assessment:
-            reason += "You failed the assessment; "
-        else:
-            reason += "You passed the assessment; "
-        if not score_pass:
-            if not score:
-                reason += "You did not meet the passmark; "
-            if not attendance:
-                reason += "You did not meet the attendance requirement; "
-        else:
-            reason += (
-                "You met the passmark and your attendance was deemed satisfactory; "
-            )
-        remarks.append(remark)
-        reasons.append(reason)
-    return remarks, reasons
+"""Type alias for merit collation types."""
 
 
 def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
-    result_data = read(get_paths_excel()["Result"])
-    if result_data.is_err():
-        return result_data.propagate()
-    result_data = result_data.unwrap()
+    """Collate merit-based results and generate awardees list.
 
-    result_stream = DataStream(result_data, val_result_data)
-    result_data = result_stream()
+    Processes student results to determine pass/fail status based on multiple criteria
+    including assessment scores, attendance, and special considerations.
 
-    attendance_score_col: str = det_attendance_score_col()
-    result = find_col(result_stream, "Assessment", "Score")
-    if result.is_err():
-        return result.propagate()
-    assessment_score_col: str = result.unwrap()
+    Args:
+        ds (DataStore): DataStore containing student data.
+        history (History): Application state tracking.
 
-    result = find_col(result_stream, "Attendance", "Count")
-    if result.is_err():
-        return result.propagate()
-    attendance_count_col: str = result.unwrap()
+    Returns:
+        Result[Unit]: Success or error with message.
+    """
+    results = read(get_paths_excel()["Result"])
+    if results.is_err():
+        return results.propagate()
+    results = results.unwrap()
 
-    attendance_count: int | None = find_count(attendance_count_col)
+    results_stream = DataStream.new(results, val_result_data)
+    if results_stream.is_err():
+        return results_stream.propagate()
+
+    results_stream = results_stream.unwrap()
+    results = results_stream.as_ref()
+
+    attendance_score_col = det_attendance_score_col()
+    assessment_score_col = find_col(results_stream, "Assessment", "Score")
+    if assessment_score_col.is_err():
+        return assessment_score_col.propagate()
+    assessment_score_col = assessment_score_col.unwrap()
+
+    attendance_count_col = find_col(results_stream, "Attendance", "Count")
+    if attendance_count_col.is_err():
+        return attendance_count_col.propagate()
+    attendance_count_col = attendance_count_col.unwrap()
+
+    attendance_count = find_count(attendance_count_col)
     if attendance_count is None:
         msg = f"Expected an integer count in col {attendance_count_col}"
         eprint(msg)
         return Result.err(msg)
 
-    excellent_attendance_count: int = attendance_count - 1
-    attendance_req_col: str = det_attendance_req_col()
-    assessment_req_col: str = det_assessment_req_col()
-    result_col: str = det_result_col()
-    passmark_col: str = det_passmark_col()
+    excellent_attendance_count = attendance_count - 1
+    attendance_req_col = det_attendance_req_col()
+    assessment_req_col = det_assessment_req_col()
+    result_col = det_result_col()
+    passmark_col = det_passmark_col()
 
-    # logical indices for meeting attendance requirement
-    attendance_pass: pd.Series = (
-        result_data[attendance_score_col] >= result_data[attendance_req_col].loc[0]
+    # Get requirement values
+    attendance_req = results[0, attendance_req_col]
+    assessment_req = results[0, assessment_req_col]
+    passmark = results[0, passmark_col]
+
+    # Calculate pass criteria using Polars expressions
+    attendance_cond = pl.col(attendance_score_col) >= attendance_req
+    assessment_cond = pl.col(attendance_count_col) >= assessment_req
+    score_cond = pl.col(result_col) >= passmark
+    near_score = (pl.col(result_col) >= passmark - 5) & (pl.col(result_col) < passmark)
+    excellent_attendance = pl.col(attendance_score_col) >= np.round(
+        excellent_attendance_count * 100 / attendance_count, 1
+    )
+    near_attendance = (pl.col(attendance_score_col) >= 50) & (
+        pl.col(attendance_score_col) < attendance_req
+    )
+    excellent_score = pl.col(result_col) >= passmark + 10
+
+    pass_cond = assessment_cond & (
+        (attendance_cond & score_cond)
+        | (near_score & excellent_attendance)
+        | (near_attendance & excellent_score)
     )
 
-    # logical indices for meeting assessment requirement
-    assessment_pass: pd.Series = (
-        result_data[assessment_score_col] >= result_data[assessment_req_col].loc[0]
+    # Evaluate Reasons and Remark Based on Pass Criteria
+    results = results.lazy()
+    results = (
+        results.with_columns(
+            [
+                pl.when(assessment_cond)
+                .then(pl.lit("You passed the assessment"))
+                .otherwise(pl.lit("You failed the assessment"))
+                .alias(REASON + "1"),
+                pl.when(attendance_cond | (near_attendance & excellent_score))
+                .then(pl.lit("You met the attendance requirement"))
+                .otherwise(pl.lit("You failed to meet the attendance requirement"))
+                .alias(REASON + "2"),
+                pl.when(score_cond | (near_score & excellent_attendance))
+                .then(pl.lit("You met the passmark"))
+                .otherwise(pl.lit("You failed to meet the passmark"))
+                .alias(REASON + "3"),
+            ]
+        )
+        .with_columns(
+            [
+                pl.concat_str(
+                    [pl.col(REASON + str(i)) for i in range(1, 4)], separator="\n"
+                ).alias(REASON),
+                pl.when(pass_cond)
+                .then(pl.lit(PASS))
+                .otherwise(pl.lit(FAIL))
+                .alias(REMARK),
+            ]
+        )
+        .collect()
     )
+    results = results.drop([REASON + str(i) for i in range(1, 4)])
+    pass_series = results.with_columns(
+        pl.when(pass_cond).then(pl.lit(True)).otherwise(pl.lit(False)).alias("Cond")
+    )["Cond"]
 
-    # logical indices for meeting passmark requirement
-    score_pass: pd.Series = result_data[result_col] >= result_data[passmark_col].loc[0]
+    # Save updated results
+    result_path = get_paths_excel()["Result"]
+    results = write(results, result_path)
+    if results.is_err():
+        return results.propagate()
 
-    # special pleading for excellent attendance but almost passmark scores
-    near_score_pass: pd.Series = (
-        result_data[result_col] >= result_data[passmark_col].loc[0] - 5
-    ) & (
-        result_data[result_col] < result_data[passmark_col].loc[0]
-    )  # scores are within 5 marks from the passmark ❌
-    excellent_attendance: float = excellent_attendance_count * 100 / attendance_count
-    brilliant_attendance_pass: pd.Series = (
-        result_data[attendance_score_col] >= excellent_attendance
-    )  # attendance is excellent ✅
+    pretty = ds.pretty()
+    passed_data = pretty.filter(pass_series)
+    passed_stream = DataStream(passed_data)
+    cohort = pretty[0, COHORT]
 
-    # special pleading for excellent scores but poor attendance
-    poor_attendance_pass: pd.Series = (result_data[attendance_score_col] >= 50) & (
-        result_data[attendance_score_col] < result_data[attendance_req_col].loc[0]
-    )  # attendance is at least 50 but not up to the requirement ❌
-    excellent_score: float = result_data[passmark_col].loc[0] + 10
-    brilliant_score_pass: pd.Series = (
-        result_data[result_col] >= excellent_score
-    )  # scores are excellent ✅
+    results = collate_awardees(passed_stream, cohort)
+    if results.is_err():
+        return results.propagate()
 
-    attendance_score_pass: pd.Series = (
-        (near_score_pass & brilliant_attendance_pass)
-        | (poor_attendance_pass & brilliant_score_pass)
-        | (attendance_pass & score_pass)
-    )
-
-    remarks, reasons = remark(
-        assessment_pass.tolist(),
-        (poor_attendance_pass & brilliant_score_pass).tolist(),
-        (brilliant_attendance_pass & near_score_pass).tolist(),
-        attendance_pass.tolist(),
-        score_pass.tolist(),
-    )
-    result_data[REMARK] = remarks
-    result_data[REASON] = reasons
-
-    result = DataStream(result_data).to_excel(get_paths_excel()["Result"])
-    if result.is_err():
-        return result.propagate()
-
-    pass_logic_idx: pd.Series = attendance_score_pass & assessment_pass
-    pretty_data: pl.DataFrame = ds.pretty()
-    passed_data: pl.DataFrame = pretty_data.loc[pass_logic_idx, :]
-    passed_stream: DataStream = DataStream(passed_data)
-
-    result = collate_awardees(passed_stream)
-    if result.is_err():
-        return result.propagate()
-
-    result = record_merit(history)
-    if result.is_err():
-        return result.propagate()
+    results = record_merit(history)
+    if results.is_err():
+        return results.propagate()
 
     return Result.unit()

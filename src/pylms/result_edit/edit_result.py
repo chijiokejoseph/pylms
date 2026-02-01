@@ -39,22 +39,23 @@ def edit_result(ds: DataStore) -> Result[Unit]:
         return Result.err(msg)
 
     # Load the result data from the Excel file
-    try:
-        result_data = read(result_path)
-        if result_data.is_err():
-            return result_data.propagate()
-        result_data = result_data.unwrap()
-    except PermissionError as e:
-        msg = f"Error reading file at {result_path}, access denied.\nError: {e}"
-        eprint(msg)
-        return Result.err(msg)
+    result_data = read(result_path)
+    if result_data.is_err():
+        return result_data.propagate()
+    result_data = result_data.unwrap()
+
     # Validate the result data
-    result_stream = DataStream(result_data, val_result_data)
+    result_stream = DataStream.new(result_data, val_result_data)
+    if result_stream.is_err():
+        return result_stream.propagate()
+
+    result_stream = result_stream.unwrap()
+
     # Get the validated result data
-    result_data = result_stream()
+    result_data = result_stream.as_ref()
 
     # Determine the next result update column
-    result_cols: list[str] = result_data.columns.tolist()
+    result_cols: list[str] = result_data.columns
     result = find_col(result_stream, "Result", "Score")
     if result.is_err():
         return result.propagate()
@@ -91,7 +92,9 @@ def edit_result(ds: DataStore) -> Result[Unit]:
             if result.is_err():
                 return result.propagate()
 
-            updates_list.extend(result.unwrap())
+            data, updates = result.unwrap()
+            result_data = data
+            updates_list.extend(updates)
         case Select.MULTIPLE:
             result = edit_multiple(ds, result_data)
 
@@ -105,7 +108,9 @@ def edit_result(ds: DataStore) -> Result[Unit]:
             if result.is_err():
                 return result.propagate()
 
-            updates_list.extend(result.unwrap())
+            data, updates = result.unwrap()
+            result_data = data
+            updates_list.extend(updates)
 
     # Reorder columns to place the new result update column correctly
     unchanged_cols: list[str] = result_cols[: last_col_idx + 1]
@@ -117,7 +122,7 @@ def edit_result(ds: DataStore) -> Result[Unit]:
     result_data = result_data[unchanged_cols + [new_col] + remaining_cols]
     result_stream = DataStream(result_data)
 
-    result = result_stream.to_excel(get_paths_excel()["Result"])
+    result = result_stream.write(get_paths_excel()["Result"])
     if result.is_err():
         return result.propagate()
 

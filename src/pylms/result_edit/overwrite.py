@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Callable, cast
 
 import numpy as np
+import polars as pl
 
 from ..cli import input_option, input_str, provide_serials
-from ..constants import ValidateDataFn
 from ..data import DataStore, DataStream, print_stream, read
 from ..errors import Result, Unit, eprint
 from ..paths import get_paths_excel
@@ -80,10 +80,12 @@ def overwrite_result(ds: DataStore) -> Result[Unit]:
         return result_data.propagate()
     result_data = result_data.unwrap()
 
-    result_stream: DataStream = DataStream(
-        result_data, cast(ValidateDataFn, val_result_data)
-    )
-    result_data = result_stream()
+    result_stream = DataStream.new(result_data, val_result_data)
+    if result_stream.is_err():
+        return result_stream.propagate()
+
+    result_stream = result_stream.unwrap()
+    result_data = result_stream.as_ref()
 
     serials = provide_serials(ds)
     if serials.is_err():
@@ -110,7 +112,7 @@ def overwrite_result(ds: DataStore) -> Result[Unit]:
             proc_value = _preprocess(result_stream, column, result.unwrap())
             print()
 
-        type_value = result_data.loc[:, column].dtype
+        type_value = result_data[column].to_numpy().dtype
         column_type = cast(np.dtype, type_value)
         new_value = np.array(proc_value).astype(column_type)
 
@@ -120,16 +122,23 @@ def overwrite_result(ds: DataStore) -> Result[Unit]:
                 det_assessment_req_col(),
                 det_passmark_col(),
             ]:
-                result_data.loc[:, column] = new_value
+                result_data = result_data.with_columns(
+                    pl.Series(column, new_value).alias(column)
+                )
             case _ if column in [
                 find_col(result_stream, "Assessment", "Score").unwrap(),
                 find_col(result_stream, "Project", "Score").unwrap(),
                 find_col(result_stream, "Result", "Score").unwrap(),
             ]:
-                result_data.loc[idx, column] = new_value
+                result_data[idx, column] = new_value
             case _:
                 pass
 
         print()
 
-    return recollate(DataStream(result_data)).to_excel(result_path)
+    results_stream = recollate(DataStream(result_data))
+    if results_stream.is_err():
+        return results_stream.propagate()
+
+    results_stream = results_stream.unwrap()
+    return results_stream.write(result_path)

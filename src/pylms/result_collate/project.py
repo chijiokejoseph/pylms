@@ -1,13 +1,13 @@
 import re
 from pathlib import Path
-from typing import Callable, cast
+from typing import Callable
 
 import numpy as np
 import polars as pl
 
 from ..cli import input_path
-from ..constants import GROUP, NAME
-from ..data import DataStream, read
+from ..constants import GROUP
+from ..data import DataStream, read, write
 from ..errors import Result, Unit, eprint
 from ..history import History, record_project
 from ..info import printpass
@@ -19,28 +19,31 @@ from ..result_utils import (
 )
 
 
-def val_assessment(assessment_required: bool) -> Callable[[pl.DataFrame], bool]:
+def val_assessment(
+    assessment_required: bool,
+) -> Callable[[pl.DataFrame], tuple[bool, str]]:
     if assessment_required:
         return val_assessment_data
     else:
         return val_attendance_data
 
 
-def val_project(test_data: pl.DataFrame) -> bool:
-    columns_list: list[str] = test_data.columns.tolist()
-    test_df_rows: int = test_data.shape[-2]
+def val_project(test_data: pl.DataFrame) -> tuple[bool, str]:
+    columns: list[str] = test_data.columns
+    num_rows: int = test_data.height
     num_groups: int = _extract_num_groups()
-    if test_df_rows != num_groups:
-        print(
-            f"Project Groups created in the project are {num_groups} yet project scores received correspond to {test_df_rows} groups."
-        )
-        return False
+    if num_rows != num_groups:
+        msg = f"Project Groups created in the project are {num_groups} yet project scores received correspond to {num_rows} groups."
+        return False, msg
 
-    score_data: pd.Series = test_data.loc[:, columns_list[-1]]
-    temp = score_data.dtype
-    dtype_var: np.dtype = cast(np.dtype, temp)
-    test = np.issubdtype(dtype_var, np.number)
-    return test
+    last_col = columns[-1]
+    score_data = test_data[last_col].to_numpy()
+
+    test = np.issubdtype(score_data.dtype, np.number)
+    if not test:
+        return False, f"Last column: '{last_col}' does not contain numbers"
+
+    return True, ""
 
 
 def _extract_num_groups() -> int:
@@ -86,10 +89,12 @@ def collate_project(history: History) -> Result[Unit]:
         return assessment_data.propagate()
     assessment_data = assessment_data.unwrap()
 
-    validate_data_fn: Callable[[pl.DataFrame], bool] = val_assessment(True)
-    data_stream = DataStream(assessment_data, validate_data_fn)
-    data: pl.DataFrame = data_stream()
-
+    validator = val_assessment(True)
+    data_stream = DataStream.new(assessment_data, validator)
+    if data_stream.is_err():
+        return data_stream.propagate()
+    data_stream = data_stream.unwrap()
+    data = data_stream.as_ref()
     # Get the project groups
     group_path: Path = get_group_path()
     if not group_path.exists():
@@ -125,17 +130,21 @@ Enter the path: """
 
     print()
 
-    project_df = read(path)
+    project = read(path)
 
-    if project_df.is_err():
-        return project_df.propagate()
-    project_df = project_df.unwrap()
+    if project.is_err():
+        return project.propagate()
+    project = project.unwrap()
 
-    project_stream: DataStream = DataStream(project_df, val_project)
+    project_stream = DataStream.new(project, val_project)
+    if project_stream.is_err():
+        return project_stream.propagate()
+
+    project_stream = project_stream.unwrap()
 
     # Validate the input data
-    project_df = project_stream()
-    project_cols: list[str] = project_df.columns.tolist()
+    project = project_stream.as_ref()
+    project_cols: list[str] = project.columns
 
     # Determine the column name for the project scores
     match len(project_cols):
@@ -149,40 +158,22 @@ Enter the path: """
             return Result.err(msg)
 
     # Extract the project scores
-    project_scores: pd.Series = project_df.loc[:, score_col]
-
-    # Create a function to get the project score for a given student
-    def get_group_score(
-        names_list: list[str],
-        groups_list: list[int],
-        group_scores: list[float],
-        name_in: str,
-    ) -> float:
-        name_idx: int = names_list.index(name_in)
-        name_group: int = groups_list[name_idx]
-        name_group_idx: int = name_group - 1
-        name_score: float = group_scores[name_group_idx]
-        return name_score
-
-    # Get the names and groups from the data and group data
-    names: pd.Series = data[NAME]
-    groups: pd.Series = group_data[GROUP]
-
-    # Get the project scores for each student
-    assigned_scores: list[float] = [
-        get_group_score(names.tolist(), groups.tolist(), project_scores.tolist(), name)
-        for name in names.tolist()
-    ]
-
     # Create a column in the data with the project scores
     project_col: str = det_project_score_col()
-    data[project_col] = np.array(assigned_scores, dtype=np.float64).round(2)
+    data = data.with_columns(pl.lit(0).alias(project_col)).with_columns(
+        [
+            pl.when(pl.col(GROUP) == i)
+            .then(pl.lit(project[i - 1, score_col]))
+            .otherwise(pl.col(project_col))
+            for i in range(1, project.height + 1)
+        ]
+    )
 
     # Save the collated data to an Excel file
     printpass("Project Recorded Successfully\n")
     project_path: Path = get_paths_excel()["Project"]
 
-    result = DataStream(data).to_excel(project_path)
+    result = write(project, project_path)
     if result.is_err():
         return result.propagate()
 

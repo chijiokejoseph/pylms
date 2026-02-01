@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from ..cli import provide_serials
 from ..data import DataStore, DataStream, print_stream, read
 from ..errors import Result, Unit, eprint
@@ -8,23 +6,38 @@ from .val import val_result_data
 
 
 def view_result(ds: DataStore) -> Result[Unit]:
-    result_path: Path = get_paths_excel()["Result"]
+    """View student results from generated result file.
+
+    Reads result data from Excel file and displays selected students' results.
+
+    Args:
+        ds (DataStore): DataStore for student serial selection.
+
+    Returns:
+        Result[Unit]: Success or error with message.
+    """
+    result_path = get_paths_excel()["Result"]
     if not result_path.exists():
         msg = "Results has not been generated yet. Please collate results before running this operation"
         eprint(msg)
         return Result.err(msg)
 
-    result_data = read(result_path)
+    results = read(result_path)
 
-    if result_data.is_err():
-        return result_data.propagate()
-    result_data = result_data.unwrap()
+    if results.is_err():
+        return results.propagate()
+    results = results.unwrap()
 
-    result_stream = DataStream(result_data, val_result_data)
+    results_stream = DataStream.new(results, val_result_data)
+    if results_stream.is_err():
+        return results_stream.propagate()
+
+    results_stream = results_stream.unwrap()
+
     serials = provide_serials(ds)
     if serials.is_err():
         return serials.propagate()
 
     serials = serials.unwrap()
-    print_stream(result_stream, serials)
+    print_stream(results_stream, serials)
     return Result.unit()

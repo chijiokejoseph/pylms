@@ -1,9 +1,9 @@
+import polars as pl
 import re
 from email.message import EmailMessage
 from pathlib import Path
 from smtplib import SMTP
 from typing import Any
-
 
 from ..cli import input_option
 from ..config import read_course_name
@@ -16,150 +16,119 @@ from .find import find_col
 
 
 def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
+    """Send individualized result breakdown emails to students.
+    
+    Reads result data from Excel file, extracts relevant columns for each student,
+    formats personalized messages with scores and requirements, and sends emails.
+    
+    Args:
+        ds (DataStore): DataStore instance containing student data.
+        server (SMTP): SMTP server instance for sending emails.
+        
+    Returns:
+        Result[Unit]: Success or error with message.
     """
-    Sends individualized result breakdown emails to students using the provided SMTP server.
-
-    Reads result data from an Excel file, extracts relevant columns for each student,
-    formats a personalized message with their scores and requirements, and sends the message
-    to the student's email address.
-
-    :param ds: (DataStore) - A DataStore instance containing student data.
-    :type ds: DataStore
-    :param server: (SMTP) - An SMTP server instance used to send emails.
-    :type server: SMTP
-
-    :return: (Result[Unit]) - returns a Result object indicating success or failure.
-    :rtype: Result[Unit]
-
-    :raises Exception: Any exceptions raised by the SMTP server's send_message method or data reading functions will propagate.
-    """
-
-    # Get the sender's email address from environment variables
-    sender_email: str = must_get_env("EMAIL")
-
-    # Get the path to the result Excel file
-    path: Path = get_paths_excel()["Result"]
-
-    # Get course name
+    # Get sender email and course info
+    sender_email = must_get_env("EMAIL")
+    path = get_paths_excel()["Result"]
+    
     course_name = read_course_name()
     if course_name.is_err():
         return course_name.propagate()
     course_name = course_name.unwrap()
 
-    # Read the result data into a DataFrame
+    # Read result data
     result = read(path)
-
     if result.is_err():
         return result.propagate()
     result = result.unwrap()
 
-    # Wrap the DataFrame in a DataStream for further processing
-    result_stream: DataStream = DataStream(result)
-    result = result_stream()
+    result_stream = DataStream(result)
+    data = ds.as_ref()
 
-    # Get the data from the DataStore
-    data: pl.DataFrame = ds.as_ref()
-
-    # Find the relevant column names for each required field
-    assessment_score_col: str = find_col(result_stream, "Assessment", "Score").unwrap()
-    assessment_max_match: re.Match[str] | None = re.search(
-        r"(\d+)", assessment_score_col
-    )
+    # Find column names
+    assessment_score_col = find_col(result_stream, "Assessment", "Score").unwrap()
+    assessment_max_match = re.search(r"(\d+)", assessment_score_col)
     if assessment_max_match is None:
         msg = "Error parsing assessment max score"
         eprint(f"{msg}\n")
         return Result.err(msg)
+    assessment_max = float(assessment_max_match.group(1))
 
-    assessment_max: float = float(assessment_max_match.group(1))
+    assessment_req_col = find_col(result_stream, "Assessment", "Req").unwrap()
+    attendance_count_col = find_col(result_stream, "Attendance", "Count").unwrap()
+    attendance_score_col = find_col(result_stream, "Attendance", "Score").unwrap()
+    attendance_req_col = find_col(result_stream, "Attendance", "Req").unwrap()
+    project_score_col = find_col(result_stream, "Project", "Score").unwrap()
 
-    assessment_req_col: str = find_col(result_stream, "Assessment", "Req").unwrap()
-    attendance_count_col: str = find_col(result_stream, "Attendance", "Count").unwrap()
-    attendance_score_col: str = find_col(result_stream, "Attendance", "Score").unwrap()
-    attendance_req_col: str = find_col(result_stream, "Attendance", "Req").unwrap()
-    project_score_col: str = find_col(result_stream, "Project", "Score").unwrap()
-
-    project_max_match: re.Match[str] | None = re.search(r"(\d+)", project_score_col)
+    project_max_match = re.search(r"(\d+)", project_score_col)
     if project_max_match is None:
         msg = "Error parsing project max score"
         print(f"{msg}\n")
         return Result.err(msg)
+    project_max = float(project_max_match.group(1))
 
-    project_max: float = float(project_max_match.group(1))
+    result_col = find_col(result_stream, "Result", "Score").unwrap()
+    result_req_col = find_col(result_stream, "Result", "Req").unwrap()
 
-    result_col: str = find_col(result_stream, "Result", "Score").unwrap()
-    result_req_col: str = find_col(result_stream, "Result", "Req").unwrap()
+    # Extract requirements
+    assessment_req = result[0, assessment_req_col]
+    attendance_req = result[0, attendance_req_col]
+    result_req = result[0, result_req_col]
 
-    # extract all requirements
-    assessment_req: float = result.loc[:, assessment_req_col].astype(float).iloc[0]
-    attendance_req: float = result.loc[:, attendance_req_col].astype(float).iloc[0]
-    result_req: float = result.loc[:, result_req_col].astype(float).iloc[0]
+    # Calculate total classes
+    attendance_count_data = result[attendance_count_col]
+    attendance_score_data = result[attendance_score_col]
+    classes_calc = (100 * attendance_count_data / attendance_score_data)
+    classes = int(round(classes_calc.mode().item(), 0))
 
-    attendance_score_data: pd.Series = (
-        100
-        * result.loc[:, attendance_count_col]
-        / result.loc[:, attendance_score_col].astype(float)
-    )
-    classes_float: float = attendance_score_data.mode().iloc[0]
-    classes: int = int(round(classes_float, 0))
+    bad_records = []
 
-    bad_records: list[tuple[int, str, str, dict[str, Any]]] = []
+    # Process each student
+    for idx in range(result.height):
+        # Extract scores for current student
+        assessment_score = result[idx, assessment_score_col]
+        attendance_count = result[idx, attendance_count_col]
+        attendance_score = result[idx, attendance_score_col]
+        project_score = result[idx, project_score_col]
+        result_score = result[idx, result_col]
+        remark = result[idx, REMARK]
+        reason = result[idx, REASON]
 
-    # Iterate over each student in the result DataFrame
-    for idx in range(result.shape[0]):
-        # Extract all scores and requirements for the current student
-        assessment_score: float = (
-            result.loc[:, assessment_score_col].astype(float).iloc[idx]
-        )
-        attendance_count: int = (
-            result.loc[:, attendance_count_col].astype(int).iloc[idx]
-        )
-        attendance_score: float = (
-            result.loc[:, attendance_score_col].astype(float).iloc[idx]
-        )
-
-        project_score: float = result.loc[:, project_score_col].astype(float).iloc[idx]
-        result_score: float = result.loc[:, result_col].astype(float).iloc[idx]
-
-        remark: str = result.loc[:, REMARK].astype(str).iloc[idx]
-        reason: str = result.loc[:, REASON].astype(str).iloc[idx]
-
-        marks: float = result_score - (assessment_score + project_score)
+        marks = result_score - (assessment_score + project_score)
         marks = round(marks, 0)
 
         if marks < 0:
-            penalty_marks: int = -1 * int(marks)
-            bonus_marks: int = 0
+            penalty_marks = -1 * int(marks)
+            bonus_marks = 0
         else:
             penalty_marks = 0
             bonus_marks = int(marks)
 
-        # Extract data fields for the current student
-        name: str = result.loc[:, NAME].astype(str).iloc[idx]
-        name = name.strip()
-        gender: str = data.loc[:, GENDER].astype(str).iloc[idx]
-        gender = gender.strip()
-        email: str = data.loc[:, EMAIL].astype(str).iloc[idx]
-        email = email.strip()
+        # Extract student info
+        name = result[idx, NAME].strip()
+        gender = data[idx, GENDER].strip()
+        email = data[idx, EMAIL].strip()
 
-        # Check if the email is empty
         if email == "":
             bad_records.append((idx + 1, name, email, {"error": (1, "Email is empty")}))
             continue
 
-        cohort: int = data.loc[:, COHORT].astype(int).iloc[idx]
+        cohort = data[idx, COHORT]
 
-        attendance_score_str: str = f"{attendance_score:.2f}%"
-        attendance_req_str: str = f"{attendance_req:.0f}%"
-        assessment_score_str: str = f"{assessment_score:.2f}%"
-        assessment_req_str: str = f"{assessment_req:.2f}%"
-        project_score_str: str = f"{project_score:.2f}%"
-        result_score_str: str = f"{result_score:.2f}%"
-        result_req_str: str = f"{result_req:.0f}%"
-        bonus_marks_str: str = f"{bonus_marks:.0f}%"
-        penalty_marks_str: str = f"{penalty_marks:.0f}%"
+        # Format score strings
+        attendance_score_str = f"{attendance_score:.2f}%"
+        attendance_req_str = f"{attendance_req:.0f}%"
+        assessment_score_str = f"{assessment_score:.2f}%"
+        assessment_req_str = f"{assessment_req:.2f}%"
+        project_score_str = f"{project_score:.2f}%"
+        result_score_str = f"{result_score:.2f}%"
+        result_req_str = f"{result_req:.0f}%"
+        bonus_marks_str = f"{bonus_marks:.0f}%"
+        penalty_marks_str = f"{penalty_marks:.0f}%"
 
-        # Compose the personalized message for the student
-        msg: str = f"""
+        # Compose personalized message
+        msg = f"""
 <h2>
   <bold>
     Dear {"Mr. " if gender.strip().lower().startswith("m") else "Ms. " if gender.strip().lower().startswith("f") else ""}{name},
@@ -241,24 +210,18 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 </footer>
         """
 
-        # Create the email message
-        email_msg: EmailMessage = EmailMessage()
+        # Create email message
+        email_msg = EmailMessage()
         email_msg["Subject"] = f"{course_name} Cohort {cohort} Result"
-        email_msg.set_content(
-            "This is an HTML email. Please view in a compatible client."
-        )
+        email_msg.set_content("This is an HTML email. Please view in a compatible client.")
         email_msg.add_alternative(msg, subtype="html")
 
         try:
-            # Send the email to the student
+            # Send test email to facilitators first
             if idx == 0:
                 email_msg = EmailMessage()
-                email_msg["Subject"] = (
-                    f"Test: {read_course_name()} Cohort {cohort} Result"
-                )
-                email_msg.set_content(
-                    "This is an HTML email. Please view in a compatible client."
-                )
+                email_msg["Subject"] = f"Test: {course_name} Cohort {cohort} Result"
+                email_msg.set_content("This is an HTML email. Please view in a compatible client.")
                 mod_msg = f"""
 <h2>
   <bold>
@@ -268,9 +231,9 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 {msg}
               """
                 email_msg.add_alternative(mod_msg, subtype="html")
-                email1: str = must_get_env("FACILITATOR_EMAIL1")
-                email2: str = must_get_env("FACILITATOR_EMAIL2")
-                send_err: dict[str, tuple[int, bytes]] = server.send_message(
+                email1 = must_get_env("FACILITATOR_EMAIL1")
+                email2 = must_get_env("FACILITATOR_EMAIL2")
+                send_err = server.send_message(
                     email_msg, from_addr=sender_email, to_addrs=[email1, email2]
                 )
 
@@ -290,18 +253,16 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         except Exception as e:
             send_err = {"error": (1, bytes(str(e), "utf-8"))}
 
-        num: int = idx + 1
+        num = idx + 1
         if send_err != {}:
             bad_records.append((num, name, email, send_err))
         else:
-            print(
-                f"\nS/N: {num}. Successfully sent email to {name} with email: {email}"
-            )
+            print(f"\nS/N: {num}. Successfully sent email to {name} with email: {email}")
 
+    # Report any errors
     for num, name, email, send_err in bad_records:
-        print(
-            f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}"
-        )
+        print(f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}")
+    
     if len(bad_records) > 0:
         err = LMSError(f"Failed to send emails to {len(bad_records)} recipients.")
         return Result[Unit].err(err)
@@ -310,22 +271,15 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 
 
 def mail_result(ds: DataStore) -> Result[Unit]:
+    """Initiate process of sending result emails to students.
+    
+    Delegates email sending to utility that manages SMTP connection
+    and ensures each student receives individualized result email.
+    
+    Args:
+        ds (DataStore): DataStore instance containing student data.
+        
+    Returns:
+        Result[Unit]: Success or error from email sending process.
     """
-    Initiates the process of sending result emails to students.
-
-    This function delegates the email sending process to a utility that is responsible for
-    setting up the email environment (such as establishing an SMTP server connection),
-    performing the actual email sending logic, and handling any necessary cleanup or error management.
-
-    The function ensures that each student receives an individualized result email with their scores and requirements.
-
-    :param ds: (DataStore) - A DataStore instance containing student data.
-    :type ds: DataStore
-    :return: (None) - This function does not return a value.
-    :rtype: None
-    :raises Exception: Any exceptions raised during the email sending process (such as SMTP errors) may propagate.
-    """
-
-    # Run the email sending process using the configured email utility.
-    # The lambda ensures the DataStore is passed to the result-sending logic.
     return run_email(lambda server: _send_result(ds, server))

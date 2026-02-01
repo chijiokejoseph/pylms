@@ -19,79 +19,72 @@ from ..result_utils import (
 
 
 def val_assessment_data(test_data: pl.DataFrame) -> bool:
-    """Validate the input data for the assessment spreadsheet. The assessment spreadsheet should have either of the two (2) formats:
-        - 2-column: Serial Number | Score
-        - 3-column: Serial Number | Student Name | Score
-    Note: Student names must match existing data in spelling and casing.
-    If the assessment spreadsheet does not match the above formats, return False.
-
-    :param test_data: (pl.DataFrame) - The input data to validate
-    :type test_data: pl.DataFrame
-
-    :return: (bool) - True if the input data is valid, False otherwise
-    :rtype: bool
+    """Validate assessment spreadsheet format.
+    
+    Assessment spreadsheet should have either:
+    - 2-column: Serial Number | Score
+    - 3-column: Serial Number | Student Name | Score
+    
+    Args:
+        test_data (pl.DataFrame): Assessment data to validate.
+        
+    Returns:
+        bool: True if data format is valid, False otherwise.
     """
-
-    columns_list: list[str] = test_data.columns.tolist()
+    columns_list = test_data.columns
     match len(columns_list):
         case 2:
-            scores: pl.DataFrame = test_data.select_dtypes(include=[np.number])
-            names: pl.DataFrame = test_data.select_dtypes(exclude=[np.number])
-            score_cols = scores.columns.tolist()
-            name_cols = names.columns.tolist()
-            if len(score_cols) != 1:
+            # Check for one numeric and one non-numeric column
+            numeric_cols = [col for col in columns_list if test_data[col].dtype.is_numeric()]
+            string_cols = [col for col in columns_list if not test_data[col].dtype.is_numeric()]
+            
+            if len(numeric_cols) != 1 or len(string_cols) != 1:
                 return False
-            if len(name_cols) != 1:
-                return False
-            name_list: list[str] = names.astype(str).iloc[:, 0].tolist()
+                
+            # Check that string column has non-empty values
+            string_col = string_cols[0]
+            name_list = test_data[string_col].cast(pl.Utf8).to_list()
             return all(name.strip() != "" for name in name_list)
         case 3:
-            result = test_data.select_dtypes(include=[np.number])
-            result_cols = result.columns.tolist()
-            num_cols = columns_list[0], columns_list[-1]
-            if len(result_cols) != len(num_cols):
-                return False
-            return all(col1 == col2 for col1, col2 in zip(num_cols, result_cols))
+            # Check that first and last columns are numeric
+            first_col = columns_list[0]
+            last_col = columns_list[-1]
+            return (test_data[first_col].dtype.is_numeric() and 
+                   test_data[last_col].dtype.is_numeric())
         case _:
             return False
 
 
 def collate_assessment(history: History) -> Result[Unit]:
+    """Collate assessment spreadsheet for students.
+    
+    Prompts user for assessment spreadsheet path and processes scores.
+    Assessment spreadsheet should have either:
+    - 2-column: Serial Number | Score  
+    - 3-column: Serial Number | Student Name | Score
+    
+    Args:
+        history (History): Application state tracking.
+        
+    Returns:
+        Result[Unit]: Success or error with message.
     """
-    Collate the assessment spreadsheet for the students. Prompts for the user to enter a path
-    to the assessment spreadsheet.
-
-    The assessment spreadsheet should have either of the two (2) formats:
-        - 2-column: Serial Number | Score
-        - 3-column: Serial Number | Student Name | Score
-    Note: Student names must match existing data in spelling and casing.
-
-    If the assessment spreadsheet does not match the above formats, a SpreadSheetFmtErr will be raised.
-
-    :param history: (History) - The state of the application
-    :type history: History
-
-    :return: (Result[Unit]) - result
-    :rtype: Result[Unit]
-
-    :raises SpreadSheetFmtErr: If the assessment spreadsheet does not match the above formats
-    """
-    # Check if the attendance has been collated
+    # Check if attendance has been collated
     if not history.has_collated_attendance:
         msg = "Please collate the attendance first before collating the assessment.\n"
         eprint(msg)
         return Result.err(msg)
 
-    # Read the data from the attendance spreadsheet
+    # Read attendance data
     attendance_data = read(get_paths_excel()["Attendance"])
     if attendance_data.is_err():
         return attendance_data.propagate()
     attendance_data = attendance_data.unwrap()
     attendance = DataStream(attendance_data, val_attendance_data)
-    data: pl.DataFrame = attendance()
+    data = attendance.as_ref()
 
-    # Prompt the user to enter the path to the assessment spreadsheet
-    msg: str = """Please enter the (absolute) path to the Excel file in one of the following formats:
+    # Prompt for assessment spreadsheet path
+    msg = """Please enter the (absolute) path to the Excel file in one of the following formats:
     2-column: Serial Number | Score
     3-column: Serial Number | Student Name | Score
 Note: Scores must be between 0 and 100.
@@ -99,7 +92,6 @@ Note: Student names must match existing data in spelling and casing.
 
 Enter the path:  """
 
-    # Get the path to the assessment spreadsheet from the user
     result = input_path(msg)
     if result.is_err():
         return result.propagate()
@@ -110,64 +102,57 @@ Enter the path:  """
         return assessment_df.propagate()
     assessment_df = assessment_df.unwrap()
 
-    assessment_stream: DataStream = DataStream(assessment_df, val_assessment_data)
-    assessment_df = assessment_stream()
+    assessment_stream = DataStream(assessment_df, val_assessment_data)
+    assessment_df = assessment_stream.as_ref()
 
-    # Prompt the user to enter the assessment requirement
+    # Get assessment requirement
     req = input_marks_req("Enter the Assessment Requirement [1 - 100]: ")
     if req.is_err():
         return req.propagate()
     req = req.unwrap()
 
-    # Get the columns of the assessment spreadsheet
-    assessment_cols: list[str] = assessment_df.columns.tolist()
+    # Get assessment columns
+    assessment_cols = assessment_df.columns
 
-    # Sort the assessment spreadsheet by the first column
-    assessment_df = assessment_df.sort_values(by=[assessment_cols[0]])
+    # Sort by first column
+    assessment_df = assessment_df.sort(assessment_cols[0])
 
-    # Get the last column of the assessment spreadsheet
-    score_col: str = assessment_cols[-1]
+    # Get score column (last column)
+    score_col = assessment_cols[-1]
 
-    # Get the serials of the assessment spreadsheet
-    assessment_serials: list[int] = assessment_df.iloc[:, 0].astype(int).tolist()
+    # Get serials and scores
+    assessment_serials = assessment_df[assessment_cols[0]].cast(pl.Int32).to_list()
+    assessment_scores = assessment_df[score_col].cast(pl.Float64).to_list()
 
-    # Get the scores of the assessment spreadsheet
-    assessment_scores: list[float] = (
-        assessment_df.loc[:, score_col].astype(float).tolist()
-    )
+    serials = data[SERIAL].cast(pl.Int32).to_list()
 
-    serials = data[SERIAL].astype(int).tolist()
-
-    # Get the records of the assessment spreadsheet
-    assessment_records: list[float] = [
+    # Map scores to serials
+    assessment_records = [
         0.0
         if serial not in assessment_serials
         else assessment_scores[assessment_serials.index(serial)]
         for serial in serials
     ]
 
-    # Get the name of the assessment score column
-    assessment_score_col: str = det_assessment_score_col()
+    # Get column names
+    assessment_score_col = det_assessment_score_col()
+    assessment_req_col = det_assessment_req_col()
 
-    # Get the name of the assessment requirement column
-    assessment_req_col: str = det_assessment_req_col()
-
-    # Set the assessment scores of the attendance spreadsheet
-    data[assessment_score_col] = np.array(assessment_records, dtype=np.float64).round(2)
-
-    # Set the assessment requirement of the attendance spreadsheet
-    data[assessment_req_col] = req
+    # Update data with assessment scores and requirement
+    data = data.with_columns([
+        pl.Series(assessment_score_col, assessment_records).round(2),
+        pl.lit(req).alias(assessment_req_col)
+    ])
+    
     printpass("Assessment recorded successfully\n")
 
-    # Get the path to the assessment spreadsheet
-    assessment_path: Path = get_paths_excel()["Assessment"]
-
-    # Write the attendance spreadsheet to the assessment spreadsheet
+    # Save to Excel
+    assessment_path = get_paths_excel()["Assessment"]
     result = DataStream(data).to_excel(assessment_path)
     if result.is_err():
         return result.propagate()
 
-    # Record the assessment in the history
+    # Record in history
     record_assessment(history)
 
     return Result.unit()
