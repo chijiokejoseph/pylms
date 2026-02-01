@@ -1,3 +1,5 @@
+import polars as pl
+
 from ..clean import (
     clean_cohort,
     clean_completion_date,
@@ -20,81 +22,106 @@ from ..errors import Result
 
 
 def _clean_new(data_stream: DataStream) -> Result[DataStore]:
-    def validate_na_removal(test_data: pl.DataFrame) -> bool:
-        return not test_data.isna().any().any()
+    """Clean new student data for addition to existing registration data.
+    
+    Applies comprehensive data cleaning operations including NA removal,
+    string formatting, email/name/phone cleaning, and column reordering.
+    
+    Args:
+        data_stream (DataStream): Stream containing new student data to clean.
+        
+    Returns:
+        Result[DataStore]: Success with cleaned DataStore or error.
+    """
+    def validate_na_removal(test_data: pl.DataFrame) -> tuple[bool, str]:
+        contains_na = test_data.null_count().sum_horizontal().item() > 0
+        if contains_na:
+            return False, "The data has null values"
+        
+        return True, ""
+        
 
-    result = clean_na(data_stream, validate_na_removal)
+    data = data_stream.as_ref()
+
+    result = clean_na(data, validate_na_removal)
     if result.is_err():
         return result.propagate()
 
-    clean_str(data_stream, [NAME, PHONE])
-    clean_email(data_stream)
-    clean_name(data_stream)
+    data = result.unwrap()
 
-    result = clean_phone(data_stream)
+    data = clean_str(data, [NAME, PHONE])
+    data = clean_email(data)
+    data = clean_name(data)
+
+    result = clean_phone(data)
     if result.is_err():
         return result.propagate()
 
-    result = clean_cohort(data_stream)
+    data = result.unwrap()
+
+    result = clean_cohort(data)
     if result.is_err():
         return result.propagate()
 
-    result = clean_date(data_stream)
+    result = clean_date(data)
     if result.is_err():
         return result.propagate()
 
-    clean_time(data_stream)
-    clean_internship(data_stream)
-    clean_training(data_stream)
+    data = result.unwrap()
+    data = clean_time(data)
+    data = clean_internship(data)
+    data = clean_training(data)
 
-    result = clean_completion_date(data_stream)
+    result = clean_completion_date(data)
     if result.is_err():
         return result.propagate()
 
-    clean_duplicates(data_stream)
-    clean_sort(data_stream)
+    data = result.unwrap()
 
-    # get list of columns in `data_stream`
-    columns: list[str] = data_stream().columns.tolist()
-    # get list of columns in `data_stream` that are not in `DATA_COLUMNS`
-    not_data_columns: list[str] = [
-        column for column in columns if column not in DATA_COLUMNS
-    ]
-    # get list of columns in `data_stream` that are in `DATA_COLUMNS`
-    data_columns: list[str] = [column for column in columns if column in DATA_COLUMNS]
+    data = clean_duplicates(data)
+    data = clean_sort(data)
 
-    # extract the dataframe for only columns in `DATA_COLUMNS`
-    subset1 = data_stream.as_ref()[data_columns]
-    # extract the dataframe for only columns not in `DATA_COLUMNS`
-    subset2 = data_stream.as_ref()[not_data_columns]
+    # Get list of columns in data_stream
+    columns = data.columns
+    # Get columns not in DATA_COLUMNS
+    not_data_columns = [col for col in columns if col not in DATA_COLUMNS]
+    # Get columns in DATA_COLUMNS
+    data_columns = [col for col in columns if col in DATA_COLUMNS]
 
-    # clean that DataStream object
-    result = clean_order(DataStream(subset1))
+    # Extract dataframe for only DATA_COLUMNS
+    subset1 = data.select(data_columns)
+    # Extract dataframe for non-DATA_COLUMNS
+    subset2 = data.select(not_data_columns)
+
+    # Clean the DataStream object
+    result = clean_order(subset1)
     if result.is_err():
         return result.propagate()
 
     subset1 = result.unwrap()
 
-    # create a DataStore from the cleaned data
-    ds: DataStore = DataStore(subset1)
+    # Create DataStore from cleaned data
+    ds = DataStore(subset1)
 
-    # recombine the data in the DataStore and the data corresponding to columns not in `DATA_COLUMNS`
-    recombined_data = pd.concat([ds.as_ref(), subset2], axis="columns")
+    # Recombine the data horizontally
+    recombined_data = pl.concat([ds.as_ref(), subset2], how="horizontal")
 
-    # use a setter to replace the underlying data of `ds` with `recombined_data`
-    ds.data = recombined_data
+    # Replace underlying data of ds with recombined_data
+    _ = ds.copy_from(recombined_data)
 
     return Result.ok(ds)
 
 
 def clean_new_data(new_data_stream: DataStream) -> Result[DataStore]:
-    """
-    cleans data that is passed into the program to add additional entries to the main registration data which has already been stored as a `DataStore` object.
-
-    :param new_data_stream: (DataStream): A `DataStream` object that contains an underlying pandas DataFrame. it is the data read into the program to add extra entries to the already processed registration data.
-    :type new_data_stream: DataStream
-
-    :return: (Result[DataStore]) - a `Result` containing the `DataStore` object of the cleaned data, which makes it suitable for being added to the existing registration data that is also stored as a `DataStore`.
-    :rtype: Result[DataStore]
+    """Clean new student data for integration with existing registration data.
+    
+    Processes new student data through comprehensive cleaning pipeline to ensure
+    compatibility with existing DataStore format and data quality standards.
+    
+    Args:
+        new_data_stream (DataStream): Stream containing new student registration data.
+        
+    Returns:
+        Result[DataStore]: Success with cleaned DataStore ready for integration or error.
     """
     return _clean_new(new_data_stream)
