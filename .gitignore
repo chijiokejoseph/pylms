@@ -211,6 +211,7 @@ secrets.json
 
 # local
 /data/
+/.private
 
 # Test Html files
 src/html/
