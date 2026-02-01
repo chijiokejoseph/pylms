@@ -29,7 +29,7 @@ type CollateType = Literal["merit", "fast track"]
 
 
 def collate_awardees(
-    stream: DataStream[pd.DataFrame], collate_type: CollateType = "merit"
+    stream: DataStream[pd.DataFrame], cohort_num: int, collate_type: CollateType = "merit"
 ) -> Result[Unit]:
     def validate_fn(test_data: pd.DataFrame) -> bool:
         columns: list[str] = test_data.columns.tolist()
@@ -46,7 +46,6 @@ def collate_awardees(
 
     end_date: str = dates_list[-1]
     end_date = fmt_date(end_date)
-    cohort_num: int = data[COHORT].iloc[0]
 
     course_name = read_course_name()
     if course_name.is_err():

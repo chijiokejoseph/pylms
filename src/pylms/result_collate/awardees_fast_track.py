@@ -1,5 +1,6 @@
 import pandas as pd
 
+from pylms.constants import COHORT
 from pylms.errors import Result, Unit
 
 from ..cli import input_bool, provide_serials
@@ -29,8 +30,9 @@ def collate_fast_track(ds: DataStore) -> Result[Unit]:
     student_indices: list[int] = [serial - 1 for serial in student_serials]
     pretty_data: pd.DataFrame = ds.pretty()
     fast_track_data: pd.DataFrame = pretty_data.iloc[student_indices, :]
+    cohort = pretty_data[COHORT].iloc[0]
 
-    choice = collate_awardees(DataStream(fast_track_data), collate_type="fast track")
+    choice = collate_awardees(DataStream(fast_track_data), cohort, collate_type="fast track")
     if choice.is_err():
         return choice.propagate()
 

@@ -1,8 +1,10 @@
 from typing import Literal
 
 import pandas as pd
+import numpy as np
 
 from ..constants import (
+    COHORT,
     FAIL,
     PASS,
     REASON,
@@ -91,7 +93,7 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
-    excellent_attendance_count: int = attendance_count - 1
+    excellent_attendance_count: int = attendance_count - 2
     attendance_req_col: str = det_attendance_req_col()
     assessment_req_col: str = det_assessment_req_col()
     result_col: str = det_result_col()
@@ -116,7 +118,8 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
     ) & (
         result_data[result_col] < result_data[passmark_col].loc[0]
     )  # scores are within 5 marks from the passmark ❌
-    excellent_attendance: float = excellent_attendance_count * 100 / attendance_count
+    excellent_attendance = excellent_attendance_count * 100 / attendance_count
+    excellent_attendance = np.round(excellent_attendance, 1)
     brilliant_attendance_pass: pd.Series = (
         result_data[attendance_score_col] >= excellent_attendance
     )  # attendance is excellent ✅
@@ -154,8 +157,9 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
     pretty_data: pd.DataFrame = ds.pretty()
     passed_data: pd.DataFrame = pretty_data.loc[pass_logic_idx, :]
     passed_stream: DataStream[pd.DataFrame] = DataStream(passed_data)
+    cohort = pretty_data[COHORT].iloc[0]
 
-    result = collate_awardees(passed_stream)
+    result = collate_awardees(passed_stream, cohort)
     if result.is_err():
         return result.propagate()
 
