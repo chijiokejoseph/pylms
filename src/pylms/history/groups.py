@@ -14,8 +14,8 @@ def set_group(history: History, num: int) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
-    items: list[Path] = list(group_path.iterdir())
-    num_groups: int = len(
+    items = list(group_path.iterdir())
+    num_groups = len(
         [
             group
             for group in items

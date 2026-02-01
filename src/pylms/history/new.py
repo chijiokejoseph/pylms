@@ -250,6 +250,13 @@ def load_history() -> Result[History]:
             return Result.err(msg)
         history.merit = (data["merit"][0], Path(data["merit"][1]))
 
+    if "group" in data:
+        if not isinstance(data["group"], list) or len(data["group"]) != 2:
+            msg = "Group must be a list with two elements: a boolean and a number."
+            eprint(msg)
+            return Result.err(msg)
+        history.group = (data["group"][0], data["group"][1])
+
     # Update the dates based on the loaded data
     result = sync_classes(history)
     if result.is_err():
