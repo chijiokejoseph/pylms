@@ -59,7 +59,7 @@ def clean_completion_date(
     _, fmt = result.unwrap()
     day_first = fmt == format_options[0]
 
-    @np.vectorize
+    
     def apply() -> Callable[[str], str]:
         """Return a callable that formats entries using the chosen ordering."""
         return lambda x: _clean_date(x, day_first=day_first)
@@ -69,5 +69,7 @@ def clean_completion_date(
     # completion = np.array(completion, dtype=np.str_)
     # data = data.with_columns(pl.Series(COMPLETION, completion, dtype=pl.String))
 
-    data = datamap(data, COMPLETION, apply, np.str_, pl.String())
+    apply_func = np.vectorize(apply())
+
+    data = datamap(data, COMPLETION, apply_func, np.str_, pl.String())
     return Result.ok(data)

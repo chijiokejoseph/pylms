@@ -18,7 +18,6 @@ Exports (selected):
 """
 
 from .clean_col_names import clean_col_names
-from .clean_columns import clean_columns
 from .clean_completion_date import clean_completion_date
 from .clean_duplicates import clean_duplicates, clean_duplicates_with_cols
 from .clean_email import clean_email
@@ -39,7 +38,6 @@ from .clean_training import clean_training
 
 __all__ = [
     "clean_col_names",
-    "clean_columns",
     "clean_na",
     "clean_duplicates",
     "clean_duplicates_with_cols",

@@ -1,9 +1,8 @@
 import numpy as np
 import polars as pl
 
-from ..data import datamap
-
 from ..constants import ARABIC_APOSTROPHE, COMMA_DELIM, NAME, SPACE_DELIM
+from ..data import datamap
 
 
 def clean_name(data: pl.DataFrame) -> pl.DataFrame:
@@ -49,16 +48,13 @@ def _clean_name(entry: str) -> str:
         delim = COMMA_DELIM
 
     entries = entry.split(delim)
-    entries = [entry.title() for entry in entries]
+    entries = [entry.strip().title() for entry in entries]
     entry = COMMA_DELIM.join(entries)
-
-    entry = entry.title()
 
     idx = entry.find(ARABIC_APOSTROPHE)
 
     if idx != -1:
         seq = entry[idx : idx + 2]
         entry = entry.replace(seq, seq.lower())
-        entry = entry.capitalize()
 
     return entry

@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, TypedDict
-
+from typing import TypedDict
 
 PARENT_PATH: Path = Path(__file__).resolve().parents[2]
 ENV_PATH: Path = PARENT_PATH / ".env"
@@ -41,8 +40,6 @@ class Json(TypedDict):
 
 
 RESULT_UPDATE: str = "Result Update"
-
-type ValidateDataFn = Callable[[pl.DataFrame | pd.Series], bool]
 
 
 class AwardeesDict(TypedDict):
@@ -129,10 +126,14 @@ ARABIC_APOSTROPHE = "’"
 
 # NA Columns Replacement
 NA_COLUMNS_FILL: dict[str, object] = {
+    SERIAL: 1,
     TIME: datetime.strptime(f"01/01/{datetime.now().year}", DATE_FMT),
-    EMAIL: NA,
-    PHONE: NA,
+    NAME: NA,
     GENDER: NA,
+    COHORT: 0,
+    PHONE: NA,
+    EMAIL: NA,
+    DATE: f"{datetime.now().year}/01/01",
     INTERNSHIP: NA,
     COMPLETION: f"{datetime.now().year}/01/01",
     TRAINING: "Python Beginners (Monday - Wednesday 12:00pm)",

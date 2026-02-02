@@ -34,14 +34,19 @@ def clean_na(
     """
 
     data = data.with_columns(
-        [pl.col(col).fill_null(fill).alias(col) for col, fill in NA_COLUMNS_FILL]
+        [
+            pl.col(col).fill_null(fill).alias(col)
+            if col in data.columns
+            else pl.lit(fill).alias(col)
+            for col, fill in NA_COLUMNS_FILL.items()
+        ]
     )
 
     def validate(test_data: pl.DataFrame) -> tuple[bool, str]:
         test1 = test_data.filter(
             [pl.col(col).is_null().sum() > 0 for col in test_data.columns]
         )
-        if test1.shape[0] > 0:
+        if test1.height > 0:
             return False, "Your data contains null values"
         columns: list[str] = test_data.columns
 

@@ -10,7 +10,7 @@ from ..date import format_date
 
 
 @np.vectorize
-def _clean_time(entry: str | datetime) -> str:
+def _clean_time(entry: str | datetime | np.str_ | np.datetime64) -> str:
     """Format a single time entry according to the project's time format.
 
     Helper that formats a single time value (either a `datetime` or a string
@@ -23,7 +23,13 @@ def _clean_time(entry: str | datetime) -> str:
     Returns:
         str: The formatted time string according to `TIME_FMT`.
     """
-    return format_date(entry, TIME_FMT)
+    if isinstance(entry, np.datetime64):
+        value: str | datetime = entry.astype(datetime)
+    elif isinstance(entry, np.str_):
+        value = entry.item()
+    else:
+        value = entry
+    return format_date(value, TIME_FMT)
 
 
 def clean_time(data: pl.DataFrame) -> pl.DataFrame:

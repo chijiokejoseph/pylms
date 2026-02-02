@@ -1,38 +1,12 @@
+import polars as pl
+
 from ..cli import input_option
 from ..constants import COMMA_DELIM, WEEK_DAYS
 from ..data import DataStore
-from ..date import to_unique_week_nums
 from ..errors import Result, Unit
 from ..history import History, all_dates, save_history, set_class_days, set_cohort
 from ..info import print_info
-from ..paths import get_paths_weeks
 from ..record import RecordStatus
-
-
-def make_weekly_ds(new_ds: DataStore, dates_list: list[str]) -> Result[Unit]:
-    """Write weekly DataStore files for unique week numbers.
-
-    Given a DataStore and a list of date strings, compute the unique week
-    numbers using `to_unique_week_nums` and write the DataStore to an Excel
-    file for each unique week number. Filenames are produced using the
-    `get_paths_weeks()` base path and have the format `DataStore{week}.xlsx`.
-
-    Args:
-        new_ds (DataStore): DataStore instance to be written to disk.
-        dates_list (list[str]): List of date strings from which week numbers
-            will be derived.
-
-    Returns:
-        Result[Unit]: a Unit Result if successful or `Result.err` for any
-        caught errors
-    """
-    unique_week_nums = to_unique_week_nums(dates_list)
-    for each_week_num in unique_week_nums:
-        result = new_ds.write(get_paths_weeks() / f"DataStore{each_week_num}.xlsx")
-        if result.is_err():
-            return result.propagate()
-
-    return Result.unit()
 
 
 def input_class_days() -> Result[list[str]]:
@@ -112,6 +86,8 @@ def normalize(ds: DataStore, history: History) -> Result[Unit]:
         return result.propagate()
 
     date_cols: list[str] = all_dates(history, "")
-    ds.as_ref()[date_cols] = RecordStatus.EMPTY
-
-    return make_weekly_ds(ds, date_cols)
+    data = ds.as_ref()
+    data = data.with_columns(
+        [pl.lit(str(RecordStatus.EMPTY)).alias(col) for col in date_cols]
+    )
+    return ds.copy_from(data)

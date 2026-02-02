@@ -46,10 +46,8 @@ def clean_phone(data: pl.DataFrame) -> Result[pl.DataFrame]:
             return False, f"Column '{PHONE}' is missing"
 
         # Test if `test_data` does not contain any missing values
-        test2: bool = (
-            test_data[PHONE].is_null().any() and test_data[PHONE].is_nan().any()
-        )
-        if not test2:
+        test2: bool = test_data[PHONE].is_null().any()
+        if test2:
             return False, f"Column '{PHONE}' contains missing values"
 
         @np.vectorize
