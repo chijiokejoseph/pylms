@@ -26,7 +26,7 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
         None
     """
     data: pd.DataFrame = data_stream.as_ref()
-    for old_column in data.columns:
+    for old_column in data.columns.tolist():
         new_column: str = old_column.strip().title()
 
         regex_nysc: re.Pattern[str] = re.compile(r"nysc", flags=re.IGNORECASE)
@@ -43,9 +43,6 @@ def clean_col_names(data_stream: DataStream[pd.DataFrame]) -> None:
             for each_match in matches_siwes:
                 new_column = new_column.replace(each_match, each_match.upper())
 
-        data[new_column] = data[old_column]
-        # drop the old column if the new column name `new_column` is different from the old column name `old_column`
-        if new_column != old_column:
-            data.drop(old_column, inplace=True)
+        data.rename(columns={old_column: new_column}, inplace=True)
 
     return
