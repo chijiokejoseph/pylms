@@ -15,7 +15,7 @@ from .lms_records import (
     record_project,
     record_result,
 )
-from .new import load_history
+from .new import init_history, load_history
 from .num_cohort import set_cohort
 from .retrieve import (
     get_available_cds_forms,
@@ -68,6 +68,7 @@ __all__ = [
     "record_project",
     "record_merit",
     "record_result",
+    "init_history",
     "load_history",
     "set_cohort",
     "get_available_cds_forms",

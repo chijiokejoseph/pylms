@@ -7,12 +7,12 @@ from ..info import printpass
 from ..paths import get_data_path, get_paths_excel
 
 
-def save(ds: DataStore) -> Result[Unit]:
+def save_ds(ds: DataStore) -> Result[Unit]:
     """Save DataStore to file.
-    
+
     Args:
         ds (DataStore): DataStore to save.
-        
+
     Returns:
         Result[Unit]: Success or error message.
     """
@@ -31,5 +31,5 @@ def save(ds: DataStore) -> Result[Unit]:
     # Display save path with abbreviated format
     path_display = str(ds_path).replace(str(data_path), "...DATA")
     path_display = emphasis(path_display)
-    printpass(f'DataStore saved at path "{path_display}"')
+    printpass(f"DataStore saved at path \"{path_display}\"")
     return Result.unit()

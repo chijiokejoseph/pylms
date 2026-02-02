@@ -1,7 +1,7 @@
 from ..cache import cache_for_cmd, rollback_to_cmd
 from ..cli import interact
 from ..data import DataStore
-from ..data_service import edit, list_ds, load, remove_students, save, view
+from ..data_service import edit, list_ds, load_ds, remove_students, save_ds, view
 from ..info import print_info, printpass
 
 
@@ -54,7 +54,7 @@ def handle_data(ds: DataStore) -> None:
                 if result.is_err():
                     continue
 
-                app_ds = load()
+                app_ds = load_ds()
                 if app_ds.is_err():
                     continue
 
@@ -65,7 +65,7 @@ def handle_data(ds: DataStore) -> None:
             case _:
                 break
 
-        result = save(ds)
+        result = save_ds(ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

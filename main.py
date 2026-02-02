@@ -3,7 +3,9 @@ from dotenv import load_dotenv
 from pylms.cli import input_course_name, input_dir
 from pylms.config import load, write_config
 from pylms.constants import ENV_PATH
-from pylms.errors import ForcedExitError, Result
+from pylms.data_service import init_ds
+from pylms.errors import ForcedExitError, Result, eprint
+from pylms.history import init_history
 from pylms.mainloop import closed_loop, handle_err, mainloop
 from pylms.paths import prepare_paths
 
@@ -19,8 +21,8 @@ def main() -> None:
     runs the main or closed loop based on the application's open state. Handles errors
     gracefully and determines whether to continue running.
 
-    :return: (None) - This function does not return a value.
-    :rtype: None
+    Returns:
+        None
     """
     run: bool = True
     while run:
@@ -50,10 +52,39 @@ def main() -> None:
         # Prepare any necessary file paths for the application
         prepare_paths()
 
+        # Initialize History
+        history = init_history()
+        if history.is_err():
+            err = history.unwrap_err()
+            if isinstance(err, ForcedExitError):
+                return
+            eprint("Failed to save history")
+            continue
+
+        history = history.unwrap()
+
+        # Register Data
+        ds = init_ds(history)
+        if ds.is_err():
+            err = ds.unwrap_err()
+            if isinstance(err, ForcedExitError):
+                return
+            eprint("Failed to register data store")
+            continue
+
+        ds = ds.unwrap()
+
+        app_ds = ds
+        app_history = history
+
         # Run the main loop if the application is open, otherwise run the closed loop.
         # Any exceptions are handled by handle_err.
         def func() -> Result[bool]:
-            return mainloop(config) if config.is_open() else closed_loop(config)
+            return (
+                mainloop(config, app_ds, app_history)
+                if config.is_open()
+                else closed_loop(config, app_ds, app_history)
+            )
 
         result = handle_err(func)
 

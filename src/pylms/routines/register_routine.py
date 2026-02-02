@@ -1,7 +1,7 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
 from ..data import DataStore
-from ..data_service import append_update, new, save
+from ..data_service import append_update, init_ds, save_ds
 from ..form_request import request_complaint_form, request_update_form
 from ..form_retrieve import (
     retrieve_update_form,
@@ -39,7 +39,7 @@ def register(ds: DataStore, history: History) -> None:
 
         match selection:
             case 1:
-                app_ds = new(history)
+                app_ds = init_ds(history)
                 if app_ds.is_err():
                     continue
                 app_ds = app_ds.unwrap()
@@ -75,7 +75,7 @@ def register(ds: DataStore, history: History) -> None:
             case _:
                 break
 
-        result = save(ds)
+        result = save_ds(ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

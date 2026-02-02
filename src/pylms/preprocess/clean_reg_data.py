@@ -1,7 +1,6 @@
 from ..clean import (
     clean_cohort,
     clean_col_names,
-    clean_columns,
     clean_completion_date,
     clean_date,
     clean_duplicates,
@@ -37,7 +36,6 @@ def clean_reg(data_stream: DataStream) -> Result[DataStore]:
     """
     data = data_stream.as_ref()
     data = clean_col_names(data)
-    data = clean_columns(data)
 
     result = clean_na(data)
     if result.is_err():

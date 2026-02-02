@@ -3,7 +3,7 @@ from typing import final, override
 
 from dotenv import load_dotenv
 
-from pylms.data_service import load
+from pylms.data_service import load_ds
 from pylms.errors import Result, Unit
 from pylms.history import load_history
 from pylms.messages import assessment_message_all, custom_message_all
@@ -32,7 +32,7 @@ class AllEmailsTest(unittest.TestCase):
         # Load environment variables from .env file
         _ = load_dotenv()
         # Load the data store for use in tests
-        self.ds = load()  # pyright: ignore [reportUninitializedInstanceVariable]
+        self.ds = load_ds()  # pyright: ignore [reportUninitializedInstanceVariable]
         # Load History
         self.history = load_history()  # pyright: ignore [reportUninitializedInstanceVariable]
 

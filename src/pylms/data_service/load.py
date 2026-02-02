@@ -7,9 +7,9 @@ from ..paths import get_paths_excel
 from .prefill import prefill_ds
 
 
-def load() -> Result[DataStore]:
+def load_ds() -> Result[DataStore]:
     """Load DataStore from file or return prefilled DataStore if not found.
-    
+
     Returns:
         Result[DataStore]: Success with loaded or prefilled DataStore.
     """

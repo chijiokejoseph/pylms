@@ -30,7 +30,7 @@ def save_history(history: History) -> Result[Unit]:
         "weeks": history.weeks,
         "interlude": history.interlude.to_dict()
         if history.interlude is not None
-        else None,
+        else {},
         "held_classes": [date.strftime(DATE_FMT) for date in history.held_classes],
         "marked_classes": [date.strftime(DATE_FMT) for date in history.marked_classes],
         "class_forms": [data.model_dump(mode="json") for data in history.class_forms],

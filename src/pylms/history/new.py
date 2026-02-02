@@ -4,16 +4,41 @@ from pathlib import Path
 
 from ..date import parse_dates, to_date
 from ..errors import Result, eprint
+from ..info import print_info
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from ..paths import get_history_path
 from .classes import sync_classes
 from .history import History
 from .interlude import Interlude
+from .save import save_history
+
+
+def init_history() -> Result[History]:
+    """Initialize history data storage.
+
+    Creates a new history file if it doesn't exist, otherwise loads existing data.
+
+    Returns:
+        Result[History]: Success with new or loaded History instance, or error message.
+    """
+    history_path = get_history_path()
+    if history_path.exists():
+        return load_history()
+
+    history = History()
+
+    print_info("App history records have just been initialized")
+
+    result = save_history(history)
+    if result.is_err():
+        return result.propagate()
+
+    return Result.ok(history)
 
 
 def load_history() -> Result[History]:
     """Load history data from JSON file and initialize History object.
-    
+
     Returns:
         Result[History]: Success with loaded History instance or error message.
     """

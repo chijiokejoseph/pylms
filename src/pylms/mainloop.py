@@ -4,9 +4,10 @@ from typing import Callable
 from .cache import cache_for_cmd
 from .cli import input_bool, interact
 from .config import Config
-from .data_service import load, view
+from .data import DataStore
+from .data_service import view
 from .errors import LMSError, Result, eprint
-from .history import load_history
+from .history import History
 from .info import print_info
 from .result_utils import view_result
 from .routines import (
@@ -38,7 +39,7 @@ def handle_err(func: Callable[[], Result[bool]]) -> bool | None:
     return None
 
 
-def mainloop(config: Config) -> Result[bool]:
+def mainloop(config: Config, ds: DataStore, history: History) -> Result[bool]:
     menu = [
         "Attendance",
         "CDS",
@@ -49,16 +50,6 @@ def mainloop(config: Config) -> Result[bool]:
         "Message",
         "Quit",
     ]
-
-    history = load_history()
-    if history.is_err():
-        return history.propagate()
-    history = history.unwrap()
-
-    ds = load()
-    if ds.is_err():
-        return ds.propagate()
-    ds = ds.unwrap()
 
     selection = interact(menu)
 
@@ -98,7 +89,7 @@ def mainloop(config: Config) -> Result[bool]:
     return Result.ok(True)
 
 
-def closed_loop(config: Config) -> Result[bool]:
+def closed_loop(config: Config, ds: DataStore, history: History) -> Result[bool]:
     print_info("Cohort is closed.\n")
     menu = [
         "View Data Records",
@@ -106,18 +97,6 @@ def closed_loop(config: Config) -> Result[bool]:
         "Cohort",
         "Quit",
     ]
-
-    history = load_history()
-    if history.is_err():
-        return history.propagate()
-
-    history = history.unwrap()
-
-    ds = load()
-    if ds.is_err():
-        return ds.propagate()
-
-    ds = ds.unwrap()
 
     selection = interact(menu)
 
@@ -128,25 +107,13 @@ def closed_loop(config: Config) -> Result[bool]:
 
     match int(selection):
         case 1:
-            app_ds = load()
-            if app_ds.is_err():
-                return app_ds.propagate()
-            app_ds = app_ds.unwrap()
-
-            result = view(app_ds)
+            result = view(ds)
             if result.is_err():
                 return result.propagate()
         case 2:
-            app_ds = load()
-
-            if app_ds.is_err():
-                return app_ds.propagate()
-            app_ds = app_ds.unwrap()
-
-            result = view_result(app_ds)
+            result = view_result(ds)
             if result.is_err():
                 return result.propagate()
-
         case 3:
             handle_cohort(config, ds, history)
         case _:
