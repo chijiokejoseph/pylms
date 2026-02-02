@@ -4,7 +4,7 @@ from typing import final, override
 
 import pandas as pd
 
-from pylms.data_service import load
+from pylms.data_service import load_ds
 from pylms.history import load_history, retrieve_dates
 from pylms.record import RecordStatus
 from pylms.rollcall_edit import (
@@ -17,7 +17,7 @@ from pylms.rollcall_edit import (
 class EditAllTest(unittest.TestCase):
     @override
     def setUp(self) -> None:
-        self.ds = load().unwrap()  # pyright: ignore[reportUninitializedInstanceVariable]
+        self.ds = load_ds().unwrap()  # pyright: ignore[reportUninitializedInstanceVariable]
         self.history = load_history().unwrap()  # pyright: ignore[reportUninitializedInstanceVariable]
 
     def test_edit_all(self) -> None:

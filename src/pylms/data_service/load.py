@@ -7,7 +7,7 @@ from ..paths import get_paths_excel
 from .prefill import prefill_ds
 
 
-def load() -> Result[DataStore]:
+def load_ds() -> Result[DataStore]:
     # get DataStore path
     path: Path = get_paths_excel()["DataStore"]
 

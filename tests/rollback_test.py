@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from pylms import paths
 from pylms.cache.rollback import rollback_to_cmd
-from pylms.data_service import load
+from pylms.data_service import load_ds
 
 
 @final
@@ -22,7 +22,7 @@ class TestRollBack(TestCase):
         :rtype: None
         """
         # Load the dataset before each test
-        self.ds = load()  # pyright: ignore [reportUninitializedInstanceVariable]
+        self.ds = load_ds()  # pyright: ignore [reportUninitializedInstanceVariable]
 
     @override
     def tearDown(self) -> None:

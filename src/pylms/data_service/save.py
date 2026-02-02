@@ -8,7 +8,7 @@ from ..info import printpass
 from ..paths import get_data_path, get_paths_excel
 
 
-def save(ds: DataStore) -> Result[Unit]:
+def save_ds(ds: DataStore) -> Result[Unit]:
     if ds.prefilled:
         msg = "Error: DataStore is prefilled and has no actual data"
         eprint(msg)

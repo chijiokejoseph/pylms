@@ -1,7 +1,7 @@
 from typing import final, override
 from unittest import TestCase, main
 
-from .load import load
+from .load import load_ds
 from .view import view
 
 
@@ -9,7 +9,7 @@ from .view import view
 class ViewTest(TestCase):
     @override
     def setUp(self) -> None:
-        self.ds = load()  # pyright: ignore[reportUninitializedInstanceVariable]
+        self.ds = load_ds()  # pyright: ignore[reportUninitializedInstanceVariable]
 
     def test_view(self) -> None:
         ds = self.ds.unwrap()

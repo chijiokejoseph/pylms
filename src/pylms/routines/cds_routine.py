@@ -1,7 +1,7 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
 from ..data import DataStore
-from ..data_service import save
+from ..data_service import save_ds
 from ..form_request import request_cds_form
 from ..form_retrieve import (
     retrieve_cds_form,
@@ -55,7 +55,7 @@ def handle_cds(ds: DataStore, history: History) -> None:
             case _:
                 break
 
-        result = save(ds)
+        result = save_ds(ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

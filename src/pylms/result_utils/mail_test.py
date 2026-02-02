@@ -3,7 +3,7 @@ from typing import final, override
 
 from dotenv import load_dotenv
 
-from ..data_service import load
+from ..data_service import load_ds
 from .mail import mail_result
 
 
@@ -20,7 +20,7 @@ class TestSendResult(unittest.TestCase):
     @override
     def setUp(self) -> None:
         _ = load_dotenv()
-        self.ds = load()  # pyright: ignore[reportUninitializedInstanceVariable]
+        self.ds = load_ds()  # pyright: ignore[reportUninitializedInstanceVariable]
 
     def test_send_result(self) -> None:
         """

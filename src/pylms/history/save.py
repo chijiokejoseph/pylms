@@ -1,10 +1,8 @@
 import json
-from pathlib import Path
 
 from ..constants import DATE_FMT, HISTORY_PATH
-from ..errors import Result, Unit, eprint
-from ..paths import get_history_path, get_paths_json
-from .dates_with_history import all_dates
+from ..errors import Result, Unit
+from ..paths import get_history_path
 from .history import History
 
 
@@ -31,7 +29,7 @@ def save_history(history: History) -> Result[Unit]:
         # Interlude if present
         "interlude": history.interlude.to_dict()
         if history.interlude is not None
-        else None,
+        else {},
         # List of classes for which attendance has been generated
         "held_classes": [date.strftime(DATE_FMT) for date in history.held_classes],
         # List of classes for which attendance has been marked
@@ -86,40 +84,5 @@ def save_history(history: History) -> Result[Unit]:
     # Save the history data to the JSON file
     with HISTORY_PATH.open("w") as file:
         json.dump(data, file, indent=2)
-
-    # Save the dates to the JSON file (`Json/dates.json`)
-    # if the dates have changed
-
-    # Get `Json/dates.json`
-    dates_json_path: Path = get_paths_json()["Date"]
-
-    # Check if `Json/dates.json` exists
-    if not dates_json_path.exists():
-        # Create `Json/dates.json`, save the dates and return
-        with dates_json_path.open("w") as file:
-            json.dump(all_dates(history, ""), file, indent=2)
-        return Result.unit()
-
-    # Load the dates from the JSON file `Json/dates.json`
-    dates_json_list: list[str] = []
-    with dates_json_path.open("r") as file:
-        dates_data = json.load(file)
-        if not isinstance(dates_data, list):
-            msg = "dates_data is not a list"
-            eprint(msg)
-            return Result.err(msg)
-        if len(dates_data) != 0 and not all(
-            isinstance(value, str) for value in dates_data
-        ):
-            msg = "dates_data is not a list"
-            eprint(msg)
-            return Result.err(msg)
-
-        dates_json_list.extend(dates_data)
-
-    # Update the dates in the JSON file if they have changed
-    if dates_json_list != all_dates(history, ""):
-        with dates_json_path.open("w") as file:
-            json.dump(all_dates(history, ""), file, indent=2)
 
     return Result.unit()

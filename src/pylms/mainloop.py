@@ -4,7 +4,7 @@ from typing import Callable
 from .cache import cache_for_cmd
 from .cli import input_bool, interact
 from .config import Config
-from .data_service import load, view
+from .data_service import load_ds, view
 from .errors import LMSError, Result, eprint
 from .history import load_history
 from .info import print_info
@@ -55,7 +55,7 @@ def mainloop(config: Config) -> Result[bool]:
         return history.propagate()
     history = history.unwrap()
 
-    ds = load()
+    ds = load_ds()
     if ds.is_err():
         return ds.propagate()
     ds = ds.unwrap()
@@ -113,7 +113,7 @@ def closed_loop(config: Config) -> Result[bool]:
 
     history = history.unwrap()
 
-    ds = load()
+    ds = load_ds()
     if ds.is_err():
         return ds.propagate()
 
@@ -128,7 +128,7 @@ def closed_loop(config: Config) -> Result[bool]:
 
     match int(selection):
         case 1:
-            app_ds = load()
+            app_ds = load_ds()
             if app_ds.is_err():
                 return app_ds.propagate()
             app_ds = app_ds.unwrap()
@@ -137,7 +137,7 @@ def closed_loop(config: Config) -> Result[bool]:
             if result.is_err():
                 return result.propagate()
         case 2:
-            app_ds = load()
+            app_ds = load_ds()
 
             if app_ds.is_err():
                 return app_ds.propagate()

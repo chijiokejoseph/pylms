@@ -4,11 +4,29 @@ from pathlib import Path
 
 from ..date import parse_dates, to_date
 from ..errors import Result, eprint
+from ..info import print_info
 from ..models import CDSFormInfo, ClassFormInfo, UpdateFormInfo
 from ..paths import get_history_path
 from .classes import sync_classes
 from .history import History
 from .interlude import Interlude
+from .save import save_history
+
+
+def init_history() -> Result[History]:
+    history_path = get_history_path()
+    if history_path.exists():
+        return load_history()
+
+    history = History()
+
+    print_info("App history records have just been initialized")
+
+    result = save_history(history)
+    if result.is_err():
+        return result.propagate()
+
+    return Result.ok(history)
 
 
 def load_history() -> Result[History]:
@@ -100,7 +118,7 @@ def load_history() -> Result[History]:
             return Result.err(msg)
         history.weeks = data["weeks"]
 
-    if "interlude" in data:
+    if "interlude" in data and data["interlude"] is not None:
         interlude = Interlude.from_dict(data["interlude"])
         if interlude.is_err():
             return interlude.propagate()

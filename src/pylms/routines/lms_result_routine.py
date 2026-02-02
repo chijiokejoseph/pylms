@@ -1,7 +1,7 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
 from ..data import DataStore
-from ..data_service import save
+from ..data_service import save_ds
 from ..history import History, save_history
 from ..info import print_info, printpass
 from ..result_collate import (
@@ -93,7 +93,7 @@ def run_result_lms(ds: DataStore, history: History) -> None:
             case _:
                 pass
 
-        result = save(ds)
+        result = save_ds(ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

@@ -6,7 +6,7 @@ from unittest.case import TestCase
 from pylms.cli import get_interlude_dates
 from pylms.constants import DATA_COLUMNS, DATE_FMT, DEFAULT_DATA_PATH
 from pylms.data import DataStore
-from pylms.data_service import load
+from pylms.data_service import load_ds
 from pylms.history import (
     History,
     Interlude,
@@ -24,7 +24,7 @@ class TestClass(TestCase):
 
     def __init__(self, method_name: str) -> None:
         self.history = load_history().unwrap()
-        self.ds = load().unwrap()
+        self.ds = load_ds().unwrap()
         super().__init__(methodName=method_name)
 
     @override

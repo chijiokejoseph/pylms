@@ -8,7 +8,7 @@ from pylms import paths
 from pylms.cache.cache import cache_for_cmd
 from pylms.constants import CACHE_ID
 from pylms.data import read
-from pylms.data_service import load
+from pylms.data_service import load_ds
 from pylms.form_retrieve import retrieve_cds_form
 from pylms.history import load_history
 from pylms.rollcall import record_cds
@@ -31,7 +31,7 @@ class TestCopyData(TestCase):
         :return: (None) - This method does not return a value.
         :rtype: None
         """
-        self.ds = load()  # pyright: ignore[reportUninitializedInstanceVariable]
+        self.ds = load_ds()  # pyright: ignore[reportUninitializedInstanceVariable]
         self.history = load_history()  # pyright: ignore[reportUninitializedInstanceVariable]
 
     def test_copy_data(self) -> None:

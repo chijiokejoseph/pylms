@@ -2,7 +2,7 @@ from ..cli import get_interlude_dates, input_option, interact
 from ..config import Config, new_config, write_config
 from ..constants import DATE_FMT, GLOBAL_RECORD_PATH, HISTORY_PATH
 from ..data import DataStore
-from ..data_service import save
+from ..data_service import save_ds
 from ..history import History, add_interlude, save_history
 from ..info import print_info, printpass
 from ..paths import get_cache_path, rm_path
@@ -99,7 +99,7 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save(ds)
+        result = save_ds(ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
