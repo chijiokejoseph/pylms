@@ -1,24 +1,29 @@
-from pylms.cli import input_bool
-
+from ..cli import input_bool
 from ..data import DataStore
 from ..errors import Result, Unit
 from ..form_utils import input_class_date
-from ..history import History, get_marked_classes, match_date_index, match_info_by_date
+from ..history import (
+    History,
+    get_held_classes,
+    get_marked_classes,
+    match_date_index,
+    match_info_by_date,
+)
 from ..info import print_info
 from .class_form_init import init_class_form
 
 
 def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
     """Request creation of class forms for selected dates.
-    
+
     Allows user to select dates and handles existing forms by showing current
     URLs and asking if regeneration is needed. Only creates new forms for
     dates that need them.
-    
+
     Args:
         ds (DataStore): DataStore containing student data.
         history (History): History object for tracking operations.
-        
+
     Returns:
         Result[Unit]: Success or error message.
     """
@@ -31,9 +36,14 @@ def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
 
     new_dates: list[str] = dates.copy()
 
-    # Check each date for existing forms
+    # Remove dates that have already been previously marked from `new_dates`
     for date in dates:
         class_num = match_date_index(history, date).unwrap()
+
+        # If date has not been previously generated skip
+        if date not in get_held_classes(history, ""):
+            continue
+
         info = match_info_by_date(history, date)
         if info.is_err():
             continue
