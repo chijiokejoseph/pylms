@@ -69,7 +69,7 @@ def main() -> None:
             err = ds.unwrap_err()
             if isinstance(err, ForcedExitError):
                 return
-            eprint("Failed to register data store")
+            eprint("Failed to register/load data store")
             continue
 
         ds = ds.unwrap()

@@ -16,15 +16,19 @@ from .save import save_history
 def init_history() -> Result[History]:
     history_path = get_history_path()
     if history_path.exists():
-        return load_history()
+        history = load_history()
+        if history.is_err():
+            return history.propagate()
+        history = history.unwrap()
+        print_info("History has been loaded")
+    else:
+        history = History()
 
-    history = History()
+        print_info("App history records have just been initialized")
 
-    print_info("App history records have just been initialized")
-
-    result = save_history(history)
-    if result.is_err():
-        return result.propagate()
+        result = save_history(history)
+        if result.is_err():
+            return result.propagate()
 
     return Result.ok(history)
 

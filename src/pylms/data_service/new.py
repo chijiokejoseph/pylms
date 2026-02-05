@@ -18,6 +18,7 @@ def init_ds(history: History) -> Result[DataStore]:
         app_ds = app_ds.unwrap()
         print_info("DataStore has been loaded")
         return Result.ok(app_ds)
+        
     app_ds = clean_reg_data()
     if app_ds.is_err():
         return app_ds.propagate()

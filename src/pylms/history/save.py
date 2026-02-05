@@ -29,7 +29,7 @@ def save_history(history: History) -> Result[Unit]:
         # Interlude if present
         "interlude": history.interlude.to_dict()
         if history.interlude is not None
-        else {},
+        else None,
         # List of classes for which attendance has been generated
         "held_classes": [date.strftime(DATE_FMT) for date in history.held_classes],
         # List of classes for which attendance has been marked
