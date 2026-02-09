@@ -1,37 +1,36 @@
-import polars as pl
 import re
 from email.message import EmailMessage
-from pathlib import Path
 from smtplib import SMTP
-from typing import Any
 
 from ..cli import input_option
 from ..config import read_course_name
 from ..constants import COHORT, EMAIL, GENDER, NAME, REASON, REMARK
 from ..data import DataStore, DataStream, read
-from ..email import run_email
+from ..email import MailError, run_email
 from ..errors import LMSError, Result, Unit, eprint
 from ..paths import get_paths_excel, must_get_env
 from .find import find_col
 
+type MailResultError = tuple[int, str, str, MailError]
+
 
 def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     """Send individualized result breakdown emails to students.
-    
+
     Reads result data from Excel file, extracts relevant columns for each student,
     formats personalized messages with scores and requirements, and sends emails.
-    
+
     Args:
         ds (DataStore): DataStore instance containing student data.
         server (SMTP): SMTP server instance for sending emails.
-        
+
     Returns:
         Result[Unit]: Success or error with message.
     """
     # Get sender email and course info
     sender_email = must_get_env("EMAIL")
     path = get_paths_excel()["Result"]
-    
+
     course_name = read_course_name()
     if course_name.is_err():
         return course_name.propagate()
@@ -79,10 +78,10 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     # Calculate total classes
     attendance_count_data = result[attendance_count_col]
     attendance_score_data = result[attendance_score_col]
-    classes_calc = (100 * attendance_count_data / attendance_score_data)
+    classes_calc = 100 * attendance_count_data / attendance_score_data
     classes = int(round(classes_calc.mode().item(), 0))
 
-    bad_records = []
+    bad_records: list[MailResultError] = []
 
     # Process each student
     for idx in range(result.height):
@@ -92,8 +91,8 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         attendance_score = result[idx, attendance_score_col]
         project_score = result[idx, project_score_col]
         result_score = result[idx, result_col]
-        remark = result[idx, REMARK]
-        reason = result[idx, REASON]
+        remark = result[idx, REMARK].strip()
+        reason = result[idx, REASON].strip()
 
         marks = result_score - (assessment_score + project_score)
         marks = round(marks, 0)
@@ -111,7 +110,9 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         email = data[idx, EMAIL].strip()
 
         if email == "":
-            bad_records.append((idx + 1, name, email, {"error": (1, "Email is empty")}))
+            bad_records.append(
+                (idx + 1, name, email, {"error": (1, b"Email is empty")})
+            )
             continue
 
         cohort = data[idx, COHORT]
@@ -213,7 +214,9 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         # Create email message
         email_msg = EmailMessage()
         email_msg["Subject"] = f"{course_name} Cohort {cohort} Result"
-        email_msg.set_content("This is an HTML email. Please view in a compatible client.")
+        email_msg.set_content(
+            "This is an HTML email. Please view in a compatible client."
+        )
         email_msg.add_alternative(msg, subtype="html")
 
         try:
@@ -221,7 +224,9 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
             if idx == 0:
                 email_msg = EmailMessage()
                 email_msg["Subject"] = f"Test: {course_name} Cohort {cohort} Result"
-                email_msg.set_content("This is an HTML email. Please view in a compatible client.")
+                email_msg.set_content(
+                    "This is an HTML email. Please view in a compatible client."
+                )
                 mod_msg = f"""
 <h2>
   <bold>
@@ -237,15 +242,15 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
                     email_msg, from_addr=sender_email, to_addrs=[email1, email2]
                 )
 
-                option_result = input_option(
+                option = input_option(
                     ["Yes", "No"],
                     prompt=f"Please confirm the format of the email as sent to either {email1} or {email2}. Is it okay? ",
                 )
-                if option_result.is_err():
-                    return Result[Unit].err(option_result.unwrap_err())
-                option_idx, _ = option_result.unwrap()
+                if option.is_err():
+                    return option.propagate()
+                option_idx, _ = option.unwrap()
                 if option_idx != 1:
-                    return Result[Unit].err(Exception("Email format not okay"))
+                    return Result.err(Exception("Email format not okay"))
 
             send_err = server.send_message(
                 email_msg, from_addr=sender_email, to_addrs=email
@@ -257,28 +262,32 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         if send_err != {}:
             bad_records.append((num, name, email, send_err))
         else:
-            print(f"\nS/N: {num}. Successfully sent email to {name} with email: {email}")
+            print(
+                f"\nS/N: {num}. Successfully sent email to {name} with email: {email}"
+            )
 
     # Report any errors
     for num, name, email, send_err in bad_records:
-        print(f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}")
-    
+        print(
+            f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}"
+        )
+
     if len(bad_records) > 0:
         err = LMSError(f"Failed to send emails to {len(bad_records)} recipients.")
-        return Result[Unit].err(err)
+        return Result.err(err)
 
-    return Result[Unit].unit()
+    return Result.unit()
 
 
 def mail_result(ds: DataStore) -> Result[Unit]:
     """Initiate process of sending result emails to students.
-    
+
     Delegates email sending to utility that manages SMTP connection
     and ensures each student receives individualized result email.
-    
+
     Args:
         ds (DataStore): DataStore instance containing student data.
-        
+
     Returns:
         Result[Unit]: Success or error from email sending process.
     """

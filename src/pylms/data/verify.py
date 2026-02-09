@@ -6,8 +6,8 @@ from ..constants import COMMA_DELIM
 
 
 def val_cols_data(test_data: pl.DataFrame, req_cols: list[str]) -> tuple[bool, str]:
-    column_list = test_data.columns
-    missing_cols = [column for column in column_list if column not in req_cols]
+    columns = test_data.columns
+    missing_cols = [req for req in req_cols if req not in columns]
 
     if len(missing_cols) > 0:
         cols_print = COMMA_DELIM.join(missing_cols)

@@ -45,7 +45,7 @@ def group(ds: DataStore, history: History) -> Result[Unit]:
     num_groups = num_groups.unwrap()
     groups: list[int] = [
         num_groups if serial % num_groups == 0 else serial % num_groups
-        for serial in range(1, pretty.shape[0] + 1)
+        for serial in range(1, pretty.height + 1)
     ]
     groups_df = pretty.select(pl.col(SERIAL), pl.col(NAME)).with_columns(
         pl.Series(GROUP, groups).alias(GROUP)

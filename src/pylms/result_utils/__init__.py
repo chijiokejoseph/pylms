@@ -16,7 +16,13 @@ from .fmt import fmt_date, fmt_phone
 from .grade import prepare_grading
 from .inputs import input_marks_req, input_ratio_req
 from .mail import mail_result
-from .val import val_assessment_data, val_attendance_data, val_result_data
+from .val import (
+    val_assessment_data,
+    val_assessment_in,
+    val_attendance_data,
+    val_awardees,
+    val_result_data,
+)
 from .view import view_result
 
 __all__ = [
@@ -40,7 +46,9 @@ __all__ = [
     "input_ratio_req",
     "mail_result",
     "val_assessment_data",
+    "val_assessment_in",
     "val_attendance_data",
+    "val_awardees",
     "val_result_data",
     "view_result",
 ]

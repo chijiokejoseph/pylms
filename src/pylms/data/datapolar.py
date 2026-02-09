@@ -191,6 +191,7 @@ def validate(test_data: pl.DataFrame) -> tuple[bool, str]:
     else:
         # Length matches expected count; proceed to verify names and order.
         pass
+
     # comparing that the order and names of expected columns match those of the actual columns.
     mismatched_cols: list[str] = []
     for expected, actual in zip(DATA_COLUMNS, data_columns):
@@ -265,6 +266,7 @@ class DataStore(DataStream):
             The method expects date columns to follow DD/MM/YYYY format and will
             reject any non-date columns beyond the required DATA_COLUMNS.
         """
+        
         # Check if all required columns are present
         data_columns = set(data.columns)
         required = set(DATA_COLUMNS)
