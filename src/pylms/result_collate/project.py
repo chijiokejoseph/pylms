@@ -148,10 +148,8 @@ Enter the path: """
 
     # Determine the column name for the project scores
     match len(project_cols):
-        case 2:
-            score_col: str = project_cols[1]
-        case 3:
-            score_col = project_cols[2]
+        case 2 | 3:
+            score_col: str = project_cols[-1]
         case _:
             msg = "Wrong spreadsheet provided, expected spreadsheet to have 2 or 3 columns but requirement was not met."
             eprint(msg)

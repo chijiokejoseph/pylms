@@ -1,10 +1,7 @@
-from pathlib import Path
-
-import numpy as np
 import polars as pl
 
 from ..constants import COMMA_DELIM, NAME, SERIAL
-from ..data import DataStore, DataStream
+from ..data import DataStore, write
 from ..errors import Result, Unit, eprint
 from ..history import (
     History,
@@ -25,14 +22,14 @@ from ..result_utils import (
 
 def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     """Collate attendance spreadsheet for students.
-    
+
     Processes attendance data for all held classes and calculates attendance scores.
     Saves collated data to Attendance.xlsx file.
-    
+
     Args:
         ds (DataStore): Student data to be collated.
         history (History): Application state tracking.
-        
+
     Returns:
         Result[Unit]: Success or error with message.
     """
@@ -40,6 +37,7 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     held_dates = get_held_classes(history, "")
     unrecorded_dates = get_unrecorded_classes(history, "")
 
+    # Check if all attendance records are complete
     if len(unrecorded_dates) > 0:
         dates_print = COMMA_DELIM.join(unrecorded_dates)
         msg = f"Dates: {dates_print} have been held but have not been marked yet. Please mark before collating attendance"
@@ -57,20 +55,17 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
         return req.propagate()
     req = req.unwrap()
 
-    # Map attendance status to integer values
-    def map_to_int(value: str) -> int:
-        return 0 if value == RecordStatus.ABSENT else 1
-
     # Calculate attendance counts per student
-    count_data = dates_data.map_elements(map_to_int, return_dtype=pl.Int32)
+    count_data = dates_data.with_columns(
+        [
+            pl.when(pl.col(col) == str(RecordStatus.ABSENT))
+            .then(0)
+            .otherwise(1)
+            .alias(col)
+            for col in held_dates
+        ]
+    )
     count_arr = count_data.sum_horizontal().to_numpy()
-
-    # Check if all attendance records are complete
-    max_len = len(count_arr)
-    if max_len != count_data.height:
-        msg = "Incomplete class records detected."
-        eprint(msg)
-        return Result.err(msg)
 
     # Calculate attendance scores
     num_classes_held = len(held_dates)
@@ -82,19 +77,21 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     req_col = det_attendance_req_col()
 
     # Create collated attendance DataFrame
-    collated_data = pl.DataFrame({
-        SERIAL: data[SERIAL],
-        NAME: pretty[NAME],
-        total_col: count_arr,
-        score_col: score_arr,
-        req_col: pl.lit(req)
-    })
+    collated_data = pl.DataFrame(
+        {
+            SERIAL: data[SERIAL],
+            NAME: pretty[NAME],
+            total_col: count_arr,
+            score_col: score_arr,
+            req_col: pl.lit(req),
+        }
+    )
 
     printpass("Attendance recorded successfully\n")
 
     # Save to Excel file
     path = get_paths_excel()["Attendance"]
-    result = DataStream(collated_data).to_excel(path)
+    result = write(collated_data, path)
     if result.is_err():
         return result.propagate()
 
