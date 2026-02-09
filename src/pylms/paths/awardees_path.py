@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pylms.errors import Result
+from ..errors import Result
 
 from ..config import read_course_name
 from .path_fns import get_excel_path

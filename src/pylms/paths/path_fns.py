@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ..config.io import read_config
+from ..config import read_config
 from ..constants import Json, Spreadsheets
 
 

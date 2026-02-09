@@ -23,7 +23,13 @@ def init_history() -> Result[History]:
     """
     history_path = get_history_path()
     if history_path.exists():
-        return load_history()
+        history = load_history()
+        if history.is_err():
+            return history.propagate()
+        
+        history = history.unwrap()
+        print_info("History has been loaded")
+        return Result.ok(history)
 
     history = History()
 
