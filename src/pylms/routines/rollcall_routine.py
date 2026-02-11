@@ -18,7 +18,7 @@ from ..rollcall_edit import (
 
 
 def handle_rollcall(ds: DataStore, history: History) -> None:
-    menu: list[str] = [
+    menu = [
         "Request Attendance for a class",
         "Mark Attendance for a class",
         "Edit Student Attendance Manually",
@@ -34,7 +34,7 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
 
         selection = selection.unwrap()
 
-        cmd: str = menu[selection - 1]
+        cmd = menu[selection - 1]
 
         if selection < len(menu):
             result = cache_for_cmd(cmd)
