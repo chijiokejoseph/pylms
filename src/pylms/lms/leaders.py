@@ -1,13 +1,12 @@
-from pathlib import Path
 import random
 import re
+from pathlib import Path
 from typing import Literal, NamedTuple
 
-import numpy as np
 import polars as pl
 
 from ..constants import GENDER, GROUP, NAME, SERIAL
-from ..data import DataStore, datamap, read, write
+from ..data import DataStore, read, write
 from ..errors import Result, Unit, eprint
 from ..history import History, get_num_groups
 from ..paths import (
@@ -47,28 +46,46 @@ def get_nominations(
     ds: DataStore, serials: list[int], gender_type: Literal["Male", "Female"]
 ) -> Nominations:
     data = ds.as_ref()
+    columns: list[str] = data.columns
+    date_columns: list[str] = [
+        col for col in columns if re.match(r"\d{2}/\d{2}/\d{4}", col) is not None
+    ]
+    present = (
+        data.select(pl.col(date_columns))
+        .with_columns(
+            [
+                pl.when(pl.col(col) == "Absent" | pl.col(col).str.strip_chars() == "")
+                .then(pl.lit(0))
+                .otherwise(pl.lit(1))
+                .alias(col)
+                for col in date_columns
+            ]
+        )
+        .sum_horizontal()
+    )
     genders = (
         data.select(pl.col(GENDER, SERIAL))
         .filter(pl.col(SERIAL).is_in(serials))
         .filter(pl.col(GENDER) == gender_type)
+        .with_columns(pl.Series(present).alias("Count"))
     )
 
-    @np.vectorize
-    def get_gender_serials(serial: int):
-        return get_present_count(ds, serial)
+    # @np.vectorize
+    # def get_gender_serials(serial: int):
+    #     return get_present_count(ds, serial)
 
-    present = datamap(
-        genders, SERIAL, get_gender_serials, np.int64, pl.Int64(), new_col="Count"
-    )
+    # present = datamap(
+    #     genders, SERIAL, get_gender_serials, np.int64, pl.Int64(), new_col="Count"
+    # )
 
-    max_count: int = present.select(pl.col("Count").max()).item()
+    max_count: int = genders.select(pl.col("Count").max()).item()
 
     nominees: list[int] = (
-        present.select(pl.col(SERIAL))
+        genders.select(pl.col(SERIAL))
         .filter(pl.col("Count") == max_count)[SERIAL]
         .to_list()
     )
-    present_counts: list[int] = present["Count"].to_list()
+    present_counts: list[int] = genders["Count"].to_list()
 
     return Nominations(present_counts=present_counts, nominees=nominees)
 
