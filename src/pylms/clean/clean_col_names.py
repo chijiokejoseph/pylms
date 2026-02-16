@@ -64,8 +64,10 @@ def clean_col_names(data: pl.DataFrame) -> pl.DataFrame:
 
     col_mappings = {preprocess_col(col): col for col in data.columns}
     data = data.rename(col_mappings)
+    # drop columns in data that are not in `DATA_COLUMNS`
     columns_to_drop = [col for col in data.columns if col not in DATA_COLUMNS]
     data = data.drop(columns_to_drop)
+    # add missing columns from `DATA_COLUMNS` with null values
     data = data.with_columns(
         [pl.col(col) for col in DATA_COLUMNS if col not in data.columns]
     )

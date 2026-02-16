@@ -1,7 +1,4 @@
-import numpy as np
 import polars as pl
-
-from pylms.data import datamap
 
 from ..constants import EMAIL
 
@@ -20,11 +17,6 @@ def clean_email(data: pl.DataFrame) -> pl.DataFrame:
         pl.DataFrame: The processed DataFrame
     """
 
-    @np.vectorize
-    def apply(x: str) -> str:
-        """Return a normalized email string (lowercased and stripped)."""
-        return x.lower().strip()
-
     # email: np.ndarray = data[EMAIL].to_numpy()
     # email = apply(email)
     # email = np.array(email, dtype=np.str_)
@@ -33,5 +25,5 @@ def clean_email(data: pl.DataFrame) -> pl.DataFrame:
     #     pl.Series(EMAIL, email, dtype=pl.String)
     # )
 
-    data = datamap(data, EMAIL, apply, np.str_, pl.String())
+    data = data.with_columns(pl.col(EMAIL).str.to_lowercase().str.strip_chars())
     return data
