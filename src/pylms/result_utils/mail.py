@@ -255,7 +255,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
             if idx == 0:
                 email_msg = EmailMessage()
                 email_msg["Subject"] = (
-                    f"Test: {read_course_name()} Cohort {cohort} Result"
+                    f"Test: {course_name} Cohort {cohort} Result"
                 )
                 email_msg.set_content(
                     "This is an HTML email. Please view in a compatible client."

@@ -51,6 +51,8 @@ def collate_awardees(
     if course_name.is_err():
         return course_name.propagate()
 
+    course_name = course_name.unwrap()
+
     awardees_data: pd.DataFrame = pd.DataFrame(
         data={
             AWARDEES["Email"]: data[EMAIL],
