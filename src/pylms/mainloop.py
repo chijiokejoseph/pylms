@@ -61,26 +61,26 @@ def mainloop(config: Config, ds: DataStore, history: History) -> Result[bool]:
     cmd = menu[selection - 1]
 
     if selection < len(menu):
-        result = cache_for_cmd(cmd)
+        result = cache_for_cmd(config, cmd)
 
         if result.is_err():
             return result.propagate()
 
     match selection:
         case 1:
-            handle_rollcall(ds, history)
+            handle_rollcall(config, ds, history)
         case 2:
-            handle_cds(ds, history)
+            handle_cds(config, ds, history)
         case 3:
             handle_cohort(config, ds, history)
         case 4:
-            handle_data(ds)
+            handle_data(config, ds)
         case 5:
-            run_lms(ds, history)
+            run_lms(config, ds, history)
         case 6:
-            register(ds, history)
+            register(config, ds, history)
         case 7:
-            handle_message(ds, history)
+            handle_message(config, ds, history)
         case _:
             print_info(
                 "Hello friend, Jayce 🎓 again, I hope I have helped you a lot today. See you again next time!"

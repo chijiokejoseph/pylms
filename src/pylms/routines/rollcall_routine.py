@@ -1,5 +1,6 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
+from ..config import Config
 from ..data import DataStore
 from ..data_service import save_ds
 from ..form_request import request_class_form
@@ -17,7 +18,7 @@ from ..rollcall_edit import (
 )
 
 
-def handle_rollcall(ds: DataStore, history: History) -> None:
+def handle_rollcall(config: Config, ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Request Attendance for a class",
         "Mark Attendance for a class",
@@ -37,13 +38,13 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
         match selection:
             case 1:
-                result = request_class_form(ds, history)
+                result = request_class_form(config, ds, history)
                 if result.is_err():
                     continue
 
@@ -59,7 +60,7 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
                 if edit_result.is_err():
                     continue
             case 4:
-                record_path = record_cohort(ds, history)
+                record_path = record_cohort(config, ds, history)
                 if record_path.is_err():
                     continue
 
@@ -70,13 +71,13 @@ def handle_rollcall(ds: DataStore, history: History) -> None:
             case _:
                 break
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_history(history)
+        result = save_history(config, history)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

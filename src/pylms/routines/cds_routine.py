@@ -1,5 +1,6 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
+from ..config import Config
 from ..data import DataStore
 from ..data_service import save_ds
 from ..form_request import request_cds_form
@@ -13,7 +14,7 @@ from ..rollcall import (
 )
 
 
-def handle_cds(ds: DataStore, history: History) -> None:
+def handle_cds(config: Config, ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Request CDS form",
         "Mark CDS form",
@@ -30,13 +31,13 @@ def handle_cds(ds: DataStore, history: History) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
         match selection:
             case 1:
-                result = request_cds_form(ds, history)
+                result = request_cds_form(config, ds, history)
                 if result.is_err():
                     continue
 
@@ -57,13 +58,13 @@ def handle_cds(ds: DataStore, history: History) -> None:
             case _:
                 break
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_history(history)
+        result = save_history(config, history)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

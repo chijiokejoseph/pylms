@@ -1,4 +1,5 @@
 from ..cache import cache_for_cmd
+from ..config import Config
 from ..cli import interact
 from ..data import DataStore
 from ..data_service import save_ds
@@ -15,7 +16,7 @@ from ..result_edit import (
 from ..result_utils import view_result
 
 
-def run_result_lms(ds: DataStore, history: History) -> None:
+def run_result_lms(config: Config, ds: DataStore, history: History) -> None:
     """
     Interactive menu for managing LMS results.
 
@@ -50,13 +51,13 @@ def run_result_lms(ds: DataStore, history: History) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
         match selection:
             case 1:
-                result = collate_result(history)
+                result = collate_result(config, history)
                 if result.is_err():
                     continue
                 printpass("Results collated successfully")
@@ -67,23 +68,23 @@ def run_result_lms(ds: DataStore, history: History) -> None:
 
                 print()
             case 3:
-                result = edit_result(ds)
+                result = edit_result(config, ds)
                 if result.is_err():
                     continue
 
-                result = collate_merit(ds, history)
+                result = collate_merit(config, ds, history)
                 if result.is_err():
                     continue
 
                 printpass("Result edited successfully\n")
             case 4:
-                result = overwrite_result(ds)
+                result = overwrite_result(config, ds)
                 if result.is_err():
                     continue
 
                 print_info("Results overwritten, now recollating...")
 
-                result = collate_merit(ds, history)
+                result = collate_merit(config, ds, history)
                 if result.is_err():
                     continue
 
@@ -93,13 +94,13 @@ def run_result_lms(ds: DataStore, history: History) -> None:
             case _:
                 pass
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_history(history)
+        result = save_history(config, history)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

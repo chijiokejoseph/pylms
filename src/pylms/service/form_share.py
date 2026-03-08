@@ -3,62 +3,91 @@ from googleapiclient.http import (  # pyright: ignore[reportMissingTypeStubs]
 )
 
 from ..cli_utils import emphasis
-from ..errors import eprint
+from ..errors import Result, eprint
 from ..info import printpass
 from ..models import Form, PermissionsData
 from ._resource import DriveResource
 from .service_init import run_service
 
 
-def _share_form(form: Form, email: str, *, service: DriveResource) -> Form | None:
+def _share_form(form: Form, gmail: str, *, service: DriveResource) -> Result[Form]:
+    """Grants write access to a Gmail address for a form.
+    
+    Uses Google Drive API to share the form file with the specified Gmail address,
+    granting writer permissions.
+    
+    Args:
+        form: Form object to share.
+        gmail: Gmail address to grant write access.
+        service: DriveResource object for API calls.
+        
+    Returns:
+        Result[Form]: The same Form object on success, error otherwise.
     """
-    Grants write access to a specified email for the given form using the Google Drive API.
-
-    :param form: (Form) - A Form object that stores the id of the form that is to be shared alongside its url.
-    :param email: (str) - An email address that needs to be granted write access.
-    :param service: (DriveResource) - DriveResource object that provides the permissions() method to create a permission for the form file specified by form.uuid
-
-    :return: The `Form` object if the sharing operation is successful, else None.
-    :rtype: Form | None
-    """
-
+    # Configure writer permission for the Gmail address
     user_permission: PermissionsData = {
         "type": "user",
         "role": "writer",
-        "emailAddress": email,
+        "emailAddress": gmail,
     }
+    
     try:
+        # Create permission via Google Drive API
         drive_resource: DriveResource = service.permissions()
         share_request: HttpRequest = drive_resource.create(
             fileId=form.uuid, body=user_permission
         )
         share_request.execute()  # pyright: ignore[reportUnknownMemberType]
         printpass(
-            f"Success, form {emphasis(form.name)} has been shared to {email}. SUCCESS\n"
+            f"Success, form {emphasis(form.name)} has been shared to {gmail}. SUCCESS\n"
         )
-        return form
+        return Result.ok(form)
     except Exception as e:
-        eprint(
-            f"Fatal error occurred while sharing form {emphasis(form.name)} with {email}. Error encountered is {e}. ERROR\n",
-        )
-        return None
+        msg = f"Fatal error occurred while sharing form {emphasis(form.name)} with {gmail}. Error encountered is {e}. ERROR\n"
+        eprint(msg)
+        return Result.err(msg)
 
 
-def run_share_form(form: Form, email: str) -> Form | None:
+def run_share_form(form: Form, gmail: str) -> Result[Form]:
+    """Grants write access to a Gmail address for a form.
+    
+    Uses Google Drive API to share the form with the specified Gmail address.
+    
+    Args:
+        form: Form object to share.
+        gmail: Gmail address to grant write access.
+        
+    Returns:
+        Result[Form]: The same Form object on success, error otherwise.
     """
-    Grants write access to a specified email for the given form using the Google Drive API.
-
-    :param form: (Form) - A `Form` object that stores the id and url of the form to be shared.
-    :param email: (str) - The email address to grant write access to the form.
-
-    :return: (Form | None) - The `Form` object if the sharing operation is successful, else None.
-    """
-
-    def _run_service(service: DriveResource) -> Form | None:
-        return _share_form(form, email, service=service)
+    # Wrapper to inject DriveResource dependency
+    def _run_service(service: DriveResource) -> Result[Form]:
+        return _share_form(form, gmail, service=service)
 
     return run_service(
         api="drive",
         version="v3",
         func=_run_service,
     )
+
+
+def run_share_form_multiple(form: Form, gmails: list[str]) -> Result[Form]:
+    """Grants write access to multiple Gmail addresses for a form.
+    
+    Shares the form with all specified Gmail addresses. If any sharing operation
+    fails, returns error immediately.
+    
+    Args:
+        form: Form object to share.
+        gmails: List of Gmail addresses to grant write access.
+        
+    Returns:
+        Result[Form]: The same Form object if all shares succeed, error otherwise.
+    """
+    # Share with each Gmail address sequentially
+    for gmail in gmails:
+        result = run_share_form(form, gmail)
+        if result.is_err():
+            return result
+    
+    return Result.ok(form)

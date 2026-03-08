@@ -1,12 +1,25 @@
 from ..cli_utils import emphasis
-from ..errors import eprint
+from ..errors import Result, eprint
 from ..info import print_info
 from ..models import Form, PublishRequest, PublishSettings, PublishState
 from ._resource import FormsService
 from .service_init import run_service
 
 
-def _publish_form(form: Form, service: FormsService) -> Form | None:
+def _publish_form(form: Form, service: FormsService) -> Result[Form]:
+    """Publishes a Google Form to accept responses.
+    
+    Sets the form to published state and enables response collection using
+    the Google Forms API.
+    
+    Args:
+        form: Form object to publish.
+        service: FormsService object for API calls.
+        
+    Returns:
+        Result[Form]: The same Form object on success, error otherwise.
+    """
+    # Configure form to accept responses
     request = service.forms().setPublishSettings(
         formId=form.uuid,
         body=PublishRequest(
@@ -22,14 +35,26 @@ def _publish_form(form: Form, service: FormsService) -> Form | None:
             f"Form with \nName = {emphasis(form.name)}\nTitle = {emphasis(form.title)}"
         )
         print_info("Published successfully\n")
-        return form
+        return Result.ok(form)
     except Exception as e:
-        eprint(f"Failed to publish form due to error\nError details: {e}\n")
-        return None
+        msg = f"Failed to publish form due to error\nError details: {e}\n"
+        eprint(msg)
+        return Result.err(msg)
 
 
-def run_publish_form(form: Form) -> Form | None:
-    def _run_service(service: FormsService) -> Form | None:
+def run_publish_form(form: Form) -> Result[Form]:
+    """Publishes a Google Form to accept responses.
+    
+    Sets the form to published state and enables response collection.
+    
+    Args:
+        form: Form object to publish.
+        
+    Returns:
+        Result[Form]: The same Form object on success, error otherwise.
+    """
+    # Wrapper to inject FormsService dependency
+    def _run_service(service: FormsService) -> Result[Form]:
         return _publish_form(form, service=service)
 
     return run_service(

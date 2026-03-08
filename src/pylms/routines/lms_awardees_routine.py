@@ -1,5 +1,6 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
+from ..config import Config
 from ..data import DataStore
 from ..data_service import save_ds
 from ..history import History, record_merit, save_history
@@ -8,7 +9,7 @@ from ..result_collate import collate_fast_track, collate_merge, collate_merit
 from ..result_utils import mail_result
 
 
-def run_awardees_lms(ds: DataStore, history: History) -> None:
+def run_awardees_lms(config: Config, ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Collate Fast Track Awardees",
         "Collate Merit Awardees",
@@ -27,36 +28,36 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
         match selection:
             case 1:
-                result = collate_fast_track(ds)
+                result = collate_fast_track(config, ds)
                 if result.is_err():
                     continue
 
                 printpass("Recorded Fast Track Awardees.\n")
             case 2:
-                result = collate_merit(ds, history)
+                result = collate_merit(config, ds, history)
                 if result.is_err():
                     continue
 
                 printpass("Recorded Merit Awardees.\n")
-                result = record_merit(history)
+                result = record_merit(config, history)
                 if result.is_err():
                     continue
 
             case 3:
-                result = collate_merge(ds)
+                result = collate_merge(config, ds)
                 if result.is_err():
                     continue
 
                 printpass("Merit and Fast Track Awardees merged successfully\n")
             case 4:
                 if history.has_collated_merit:
-                    result = mail_result(ds)
+                    result = mail_result(config, ds)
                     if result.is_err():
                         continue
 
@@ -70,13 +71,13 @@ def run_awardees_lms(ds: DataStore, history: History) -> None:
             case _:
                 pass
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_history(history)
+        result = save_history(config, history)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

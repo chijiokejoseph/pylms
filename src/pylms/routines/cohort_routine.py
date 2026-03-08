@@ -1,11 +1,11 @@
-from ..cli import get_interlude_dates, input_option, interact
-from ..config import Config, new_config, write_config
-from ..constants import DATE_FMT, GLOBAL_RECORD_PATH, HISTORY_PATH
+from ..cli import input_option, interact
+from ..config import Config, init_config, is_open, mark_closed, mark_open, save_config
+from ..constants import DATA_PATH, DATE_FMT
 from ..data import DataStore
 from ..data_service import save_ds
-from ..history import History, add_interlude, save_history
+from ..history import History, add_interlude, new_interlude, save_history
 from ..info import print_info, printpass
-from ..paths import get_cache_path, rm_path
+from ..paths import rm_path
 
 
 def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
@@ -26,7 +26,7 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
 
         match selection:
             case 1:
-                interlude = get_interlude_dates(history)
+                interlude = new_interlude(history)
                 if interlude.is_err():
                     continue
 
@@ -40,7 +40,7 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
                 )
 
             case 2:
-                if not config.is_open():
+                if not is_open(config):
                     print_info("Cohort is already closed.\n")
                     continue
                 result = input_option(
@@ -52,12 +52,12 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
                     continue
                 _, choice = result.unwrap()
                 if choice == "Yes":
-                    config.close()
+                    mark_closed(config)
                     printpass(
                         "The Cohort, which was previously open, has been closed.\n"
                     )
             case 3:
-                if config.is_open():
+                if is_open(config):
                     print_info("Cohort is already open.\n")
                     continue
                 result = input_option(
@@ -69,37 +69,38 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
                     continue
                 _, choice = result.unwrap()
                 if choice == "Yes":
-                    config.open()
+                    mark_open(config)
                     printpass("The Cohort, which was previously closed, is now open.\n")
             case 4:
-                if config.is_open():
+                if is_open(config):
                     print_info("Close the Cohort First before creating a new cohort.\n")
                     continue
-                result = rm_path(get_cache_path())
+
+                result = rm_path(DATA_PATH)
                 if result.is_err():
                     continue
 
-                result = rm_path(HISTORY_PATH)
-                if result.is_err():
+                new_config = init_config()
+                if new_config.is_err():
                     continue
-
-                result = rm_path(GLOBAL_RECORD_PATH)
-                if result.is_err():
-                    continue
-
-                config.from_self(new_config())
+                new_config = new_config.unwrap()
+                config.copy_from(new_config)
                 printpass("You have a new open cohort\n")
             case _:
                 break
-        write_config(config)
-
-        result = save_history(history)
+        result = save_config(config)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_ds(ds)
+        result = save_history(config, history)
+        if result.is_err():
+            print_info(
+                "Last change was not saved, please rollback and repeat your last operation"
+            )
+
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

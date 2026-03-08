@@ -1,5 +1,6 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
+from ..config import Config
 from ..data import DataStore
 from ..data_service import append_update, init_ds, save_ds
 from ..form_request import request_complaint_form, request_update_form
@@ -14,7 +15,7 @@ from ..rollcall import (
 )
 
 
-def register(ds: DataStore, history: History) -> None:
+def register(config: Config, ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Register New Cohort Data",
         "Request Update Form",
@@ -33,20 +34,24 @@ def register(ds: DataStore, history: History) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
         match selection:
             case 1:
-                app_ds = init_ds(history)
+                app_ds = init_ds(config, history)
                 if app_ds.is_err():
                     continue
                 app_ds = app_ds.unwrap()
-                ds.copy_from(app_ds)
+                result = ds.copy_from(app_ds)
+
+                if result.is_err():
+                    continue
+
                 printpass("Onboarding of Registered Students completed successfully.\n")
             case 2:
-                result = request_update_form(ds, history)
+                result = request_update_form(config, ds, history)
                 if result.is_err():
                     continue
                 printpass("Generated Update Form successfully\n")
@@ -63,11 +68,14 @@ def register(ds: DataStore, history: History) -> None:
                 if result.is_err():
                     continue
 
-                record_cds(ds, cds_data_stream)
+                result = record_cds(ds, cds_data_stream)
+                if result.is_err():
+                    continue
+                
                 add_recorded_update_form(history, info)
                 printpass("CDS data marked successfully\n")
             case 4:
-                result = request_complaint_form(ds)
+                result = request_complaint_form(config, ds)
                 if result.is_err():
                     continue
 
@@ -75,13 +83,13 @@ def register(ds: DataStore, history: History) -> None:
             case _:
                 break
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_history(history)
+        result = save_history(config, history)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

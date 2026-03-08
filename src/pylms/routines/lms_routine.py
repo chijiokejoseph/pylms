@@ -1,5 +1,6 @@
 from ..cache import cache_for_cmd
 from ..cli import interact
+from ..config import Config
 from ..data import DataStore
 from ..data_service import save_ds
 from ..form_request import request_assessment_form
@@ -15,7 +16,7 @@ from .lms_collate_routine import run_collate_lms
 from .lms_result_routine import run_result_lms
 
 
-def run_lms(ds: DataStore, history: History) -> None:
+def run_lms(config: Config, ds: DataStore, history: History) -> None:
     menu: list[str] = [
         "Group Students",
         "Request Assessment Form Template",
@@ -35,13 +36,13 @@ def run_lms(ds: DataStore, history: History) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
         match selection:
             case 1:
-                result = group(ds, history)
+                result = group(config, ds, history)
                 if result.is_err():
                     continue
 
@@ -62,25 +63,25 @@ def run_lms(ds: DataStore, history: History) -> None:
 
                     printpass("Leaders have been selected successfully\n")
             case 2:
-                result = request_assessment_form(ds)
+                result = request_assessment_form(config, ds)
                 if result.is_err():
                     continue
             case 3:
-                run_collate_lms(ds, history)
+                run_collate_lms(config, ds, history)
             case 4:
-                run_result_lms(ds, history)
+                run_result_lms(config, ds, history)
             case 5:
-                run_awardees_lms(ds, history)
+                run_awardees_lms(config, ds, history)
             case _:
                 break
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
             )
 
-        result = save_history(history)
+        result = save_history(config, history)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"

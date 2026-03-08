@@ -3,9 +3,10 @@ from ..cli import interact
 from ..data import DataStore
 from ..data_service import edit, list_ds, load_ds, remove_students, save_ds, view
 from ..info import print_info, printpass
+from ..config import Config
 
 
-def handle_data(ds: DataStore) -> None:
+def handle_data(config: Config, ds: DataStore) -> None:
     menu: list[str] = [
         "View Students' Data",
         "Edit Students' Data",
@@ -25,7 +26,7 @@ def handle_data(ds: DataStore) -> None:
         cmd: str = menu[selection - 1]
 
         if selection < len(menu):
-            result = cache_for_cmd(cmd)
+            result = cache_for_cmd(config, cmd)
             if result.is_err():
                 continue
 
@@ -40,7 +41,7 @@ def handle_data(ds: DataStore) -> None:
                     continue
                 printpass("Edited Datastore successfully")
             case 3:
-                result = list_ds(ds)
+                result = list_ds(config, ds)
                 if result.is_err():
                     continue
 
@@ -50,22 +51,24 @@ def handle_data(ds: DataStore) -> None:
                     continue
                 printpass("Students removed successfully\n")
             case 5:
-                result = rollback_to_cmd()
+                result = rollback_to_cmd(config)
                 if result.is_err():
                     continue
 
-                app_ds = load_ds()
+                app_ds = load_ds(config)
                 if app_ds.is_err():
                     continue
 
                 app_ds = app_ds.unwrap()
-                ds.copy_from(app_ds)
+                result = ds.copy_from(app_ds)
+                if result.is_err():
+                    continue
 
                 printpass("Rollback completed successfully")
             case _:
                 break
 
-        result = save_ds(ds)
+        result = save_ds(config, ds)
         if result.is_err():
             print_info(
                 "Last change was not saved, please rollback and repeat your last operation"
