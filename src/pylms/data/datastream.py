@@ -1,220 +1,104 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, cast, overload, override
+from typing import Self
+
+import polars as pl
+
+from ..errors import Result, Unit
+from .utils import write
+
+type Stream = DataStream
 
 
-from ..errors import Result, Unit, eprint
+class DataStream:
+    """Wrapper for Polars DataFrame with validation and I/O operations."""
 
-type DS[K: pl.DataFrame | pd.Series] = DataStream[K]
+    _value: tuple[pl.DataFrame]
 
-
-class DataStream[T: pl.DataFrame | pd.Series]:
-    """Lightweight container for a pandas DataFrame or Series with validation.
-
-    This class wraps a pandas DataFrame or Series (or another `DataStream`)
-    and enforces an optional validation function. It provides accessors that
-    return either the stored object or a cloned copy, convenience methods for
-    exporting to Excel, and simple introspection helpers.
-
-    Type parameters:
-        T: Either `pandas.DataFrame` or `pandas.Series`.
-
-    Attributes:
-        _value (tuple[T]): Internal single-element tuple holding the stored value.
-
-    Note:
-        When building instances of this class with validators, prefer the `new`
-        class method over Python's `__init__` magic method as the former will
-        return a Result whose error can be handled while the latter will raise
-        an exception.
-    """
-
-    _value: tuple[T]
-
-    @overload
-    def __init__(self, data: T, validate_fn: Callable[[T], bool] | None = None) -> None:
-        pass
-
-    @overload
-    def __init__(
-        self, data: DS[T], validate_fn: Callable[[T], bool] | None = None
-    ) -> None:
-        pass
-
-    def __init__(
-        self, data: T | DS[T], validate_fn: Callable[[T], bool] | None = None
-    ) -> None:
-        """Initialize a DataStream with optional validation.
-
-        The constructor accepts either a direct pandas object (`DataFrame` or
-        `Series`) or another `DataStream` and an optional `validate_fn`. When a
-        validator is provided it is called with the underlying data; if the
-        validator returns False an exception is raised and the instance is not
-        constructed.
+    def __init__(self, data: pl.DataFrame | Stream) -> None:
+        """Initialize DataStream with DataFrame or another DataStream.
 
         Args:
-            data (T | DataStream[T]): The data to store or another DataStream
-                whose value should be used.
-            validate_fn (Optional[Callable[[T], bool]]): Optional function that
-                returns True when `data` is valid. If None, no validation is performed.
-
-        Raises:
-            Exception: If `validate_fn` is provided and returns False for the
-                underlying data.
-
-         Note:
-             When building instances of this class with validators, prefer the `new`
-             class method over Python's `__init__` magic method as the former will
-             return a Result whose error can be handled while the latter will raise
-             an exception.
+            data (pl.DataFrame | Stream): Source data.
         """
-        # Extract the underlying value whether the caller passed a DataStream
-        # (in which case we call it to get the stored object) or a raw pandas
-        # object. Using this canonical underlying value simplifies validation
-        # and storage below.
-        if isinstance(data, DataStream):
-            underlying_data = data.as_clone()
-        else:
-            underlying_data = cast(T, data.copy())
-
-        # Two valid initialization conditions:
-        #  - A validator was provided and it returns True for the underlying data.
-        #  - No validator was provided (validate_fn is None), in which case we
-        #    accept the data unconditionally.
-        condition1: bool = validate_fn is not None and validate_fn(underlying_data)
-        condition2: bool = validate_fn is None
-
-        # If either condition holds we store the underlying object in a single-
-        # element tuple. Storing as a tuple is a simple internal representation
-        # that avoids accidental reassignment to other attributes.
-        if condition1 or condition2:
-            self._value = (underlying_data,)
-        else:
-            # Intentionally raise a clear exception when validation fails so
-            # callers cannot construct an invalid DataStream silently.
-            raise Exception(
-                "data argument to DataStream does not pass the requirements set by its validator."
-            )
+        # Extract DataFrame reference if input is DataStream
+        data = data.as_ref() if isinstance(data, DataStream) else data
+        self._value = (data,)
 
     @classmethod
-    def new[K: pd.Series | pl.DataFrame](
-        cls, data: K | DS[K], validator: Callable[[K], bool] | None = None
-    ) -> Result[DS[K]]:
-        try:
-            value = DataStream(data, validator)
-            return Result.ok(value)
-        except Exception as e:
-            msg = str(e)
-            eprint(msg)
-            return Result.err(msg)
+    def new(
+        cls,
+        data: pl.DataFrame | Stream,
+        validator: Callable[[pl.DataFrame], tuple[bool, str]] | None = None,
+    ) -> Result[Self]:
+        """Create new DataStream with optional validation.
+
+        Args:
+            data (pl.DataFrame | Stream): Source data.
+            validator (Callable | None): Optional validation function.
+
+        Returns:
+            Result[Self]: Success with DataStream or error message.
+        """
+        # Clone data to avoid mutations
+        value = data.as_clone() if isinstance(data, DataStream) else data.clone()
+
+        if validator is None:
+            return Result.ok(cls(value))
+        test, msg = validator(value)
+        if test:
+            return Result.ok(cls(value))
+
+        return Result.err(msg)
+
+    def as_ref(self) -> pl.DataFrame:
+        """Get reference to underlying DataFrame.
+
+        Returns:
+            pl.DataFrame: Reference to stored DataFrame.
+        """
+        return self._value[0]
+
+    def as_clone(self) -> pl.DataFrame:
+        """Get clone of underlying DataFrame.
+
+        Returns:
+            pl.DataFrame: Clone of stored DataFrame.
+        """
+        return self.as_ref().clone()
+
+    def is_empty(self) -> bool:
+        return self.as_ref().shape[0] > 0
+
+    def write(self, path: Path, *, worksheet: str | None = None) -> Result[Unit]:
+        """Write DataFrame to file.
+
+        Args:
+            path (Path): Output file path.
+            worksheet (str | None): Excel worksheet name.
+
+        Returns:
+            Result[Unit]: Success or error message.
+        """
+        data = self.as_ref()
+        return write(data, path, worksheet=worksheet)
 
     @classmethod
-    def verify[K: pd.Series | pl.DataFrame](
-        cls, data: K | DS[K], validator: Callable[[K], bool]
+    def verify(
+        cls, data: pl.DataFrame, validator: Callable[[pl.DataFrame], tuple[bool, str]]
     ) -> Result[Unit]:
+        """Verify DataFrame against validator without creating instance.
+
+        Args:
+            data (pl.DataFrame): DataFrame to validate.
+            validator (Callable): Validation function.
+
+        Returns:
+            Result[Unit]: Success or error message.
+        """
         result = DataStream.new(data, validator)
+        result.print_if_err()
         if result.is_err():
-            result.print_if_err()
             return result.propagate()
 
         return Result.unit()
-
-    def __call__(self) -> T:
-        """Return the stored data.
-
-        This call returns the underlying object held by the `DataStream`. It
-        does not clone the value; use `as_clone()` when a copy is required.
-
-        Returns:
-            T: The stored `DataFrame` or `Series`.
-        """
-        # Return the stored object by reference. Callers that intend to mutate
-        # the returned value should prefer `as_clone()` to avoid mutating the
-        # value held inside this DataStream instance.
-        return self._value[0]
-
-    def as_ref(self) -> T:
-        """Return the underlying value by reference (no copy).
-
-        Note:
-            Mutating the returned object will mutate the DataStream's stored
-            value. Use `as_clone()` to obtain a copy when mutation is not
-            desired.
-        """
-        return self._value[0]
-
-    def as_clone(self) -> T:
-        """Return a shallow copy of the underlying value.
-
-        This method uses the pandas `copy()` operation to produce a separate
-        object suitable for modification without affecting the stored value.
-        The copy is cast back to the generic type `T` for the caller.
-        """
-        # Create a shallow copy of the underlying pandas object to protect
-        # the internal state against external mutation.
-        ref = self._value[0]
-        ref = ref.copy()
-        return cast(T, ref)
-
-    @override
-    def __str__(self) -> str:
-        return f"""
-{self.__class__.__name__}(
-{self().head(10)}
-)
-        """
-
-    def is_empty(self) -> bool:
-        """Return True if the stored DataFrame/Series has no rows.
-
-        Returns:
-            bool: True when there are zero rows; otherwise False.
-        """
-        # Use the stored object's shape to determine emptiness. For Series and
-        # DataFrame this checks the number of rows (axis 0).
-        data = self()
-        return data.shape[0] == 0
-
-    def to_excel(self, path: Path) -> Result[Unit]:
-        """Write the stored DataFrame to an Excel file.
-
-        If the stored value is a `pandas.DataFrame` it will be written to the
-        given path using `DataFrame.to_excel`. If the stored value is a
-        `pandas.Series` this method does nothing.
-
-        Args:
-            path (Path): Filesystem path where the Excel file will be written.
-
-        Returns:
-            Result[Unit]: A result object indicating if write was successful.
-
-        Note:
-            Any I/O errors raised by pandas or the filesystem is caught by the function
-            and a result object with `err` value is returned.
-        """
-        # Extract the stored value and only attempt to write when it's a DataFrame.
-        # Writing a Series would either require additional handling or produce
-        # a less-structured Excel output; the existing behavior intentionally
-        # limits output to DataFrames.
-        data = self()
-
-        parent = path.parent
-        if not parent.exists():
-            msg = f"Parent path specified: '{parent} does not exist"
-            eprint(msg)
-            return Result.err(msg)
-
-        try:
-            # Use pandas' to_excel implementation which will raise I/O related
-            # exceptions on failure; those propagate to callers.
-            data.to_excel(path, index=False)  # pyright: ignore [reportUnknownMemberType]
-        except Exception as e:
-            msg = str(e)
-            eprint(msg)
-            return Result.err(e)
-
-        return Result.unit()
-
-
-if __name__ == "__main__":
-    datastream = DataStream(pd.Series([1, 2, 3, 4, 5]))
-    stream2 = DataStream(datastream)

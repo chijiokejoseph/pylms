@@ -1,7 +1,9 @@
 from .data_read import read
-from .datapolar import DataStore, DataStream, write
-from .print_fns import print_df, print_stream
+from .datastore import DataStore
+from .datastream import DataStream
 from .datautils import datamap
+from .print_fns import print_df, print_stream
+from .utils import write
 from .verify import new_validator
 
 __all__ = [
@@ -12,5 +14,5 @@ __all__ = [
     "print_df",
     "print_stream",
     "write",
-    "new_validator"
+    "new_validator",
 ]

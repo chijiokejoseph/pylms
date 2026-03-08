@@ -3,7 +3,7 @@ from typing import Any
 
 import polars as pl
 
-from .datapolar import DataStream
+from .datastream import DataStream
 
 
 def _max_print(items: Iterable[Any]) -> int:
