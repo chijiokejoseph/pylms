@@ -1,6 +1,6 @@
 from ..constants import COHORT, NAME
 from ..data import DataStore
-from ..errors import Result, eprint
+from ..errors import Result
 from ..form_utils import return_name
 from ..models import (
     ChoiceQuestion,
@@ -19,24 +19,25 @@ from ..service import (
     run_create_form,
     run_publish_form,
     run_setup_form,
-    run_share_form,
+    run_share_form_multiple,
 )
 
 
-def init_excused_form(ds: DataStore, input_date: str, email: str) -> Result[Form]:
+def init_excused_form(ds: DataStore, input_date: str, gmails: list[str]) -> Result[Form]:
     """Initialize excused attendance form for a specific date.
     
     Creates a form for students to report excused absences with name selection,
     date confirmation, and reason input.
     
     Args:
-        ds (DataStore): DataStore containing student data.
-        input_date (str): Date for the excused form.
-        email (str): Email address to share the form with.
+        ds: DataStore containing student data.
+        input_date: Date for the excused form.
+        gmails: List of Gmail addresses to share the form with.
         
     Returns:
         Result[Form]: Success with created form or error message.
     """
+    # Extract student data
     pretty = ds.pretty()
     names: list[str] = pretty[NAME].to_list()
     cohort_no: int = pretty[0, COHORT]
@@ -44,13 +45,12 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Result[Form
     form_title, form_name = head.title, head.name
     
     # Create form
-    excused_form: Form | None = run_create_form(form_title, form_name)
-    if excused_form is None:
-        msg = f"Form creation failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    excused_form_result = run_create_form(form_title, form_name)
+    if excused_form_result.is_err():
+        return excused_form_result.propagate()
+    excused_form = excused_form_result.unwrap()
 
-    # Setup form content with name dropdown, date, and reason fields
+    # Setup form content with name dropdown, date selection, and reason input
     form_content: ContentBody = ContentBody(
         requests=[
             Content(
@@ -105,23 +105,20 @@ def init_excused_form(ds: DataStore, input_date: str, email: str) -> Result[Form
         ]
     )
     
-    # Setup, publish, and share form
-    excused_form = run_setup_form(excused_form, form_content)
-    if excused_form is None:
-        msg = f"Form creation failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Setup and publish form
+    excused_form_result = run_setup_form(excused_form, form_content)
+    if excused_form_result.is_err():
+        return excused_form_result.propagate()
+    excused_form = excused_form_result.unwrap()
 
-    excused_form = run_publish_form(excused_form)
-    if excused_form is None:
-        msg = "Failed to publish form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    excused_form_result = run_publish_form(excused_form)
+    if excused_form_result.is_err():
+        return excused_form_result.propagate()
+    excused_form = excused_form_result.unwrap()
 
-    excused_form = run_share_form(excused_form, email)
-    if excused_form is None:
-        msg = "Form sharing failed when trying to share form \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Share form with admin and selected facilitators
+    result = run_share_form_multiple(excused_form, gmails)
+    if result.is_err():
+        return result.propagate()
         
     return Result.ok(excused_form)

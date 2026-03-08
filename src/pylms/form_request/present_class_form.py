@@ -1,6 +1,6 @@
 from ..constants import COHORT, NAME
 from ..data import DataStore
-from ..errors import Result, eprint
+from ..errors import Result
 from ..form_utils import return_name
 from ..models import (
     ChoiceQuestion,
@@ -18,24 +18,22 @@ from ..service import (
     run_create_form,
     run_publish_form,
     run_setup_form,
-    run_share_form,
+    run_share_form_multiple,
 )
 
 
-def init_present_form(ds: DataStore, input_date: str, email: str) -> Result[Form]:
+def init_present_form(ds: DataStore, input_date: str, gmails: list[str]) -> Result[Form]:
     """Initialize present attendance form for a specific date.
     
-    Creates a form for students to mark their attendance as present with
-    name selection and date confirmation.
-    
     Args:
-        ds (DataStore): DataStore containing student data.
-        input_date (str): Date for the attendance form.
-        email (str): Email address to share the form with.
+        ds: DataStore containing student data.
+        input_date: Date for the attendance form.
+        gmails: List of Gmail addresses to share the form with.
         
     Returns:
         Result[Form]: Success with created form or error message.
     """
+    # Extract student data
     pretty = ds.pretty()
     names: list[str] = pretty[NAME].to_list()
     cohort_no: int = pretty[0, COHORT]
@@ -43,11 +41,10 @@ def init_present_form(ds: DataStore, input_date: str, email: str) -> Result[Form
     form_title, form_name = head.title, head.name
     
     # Create form
-    present_form: Form | None = run_create_form(form_title, form_name)
-    if present_form is None:
-        msg = f"Form creation failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    present_form_result = run_create_form(form_title, form_name)
+    if present_form_result.is_err():
+        return present_form_result.propagate()
+    present_form = present_form_result.unwrap()
 
     # Setup form content with name dropdown and date selection
     form_content: ContentBody = ContentBody(
@@ -91,23 +88,20 @@ def init_present_form(ds: DataStore, input_date: str, email: str) -> Result[Form
         ]
     )
     
-    # Setup, publish, and share form
-    present_form = run_setup_form(present_form, form_content)
-    if present_form is None:
-        msg = f"Form setup failed when creating attendance for students for date {input_date}. \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Setup and publish form
+    present_form_result = run_setup_form(present_form, form_content)
+    if present_form_result.is_err():
+        return present_form_result.propagate()
+    present_form = present_form_result.unwrap()
 
-    present_form = run_publish_form(present_form)
-    if present_form is None:
-        msg = "Failed to publish form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    present_form_result = run_publish_form(present_form)
+    if present_form_result.is_err():
+        return present_form_result.propagate()
+    present_form = present_form_result.unwrap()
 
-    present_form = run_share_form(present_form, email)
-    if present_form is None:
-        msg = "Form sharing failed when trying to share form \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Share form with admin and selected facilitators
+    result = run_share_form_multiple(present_form, gmails)
+    if result.is_err():
+        return result.propagate()
 
     return Result.ok(present_form)

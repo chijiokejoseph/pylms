@@ -1,19 +1,20 @@
 from ..cli import input_bool
+from ..config import Config
 from ..data import DataStore
 from ..errors import Result, Unit
-from ..form_utils import input_class_date
 from ..history import (
     History,
+    get_class_info,
+    get_date_index,
     get_held_classes,
     get_marked_classes,
-    match_date_index,
-    match_info_by_date,
 )
 from ..info import print_info
+from ..query_dates import search_unheld
 from .class_form_init import init_class_form
 
 
-def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
+def request_class_form(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     """Request creation of class forms for selected dates.
 
     Allows user to select dates and handles existing forms by showing current
@@ -21,13 +22,15 @@ def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
     dates that need them.
 
     Args:
-        ds (DataStore): DataStore containing student data.
-        history (History): History object for tracking operations.
+        config: Config containing facilitator information.
+        ds: DataStore containing student data.
+        history: History object for tracking operations.
 
     Returns:
         Result[Unit]: Success or error message.
     """
-    dates = input_class_date(history)
+    # Request dates from user
+    dates = search_unheld(history)
     if dates.is_err():
         return dates.propagate()
 
@@ -36,15 +39,14 @@ def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
 
     new_dates: list[str] = dates.copy()
 
-    # Remove dates that have already been previously marked from `new_dates`
+    # Check each date for existing forms
     for date in dates:
-        class_num = match_date_index(history, date).unwrap()
+        class_num = get_date_index(history, date).unwrap()
 
-        # If date has not been previously generated skip
         if date not in get_held_classes(history, ""):
             continue
 
-        info = match_info_by_date(history, date)
+        info = get_class_info(history, date)
         if info.is_err():
             continue
 
@@ -53,13 +55,13 @@ def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
         print_info(f"Attendance Url: {info.present_url}")
         print_info(f"Excused Url: {info.excused_url}\n")
 
-        # Check if attendance has been recorded
+        # Check if attendance already recorded
         marked_dates = get_marked_classes(history, "")
         if date in marked_dates:
             print_info(f"Attendance for Class {class_num} has been recorded")
             continue
 
-        # Ask if user wants to regenerate forms
+        # Ask if user wants to regenerate form
         choice = input_bool(
             f"Do you wish to regenerate the attendance for Class {class_num}: "
         )
@@ -73,7 +75,7 @@ def request_class_form(ds: DataStore, history: History) -> Result[Unit]:
 
         new_dates.remove(date)
 
-    # Create forms only for dates that need them
+    # Create forms for new dates only
     if len(new_dates) == 0:
         return Result.unit()
-    return init_class_form(ds, history, new_dates)
+    return init_class_form(config, ds, history, new_dates)

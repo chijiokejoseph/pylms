@@ -2,10 +2,10 @@ from datetime import datetime
 
 import polars as pl
 
-from ..cli import input_email
+from ..config import Config
 from ..constants import CDS, COHORT, INTERNSHIP, NAME, TIMESTAMP_FMT, WORK_DAYS
 from ..data import DataStore
-from ..errors import Result, Unit, eprint
+from ..errors import Result, Unit
 from ..form_utils import return_name
 from ..history import History, add_cds_form
 from ..models import (
@@ -14,7 +14,6 @@ from ..models import (
     Content,
     ContentBody,
     CreateItem,
-    Form,
     Item,
     Location,
     OptionDict,
@@ -25,24 +24,26 @@ from ..service import (
     run_create_form,
     run_publish_form,
     run_setup_form,
-    run_share_form,
+    run_share_form_multiple,
 )
+from .share_emails import input_share_emails
 
 
-def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
+def init_cds_form(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     """Initialize and create CDS form for NYSC corpers.
-    
+
     Args:
-        ds (DataStore): DataStore containing student data.
-        history (History): History object for tracking operations.
-        
+        config: Config containing admin and facilitator information.
+        ds: DataStore containing student data.
+        history: History object for tracking operations.
+
     Returns:
         Result[Unit]: Success or error message.
     """
     pretty = ds.pretty()
     # Filter for NYSC corpers only
     corpers = pretty.filter(pl.col(INTERNSHIP) == "NYSC")
-    corper_names: list[str] = corpers[NAME].to_list()  # Fixed: should be NAME not INTERNSHIP
+    corper_names: list[str] = corpers[NAME].to_list()
     cohort_no: int = pretty[0, COHORT]
     timestamp: str = datetime.now().strftime(TIMESTAMP_FMT)
 
@@ -50,12 +51,10 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
     head = return_name(cohort_no, "CDS")
     form_title, form_name = head.title, head.name
 
-    cds_form: Form | None = run_create_form(form_title, form_name)
-
-    if cds_form is None:
-        msg = f"Form creation failed when creating CDS Entry Forms for students for cohort {cohort_no}. \n\nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    form_result = run_create_form(form_title, form_name)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
     # Setup form content with name dropdown and CDS day selection
     cds_content: ContentBody = ContentBody(
@@ -106,39 +105,34 @@ def init_cds_form(ds: DataStore, history: History) -> Result[Unit]:
     )
 
     # Setup and publish form
-    cds_form = run_setup_form(cds_form, cds_content)
-    if cds_form is None:
-        msg = f"Form setup failed when setting up CDS Entry Forms for students for cohort {cohort_no}. \n\nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    form_result = run_setup_form(form, cds_content)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
-    cds_form = run_publish_form(cds_form)
+    form_result = run_publish_form(form)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
-    if cds_form is None:
-        msg = "Failed to publish form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Get emails to share with
+    gmails_result = input_share_emails(config)
+    if gmails_result.is_err():
+        return gmails_result.propagate()
+    gmails = gmails_result.unwrap()
 
-    # Share form with recipient
-    recipient_email = input_email(
-        "Enter an email address to share the form with: ",
-    )
-    if recipient_email.is_err():
-        return recipient_email.propagate()
-    recipient_email = recipient_email.unwrap()
-
-    cds_form = run_share_form(cds_form, recipient_email)
-    if cds_form is None:
-        msg = f"Form sharing failed when sharing the form with {recipient_email}. \n\nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Share form with admin and selected facilitators
+    form_result = run_share_form_multiple(form, gmails)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
     # Save form info to history
     info: CDSFormInfo = CDSFormInfo(
-        name=cds_form.name,
-        title=cds_form.title,
-        url=cds_form.url,
-        uuid=cds_form.uuid,
+        name=form.name,
+        title=form.title,
+        url=form.url,
+        uuid=form.uuid,
         timestamp=timestamp,
     )
     add_cds_form(history, info)

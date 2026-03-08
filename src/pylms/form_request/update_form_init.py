@@ -1,52 +1,53 @@
-from ..cli import input_email, select_class_date
+from ..config import Config
 from ..data import DataStore
 from ..date import to_week_num
-from ..errors import Result, Unit, eprint
+from ..errors import Result, Unit
 from ..form_utils import (
     UpdateFormDetails,
     extract_update_details,
     new_update_content,
 )
-from ..history import History, add_update_form, get_held_classes
+from ..history import History, add_update_form
 from ..info import print_info
 from ..models import (
     ContentBody,
-    Form,
     UpdateFormInfo,
 )
+from ..query_dates import search_held
 from ..service import (
     run_create_form,
     run_setup_form,
-    run_share_form,
+    run_share_form_multiple,
 )
+from .share_emails import input_share_emails
 
 
-def init_update_form(ds: DataStore, history: History) -> Result[Unit]:
+def init_update_form(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     """Initialize update form for students to fill attendance for past dates.
-    
+
     Creates a form allowing students to update their attendance for held classes
-    within the current week number. Filters dates to only include those from
-    weeks equal to or below the current week.
-    
+    within the current week number. Shares with admin and selected facilitators.
+
     Args:
-        ds (DataStore): DataStore containing student data.
-        history (History): History object for tracking operations.
-        
+        config: Config containing admin and facilitator information.
+        ds: DataStore containing student data.
+        history: History object for tracking operations.
+
     Returns:
         Result[Unit]: Success or error message.
     """
-    msg: str = """
+    print_info("""
 You'll now select the dates for which the fillers of this form can fill their attendance.
 Please select all the dates for which attendance can be filled using the instructions below.
-    """
-    dates = get_held_classes(history, "")
-    dates = select_class_date(msg, dates)
+    """)
+
+    dates = search_held(history)
 
     if dates.is_err():
         return dates.propagate()
 
     dates = dates.unwrap()
-    
+
     # Extract form details and filter dates by week number
     result: UpdateFormDetails = extract_update_details(ds)
     form_title: str = result.title
@@ -54,37 +55,33 @@ Please select all the dates for which attendance can be filled using the instruc
     week_num: int = result.week_num
     timestamp: str = result.timestamp
 
-    # Only allow dates from current week or earlier
     dates = [each_date for each_date in dates if to_week_num(each_date) <= week_num]
     print_info(
         f"The current week number of the year {result.year_num} is {result.week_num} \nHence, only dates: {dates} which belong to weeks equal to or below {result.week_num} are allowed"
     )
-    
+
     # Create and setup form
-    data_form: Form | None = run_create_form(form_title, form_name)
-    if data_form is None:
-        msg = "Form creation failed when creating data form. \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    data_form_result = run_create_form(form_title, form_name)
+    if data_form_result.is_err():
+        return data_form_result.propagate()
+    data_form = data_form_result.unwrap()
 
     data_form_content: ContentBody = new_update_content(dates)
-    data_form = run_setup_form(data_form, data_form_content)
-    if data_form is None:
-        msg = "Form setup failed when setting up data form. \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    
+    data_form_result = run_setup_form(data_form, data_form_content)
+    if data_form_result.is_err():
+        return data_form_result.propagate()
+    data_form = data_form_result.unwrap()
 
-    # Share form with specified email
-    email = input_email("Enter email to share the form with: ")
-    if email.is_err():
-        return email.propagate()
+    # Share form with admin and selected facilitators
+    gmails_result = input_share_emails(config)
+    if gmails_result.is_err():
+        return gmails_result.propagate()
+    gmails = gmails_result.unwrap()
 
-    email = email.unwrap()
-    data_form = run_share_form(data_form, email)
-    if data_form is None:
-        msg = f"Form sharing failed when sharing the form. with {email} \nPlease restart the program and try again."
-        eprint(msg)
-        return Result.err(msg)
+    share_result = run_share_form_multiple(data_form, gmails)
+    if share_result.is_err():
+        return share_result.propagate()
 
     # Save form info to history
     info: UpdateFormInfo = UpdateFormInfo(

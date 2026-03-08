@@ -1,7 +1,7 @@
-from ..cli import input_email
+from ..config import Config
 from ..constants import COHORT
 from ..data import DataStore
-from ..errors import Result, Unit, eprint
+from ..errors import Result, Unit
 from ..form_utils import (
     new_complaint_form,
     return_name,
@@ -11,17 +11,17 @@ from ..service import (
     run_create_form,
     run_publish_form,
     run_setup_form,
-    run_share_form,
+    run_share_form_multiple,
 )
+from .share_emails import input_share_emails
 
 
-def init_complaint_form(ds: DataStore) -> Result[Unit]:
+def init_complaint_form(config: Config, ds: DataStore) -> Result[Unit]:
     """Initialize complaint form for student feedback.
     
-    Creates, sets up, publishes, and shares a complaint form for the cohort.
-    
     Args:
-        ds (DataStore): DataStore containing student data.
+        config: Config containing admin and facilitator information.
+        ds: DataStore containing student data.
         
     Returns:
         Result[Unit]: Success or error message.
@@ -31,49 +31,46 @@ def init_complaint_form(ds: DataStore) -> Result[Unit]:
     form_title, form_name = head.title, head.name
     
     # Create form
-    form = run_create_form(form_title, form_name)
-    if form is None:
-        msg = "Form creation failed when creating complaint form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    form_result = run_create_form(form_title, form_name)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
     # Setup form content
     content_body: ContentBody = new_complaint_form(ds)
-    form = run_setup_form(form, content_body)
-    if form is None:
-        msg = "Form setup failed when setting up complaint form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    form_result = run_setup_form(form, content_body)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
     # Publish form
-    form = run_publish_form(form)
-    if form is None:
-        msg = "Failed to publish form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    form_result = run_publish_form(form)
+    if form_result.is_err():
+        return form_result.propagate()
+    form = form_result.unwrap()
 
-    # Share form with specified email
-    email_result = input_email("Enter an email address to share the form with: ")
-    if email_result.is_err():
-        return email_result.propagate()
+    # Get emails to share with
+    gmails_result = input_share_emails(config)
+    if gmails_result.is_err():
+        return gmails_result.propagate()
+    gmails = gmails_result.unwrap()
 
-    email: str = email_result.unwrap()
-    form = run_share_form(form, email)
-    if form is None:
-        msg = "Form sharing failed when sharing complaint form. Please try again."
-        eprint(msg)
-        return Result.err(msg)
+    # Share form
+    form_result = run_share_form_multiple(form, gmails)
+    if form_result.is_err():
+        return form_result.propagate()
 
     return Result.unit()
 
 
-def request_complaint_form(ds: DataStore) -> Result[Unit]:
+def request_complaint_form(config: Config, ds: DataStore) -> Result[Unit]:
     """Request creation of complaint form.
     
     Args:
-        ds (DataStore): DataStore containing student data.
+        config: Config containing admin and facilitator information.
+        ds: DataStore containing student data.
         
     Returns:
         Result[Unit]: Success or error message.
     """
-    return init_complaint_form(ds)
+    return init_complaint_form(config, ds)
