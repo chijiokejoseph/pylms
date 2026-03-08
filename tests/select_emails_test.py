@@ -4,6 +4,8 @@ from typing import final, override
 
 from dotenv import load_dotenv
 
+from pylms.config import Config, load_config
+from pylms.constants import CONFIG_PATH
 from pylms.email import run_email
 from pylms.errors import Result, Unit
 from pylms.history import History, load_history
@@ -21,7 +23,8 @@ class SelectEmailsTest(unittest.TestCase):
     message_select_emails function executes successfully and returns a successful result.
     """
 
-    history: Result[History]  # pyright: ignore[reportUninitializedInstanceVariable]
+    history: History  # pyright: ignore[reportUninitializedInstanceVariable]
+    config: Config  # pyright: ignore[reportUninitializedInstanceVariable]
 
     @override
     def setUp(self) -> None:
@@ -34,7 +37,8 @@ class SelectEmailsTest(unittest.TestCase):
         # load environment
         _ = load_dotenv()
 
-        self.history = load_history()
+        self.config = load_config(CONFIG_PATH).unwrap()
+        self.history = load_history(self.config).unwrap()
 
     def test_update_message_select(self) -> None:
         """
@@ -67,7 +71,7 @@ class SelectEmailsTest(unittest.TestCase):
             """
             # Initialize a list to store the results of sending emails
             results: list[Result[Unit]] = []
-            history = self.history.unwrap()
+            history = self.history
 
             def builder() -> Result[TextBody]:
                 """
@@ -83,7 +87,9 @@ class SelectEmailsTest(unittest.TestCase):
 
             for _ in range(4):
                 # Call the function under test for each input mode
-                result: Result[Unit] = message_select_emails(server, builder)
+                result: Result[Unit] = message_select_emails(
+                    server, self.config, builder
+                )
                 # Print any error encountered during sending
                 print(f"{result.error = }")
                 # Append the result to the list
@@ -98,7 +104,7 @@ class SelectEmailsTest(unittest.TestCase):
                 )
 
         # Assert that the result is a successful Result
-        result = run_email(mock_fn)
+        result = run_email(self.config, mock_fn)
 
         print(f"{result.error = }")
         self.assertTrue(result.is_ok())
