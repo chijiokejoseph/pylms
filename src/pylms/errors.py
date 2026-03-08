@@ -52,11 +52,11 @@ class Result[T]:
         if self._error is not None and self._value is not None:
             self._value = None
 
-    def propagate[K](self) -> MapResult[K]:
+    def propagate[K](self) -> "Result[K]":
         error = self._error
         return Result(None, error)
 
-    def map[K](self, func: Callable[[T], K]) -> MapResult[K]:
+    def map[K](self, func: Callable[[T], K]) -> "Result[K]":
         if self.is_err():
             return self.propagate()
         value = self.unwrap()
@@ -64,28 +64,28 @@ class Result[T]:
         return Result(value, None)
 
     @classmethod
-    def ok[K](cls, value: K) -> MapResult[K]:
+    def ok[K](cls, value: K) -> "Result[K]":
         return Result(value, None)
 
     @classmethod
     @overload
-    def err[K](cls, error: Exception) -> MapResult[K]:
+    def err[K](cls, error: Exception) -> "Result[K]":
         pass
 
     @classmethod
     @overload
-    def err[K](cls, error: str) -> MapResult[K]:
+    def err[K](cls, error: str) -> "Result[K]":
         pass
 
     @classmethod
-    def err[K](cls, error: Exception | str) -> MapResult[K]:
+    def err[K](cls, error: Exception | str) -> "Result[K]":
         if isinstance(error, str):
             error = LMSError(error)
 
         return Result(None, error)
 
     @classmethod
-    def unit(cls) -> UnitResult:
+    def unit(cls) -> "Result[Unit]":
         return Result.ok(Unit())
 
     @overload
