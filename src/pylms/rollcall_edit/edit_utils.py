@@ -1,14 +1,14 @@
 from typing import Literal, overload
 
 from ..cli import input_bool
-from ..constants import COMMA_DELIM, NAME
+from ..constants import COMMA_DELIM, NAME, SERIAL
 from ..data import DataStore
 from ..errors import Result, Unit
 from ..history import History, all_dates
 from ..info import print_info
 from ..record import RecordStatus
 from .record_input import RECORDS, input_record
-
+import polars as pl
 
 @overload
 def edit_single_serial(
@@ -48,7 +48,7 @@ def edit_single_serial(
         msg = f"The following dates: '{dates_str}' do not correspond to any class dates"
         raise Result.fail(msg)
 
-    len_rows = ds.as_ref().shape[0]
+    len_rows = ds.as_ref().height
 
     if serial < 1 or serial > len_rows:
         raise Result.fail(f"serial argument must be between 1 - {len_rows}")
@@ -63,10 +63,10 @@ def edit_single_serial(
             return choice.propagate()
         choice = choice.unwrap()
 
-    pretty = ds.to_pretty()
+    pretty = ds.pretty()
     data = ds.as_ref()
     idx = serial - 1
-    name = pretty.loc[:, NAME].astype(str).iloc[idx]
+    name: str = pretty[idx, NAME]
 
     print_info(
         f"You are editing the attendance record for {name} with serial no: {serial}"
@@ -79,17 +79,30 @@ def edit_single_serial(
             return record.propagate()
         record = record.unwrap()
 
-        for date in dates:
-            data.at[idx, date] = str(record)
+        data = data.with_columns(
+            [
+                pl.when(pl.col(SERIAL) == serial)
+                .then(pl.lit(str(record)))
+                .otherwise(pl.col(date))
+                .alias(date)
+                for date in dates
+            ]
+        )
 
         print_info(
             f"Attendance record for {name} with serial no: {serial} for dates: '{dates}' edited successfully"
         )
+        result = ds.copy_from(data)
+        if result.is_err():
+            return result.propagate()
+
         if kind == "public":
             return Result.unit()
         else:
             return Result.ok(record)
 
+
+    data_lazy = data.lazy()
     records: list[RecordStatus] = []
     for date in dates:
         record = input_record(history, date, RECORDS)
@@ -97,10 +110,23 @@ def edit_single_serial(
             return record.propagate()
         record = record.unwrap()
 
-        data.at[idx, date] = str(record)
+        data_lazy = data_lazy.with_columns(
+            [
+                pl.when(pl.col(SERIAL) == serial)
+                .then(pl.lit(str(record)))
+                .otherwise(pl.col(date))
+                .alias(date)
+            ]
+        )
         records.append(record)
         print_info(f"Edited Attendance for {date}")
 
+    data = data_lazy.collect()
+    
+    result = ds.copy_from(data)
+    if result.is_err():
+        return result.propagate()
+    
     print_info(
         f"Attendance record for {name} with serial no: {serial} for dates: '{dates}' edited successfully"
     )
@@ -166,48 +192,72 @@ def edit_single_date(
             return choice.propagate()
         choice = choice.unwrap()
 
-    pretty = ds.to_pretty()
-    names = pretty.loc[:, NAME].astype(str)
+    pretty = ds.pretty()
+    names = pretty[NAME]
     data = ds.as_ref()
 
     print_info(f"You are editing the attendance record for date: {date}")
-
+    
     if choice:
         record = input_record(history, date, RECORDS)
         if record.is_err():
             return record.propagate()
         record = record.unwrap()
 
+        data = data.with_columns(
+            [
+                pl.when(pl.col(SERIAL) == serial)
+                .then(pl.lit(str(record)))
+                .otherwise(pl.col(date))
+                .alias(date)
+                for serial in serials
+            ]
+        )
+
         for serial in serials:
             idx = serial - 1
-            name = names.iloc[idx]
-            data.at[idx, date] = str(record)
-
+            name: str = names.item(idx)
+            
             print_info(
                 f"Attendance record for {name} with serial no: {serial} for date: '{date}' edited successfully"
             )
+
+        result = ds.copy_from(data)
+        if result.is_err():
+            return result.propagate()
 
         if kind == "public":
             return Result.unit()
         else:
             return Result.ok(record)
 
+    data_lazy = data.lazy()
     records: list[RecordStatus] = []
     for serial in serials:
         idx = serial - 1
-        name = names.iloc[idx]
+        name = names.item(idx)
         record = input_record(history, date, RECORDS)
         if record.is_err():
             return record.propagate()
         record = record.unwrap()
 
-        data.at[idx, date] = str(record)
+        data_lazy = data_lazy.with_columns(
+            pl.when(pl.col(SERIAL) == serial)
+            .then(pl.lit(str(record)))
+            .otherwise(pl.col(date))
+            .alias(date)
+        )
         records.append(record)
 
         print_info(
             f"Attendance record for {name} with serial no: {serial} for date: '{date}' edited successfully"
         )
 
+    data = data_lazy.collect()
+    result = ds.copy_from(data)
+    if result.is_err():
+        return result.propagate()
+        
     if kind == "public":
         return Result.unit()
     else:

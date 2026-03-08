@@ -3,6 +3,7 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
+from ..config import Config
 from ..constants import (
     COHORT,
     FAIL,
@@ -30,20 +31,22 @@ type CollateType = Literal["merit", "fast track"]
 """Type alias for merit collation types."""
 
 
-def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
+def collate_merit(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     """Collate merit-based results and generate awardees list.
 
     Processes student results to determine pass/fail status based on multiple criteria
     including assessment scores, attendance, and special considerations.
 
     Args:
+        config (Config): Application configuration.
         ds (DataStore): DataStore containing student data.
         history (History): Application state tracking.
 
     Returns:
         Result[Unit]: Success or error with message.
     """
-    results = read(get_paths_excel()["Result"])
+    paths = get_paths_excel(config)
+    results = read(paths["Result"])
     if results.is_err():
         return results.propagate()
     results = results.unwrap()
@@ -140,7 +143,7 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
     )["Cond"]
 
     # Save updated results
-    result_path = get_paths_excel()["Result"]
+    result_path = paths["Result"]
     results = write(results, result_path)
     if results.is_err():
         return results.propagate()
@@ -150,11 +153,11 @@ def collate_merit(ds: DataStore, history: History) -> Result[Unit]:
     passed_stream = DataStream(passed_data)
     cohort = pretty[0, COHORT]
 
-    results = collate_awardees(passed_stream, cohort)
+    results = collate_awardees(config, passed_stream, cohort)
     if results.is_err():
         return results.propagate()
 
-    results = record_merit(history)
+    results = record_merit(config, history)
     if results.is_err():
         return results.propagate()
 

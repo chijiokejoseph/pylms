@@ -1,13 +1,15 @@
 import polars as pl
 
 from ..cli import input_num, input_option
-from ..cli.serials_input import provide_serials
 from ..data import DataStore
 from ..errors import Result
+from ..query_data import run_query_data
 from ..result_utils import det_result_col
 
 
-def edit_batch(ds: DataStore, result_data: pl.DataFrame) -> Result[tuple[pl.DataFrame, list[float]]]:
+def edit_batch(
+    ds: DataStore, result_data: pl.DataFrame
+) -> Result[tuple[pl.DataFrame, list[float]]]:
     """Edit results for multiple selected students with same adjustment.
 
     Allows user to select multiple students and apply the same mark adjustment
@@ -21,7 +23,7 @@ def edit_batch(ds: DataStore, result_data: pl.DataFrame) -> Result[tuple[pl.Data
         Result[tuple[pl.DataFrame, list[float]]]: Success with new updated DataFrame and a list of updates applied to each student or error.
     """
     print("Please provide serial numbers of students to reward/penalize their scores.")
-    result = provide_serials(ds)
+    result = run_query_data(ds)
     if result.is_err():
         return result.propagate()
 

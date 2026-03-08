@@ -5,14 +5,15 @@ import numpy as np
 import polars as pl
 
 from ..cli import input_bool
+from ..config import Config
 from ..constants import COHORT, DATA_COLUMNS, DATE_FMT
 from ..data import DataStore, datamap, write
 from ..errors import Result, eprint
 from ..history import (
     History,
+    all_dates,
     get_available_cds_forms,
     get_marked_classes,
-    retrieve_dates,
 )
 from ..info import print_info
 from ..paths import get_cohort_path
@@ -61,10 +62,11 @@ def fill_records(record_input: str) -> str:
             return str(RecordStatus.ABSENT)
 
 
-def record_cohort(ds: DataStore, history: History) -> Result[Path]:
+def record_cohort(config: Config, ds: DataStore, history: History) -> Result[Path]:
     """Generate half-cohort attendance record for NCAIR review.
 
     Args:
+        config (Config): Configuration object with app settings.
         ds (DataStore): DataStore containing student attendance data.
         history (History): History object with class and form information.
 
@@ -78,11 +80,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
     cohort_no = pretty[0, COHORT]
 
     # Get class dates
-    dates = retrieve_dates("")
-    if dates.is_err():
-        return dates.propagate()
-
-    dates = dates.unwrap()
+    dates = all_dates(history, "")
 
     today = datetime.now()
     past_classes = [
@@ -109,7 +107,7 @@ def record_cohort(ds: DataStore, history: History) -> Result[Path]:
         return Result.err(msg)
 
     # Check if cohort attendance already exists
-    cohort_path = get_cohort_path(cohort_no)
+    cohort_path = get_cohort_path(config, cohort_no)
     if cohort_path.exists():
         print_info(
             f"Cohort Attendance for the Cohort {cohort_no} has already been recorded. This record can be found at the path\nPath: {cohort_path.resolve()}"

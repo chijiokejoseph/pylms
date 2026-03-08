@@ -1,5 +1,6 @@
 import polars as pl
 
+from ..history import History, get_num_groups
 from ..constants import AWARDEES, NAME, SERIAL
 from ..data import new_validator
 from .col_name import (
@@ -7,6 +8,7 @@ from .col_name import (
     det_assessment_score_col,
     det_attendance_req_col,
     det_attendance_score_col,
+    det_project_score_col,
     det_result_col,
 )
 
@@ -63,6 +65,30 @@ val_assessment_data = new_validator(
         det_assessment_req_col(),
     ]
 )
+
+def val_project_in(test_data: pl.DataFrame, history: History) -> tuple[bool, str]:
+    columns = test_data.columns
+    num_rows = test_data.height
+    num_groups = get_num_groups(history)
+    if num_rows != num_groups:
+        msg = f"Project Groups created in the project are {num_groups} yet project scores received correspond to {num_rows} groups."
+        return False, msg
+
+    last_col = columns[-1]
+
+    if not test_data[last_col].dtype.is_numeric():
+        return False, f"Last column: '{last_col}' does not contain numbers"
+
+    return True, ""
+
+
+val_project_data = new_validator([
+    SERIAL,
+    NAME,
+    det_attendance_req_col(),
+    det_assessment_req_col(),
+    det_project_score_col(),
+])
 
 val_result_data = new_validator(
     [

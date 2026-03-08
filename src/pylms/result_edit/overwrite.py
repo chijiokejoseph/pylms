@@ -4,10 +4,12 @@ from typing import Callable, cast
 import numpy as np
 import polars as pl
 
-from ..cli import input_option, input_str, provide_serials
+from ..cli import input_option, input_str
+from ..config import Config
 from ..data import DataStore, DataStream, print_stream, read
 from ..errors import Result, Unit, eprint
 from ..paths import get_paths_excel
+from ..query_data import run_query_data
 from ..result_collate import recollate
 from ..result_utils import (
     det_assessment_req_col,
@@ -45,6 +47,15 @@ def _parse(
 
 
 def get_mutable_cols(data_stream: DataStream) -> list[str]:
+    """
+    Get the mutable columns of the result data
+
+    Args:
+        data_stream (DataStream): The data stream to get the mutable columns from
+    
+    Returns:
+        list[str]: The mutable columns of the result data
+    """
     return [
         find_col(data_stream, "Attendance", "Req").unwrap(),
         find_col(data_stream, "Assessment", "Req").unwrap(),
@@ -68,31 +79,41 @@ def _preprocess(data_stream: DataStream, col: str, value: str) -> float | None:
             return None
 
 
-def overwrite_result(ds: DataStore) -> Result[Unit]:
-    result_path: Path = get_paths_excel()["Result"]
+def overwrite_result(config: Config, ds: DataStore) -> Result[Unit]:
+    """
+    
+    
+    """
+    # 
+    result_path: Path = get_paths_excel(config)["Result"]
     if not result_path.exists():
         msg = "Results has not been generated yet. Please collate results before running this operation"
         eprint(msg)
         return Result.err(msg)
 
+    # 
     result_data = read(result_path)
     if result_data.is_err():
         return result_data.propagate()
     result_data = result_data.unwrap()
 
+    # 
     result_stream = DataStream.new(result_data, val_result_data)
     if result_stream.is_err():
         return result_stream.propagate()
 
+    # 
     result_stream = result_stream.unwrap()
     result_data = result_stream.as_ref()
 
-    serials = provide_serials(ds)
+    # 
+    serials = run_query_data(ds)
     if serials.is_err():
         return serials.propagate()
 
     serials = serials.unwrap()
 
+    # 
     for serial in serials:
         idx = serial - 1
         print_stream(result_stream, [serial])

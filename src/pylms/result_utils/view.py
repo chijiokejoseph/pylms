@@ -1,7 +1,7 @@
-from ..cli import provide_serials
 from ..data import DataStore, DataStream, print_stream, read
 from ..errors import Result, Unit, eprint
 from ..paths import get_paths_excel
+from ..query_data import run_query_data
 from .val import val_result_data
 
 
@@ -34,7 +34,7 @@ def view_result(ds: DataStore) -> Result[Unit]:
 
     results_stream = results_stream.unwrap()
 
-    serials = provide_serials(ds)
+    serials = run_query_data(ds)
     if serials.is_err():
         return serials.propagate()
 

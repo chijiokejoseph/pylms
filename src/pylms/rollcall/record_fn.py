@@ -15,7 +15,7 @@ def record(ds: DataStore, turnout_stream: DataStream, fill_value: RecordStatus) 
         turnout_stream (DataStream): Stream containing student attendance data.
         fill_value (RecordStatus): Status to assign to students in turnout data.
     """
-    data_ref = ds.as_ref()
+    data_ref = ds.pretty()
     
     turnout = filter_names(turnout_stream)
     if turnout.is_err():
@@ -26,22 +26,15 @@ def record(ds: DataStore, turnout_stream: DataStream, fill_value: RecordStatus) 
     
     # Get student names and class date
     present_names: list[str] = turnout_data[NAME].to_list()
-    class_date = turnout_data[0, DATE]
-    
-    # Get all student names from DataStore
-    all_names: list[str] = data_ref[NAME].to_list()
-    
-    # Get current attendance records for the class date
-    class_record: list[str] = data_ref[class_date].to_list()
-    
-    # Update records for students in turnout data
-    new_class_record = [
-        str(fill_value) if each_name in present_names else old_record
-        for each_name, old_record in zip(all_names, class_record)
-    ]
+    class_date: str = turnout_data[0, DATE]
+
+    # Mark students with `fill_value`
+    data_ref = data_ref.with_columns(
+        pl.when(pl.col(NAME).is_in(present_names))
+        .then(pl.lit(str(fill_value)))
+        .otherwise(pl.col(class_date))
+        .alias(class_date)
+    )
     
     # Update DataStore with new records
-    data_ref = data_ref.with_columns(
-        pl.Series(class_date, new_class_record).alias(class_date)
-    )
     return ds.copy_from(data_ref)

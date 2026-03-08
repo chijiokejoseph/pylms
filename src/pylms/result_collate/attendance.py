@@ -1,5 +1,6 @@
 import polars as pl
 
+from ..config import Config
 from ..constants import COMMA_DELIM, NAME, SERIAL
 from ..data import DataStore, write
 from ..errors import Result, Unit, eprint
@@ -20,13 +21,14 @@ from ..result_utils import (
 )
 
 
-def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
+def collate_attendance(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     """Collate attendance spreadsheet for students.
 
     Processes attendance data for all held classes and calculates attendance scores.
     Saves collated data to Attendance.xlsx file.
 
     Args:
+        config (Config): Application configuration settings.
         ds (DataStore): Student data to be collated.
         history (History): Application state tracking.
 
@@ -77,25 +79,30 @@ def collate_attendance(ds: DataStore, history: History) -> Result[Unit]:
     req_col = det_attendance_req_col()
 
     # Create collated attendance DataFrame
-    collated_data = pl.DataFrame(
-        {
-            SERIAL: data[SERIAL],
-            NAME: pretty[NAME],
-            total_col: count_arr,
-            score_col: score_arr,
-            req_col: pl.lit(req),
-        }
+    collated_data = pretty.select([SERIAL, NAME]).with_columns(
+        pl.Series(count_arr, dtype=pl.Int64).alias(total_col),
+        pl.Series(score_arr, dtype=pl.Float64).alias(score_col),
+        pl.lit(req).alias(req_col),
     )
+    # collated_data = pl.DataFrame(
+    #     {
+    #         SERIAL: data[SERIAL],
+    #         NAME: pretty[NAME],
+    #         total_col: count_arr,
+    #         score_col: score_arr,
+    #         req_col: pl.lit(req),
+    #     }
+    # )
 
     printpass("Attendance recorded successfully\n")
 
     # Save to Excel file
-    path = get_paths_excel()["Attendance"]
+    path = get_paths_excel(config)["Attendance"]
     result = write(collated_data, path)
     if result.is_err():
         return result.propagate()
 
     # Record in history
-    record_attendance(history)
+    record_attendance(config, history)
 
     return Result.unit()

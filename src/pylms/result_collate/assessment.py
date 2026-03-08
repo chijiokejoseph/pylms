@@ -1,6 +1,7 @@
 import polars as pl
 
 from ..cli import input_path
+from ..config import Config
 from ..constants import NAME, SERIAL
 from ..data import DataStream, read, write
 from ..errors import Result, Unit, eprint
@@ -16,8 +17,7 @@ from ..result_utils import (
 )
 
 
-
-def collate_assessment(history: History) -> Result[Unit]:
+def collate_assessment(config: Config, history: History) -> Result[Unit]:
     """Collate assessment spreadsheet for students.
 
     Prompts user for assessment spreadsheet path and processes scores.
@@ -26,6 +26,7 @@ def collate_assessment(history: History) -> Result[Unit]:
     - 3-column: Serial Number | Student Name | Score
 
     Args:
+        config (Config): Application configuration.
         history (History): Application state tracking.
 
     Returns:
@@ -37,8 +38,9 @@ def collate_assessment(history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
+    paths = get_paths_excel(config)
     # Read attendance data
-    attendance = read(get_paths_excel()["Attendance"])
+    attendance = read(paths["Attendance"])
     if attendance.is_err():
         return attendance.propagate()
     attendance = attendance.unwrap()
@@ -84,28 +86,33 @@ Enter the path:  """
 
     # Get score column (last column)
     score_col = assessment_cols[-1]
-    
+
     # Get column names
     assessment_score_col = det_assessment_score_col()
     assessment_req_col = det_assessment_req_col()
 
     # Update data with assessment scores and requirement
-    final_assessment = attendance.join(
-        assessment, on=[SERIAL, NAME],
-    ).fill_null(0.0).with_columns(
-        pl.col(score_col).round(2).alias(assessment_score_col),
-        pl.lit(req).alias(assessment_req_col)
+    final_assessment = (
+        attendance.join(
+            assessment,
+            on=[SERIAL, NAME],
+        )
+        .fill_null(0.0)
+        .with_columns(
+            pl.col(score_col).round(2).alias(assessment_score_col),
+            pl.lit(req).alias(assessment_req_col),
+        )
     )
 
     printpass("Assessment recorded successfully\n")
 
     # Save to Excel
-    assessment_path = get_paths_excel()["Assessment"]
+    assessment_path = paths["Assessment"]
     result = write(final_assessment, assessment_path)
     if result.is_err():
         return result.propagate()
 
     # Record in history
-    record_assessment(history)
+    record_assessment(config, history)
 
     return Result.unit()

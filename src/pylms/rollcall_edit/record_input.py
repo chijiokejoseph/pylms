@@ -1,4 +1,4 @@
-from ..cli import input_num
+from ..cli import input_option
 from ..errors import Result
 from ..history import History, all_dates
 from ..info import print_info
@@ -21,30 +21,22 @@ def input_record(
     """
     # Retrieve all class dates
     class_dates: list[str] = all_dates(history, "")
-    # Display options to the user
-    print("\nSelect from the following: ")
-    for i, option in enumerate(options, start=1):
-        print(f"{i}. {option}")
+
     # Determine the class number based on the target date
     class_num: int = class_dates.index(target_date) + 1
-    # Prepare the prompt message for user input
-    prompt: str = f"""
-From the options presented above listed 1 - {len(options)},
-Please Select which of the following Record Status should be set
-\nFor Class {class_num} held on {target_date} (only integers from 1 - {len(options)} are allowed):  """
 
-    # Validation function to ensure input is within valid range
-    def validate_input(entered_num: int) -> bool:
-        return 1 <= entered_num <= len(options)
+    # Prepare the prompt message for user input
+    prompt: str = f"""Please Select which of the following Record Status should be set
+\nFor Class {class_num} held on {target_date}"""
 
     # Prompt user for input with validation
-    result = input_num(prompt, 1, test_fn=validate_input)
+    result = input_option([str(value) for value in options], prompt)
     if result.is_err():
         return result.propagate()
-    selection = result.unwrap()
+    idx, _ = result.unwrap()
 
     # Get the selected record status based on user input
-    selected_record: RecordStatus = options[selection - 1]
+    selected_record = options[idx - 1]
 
     # Display the selected record status
     print_info(f"You have selected: {selected_record}")

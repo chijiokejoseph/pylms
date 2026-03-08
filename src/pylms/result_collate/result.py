@@ -2,6 +2,7 @@ from pathlib import Path
 
 import polars as pl
 
+from ..config import Config
 from ..data import read, write
 from ..errors import Result, Unit, eprint
 from ..history import History, record_result
@@ -18,7 +19,7 @@ from ..result_utils import (
 from .input_collate_req import CollateReq, input_collate_req
 
 
-def collate_result(history: History) -> Result[Unit]:
+def collate_result(config: Config, history: History) -> Result[Unit]:
     """
     Collate the result spreadsheet for the students.
 
@@ -28,13 +29,12 @@ def collate_result(history: History) -> Result[Unit]:
     The user is prompted to enter the pass mark, assessment ratio and project ratio for the cohort.
     The entered data is validated before being saved to the Result.xlsx file in the Data folder.
 
-    :param ds: (DataStore) - The data to be collated
-    :type ds: DataStore
-    :param history: (History) - The state of the application
-    :type history: History
+    Args:
+        config (Config): The configuration object.
+        history (History): The history object.
 
-    :return: (Result[Unit]) - a result object
-    :rtype: Result[Unit]
+    Returns:
+        Result[Unit]: A Result object containing Unit if successful, or an error message if not.
     """
     # Check if all required data (attendance, assessment, and project) has been collated
     if not history.has_collated_all:
@@ -42,8 +42,9 @@ def collate_result(history: History) -> Result[Unit]:
         eprint(msg)
         return Result.err(msg)
 
+    paths = get_paths_excel(config)
     # Read the collated project data
-    collated_data = read(get_paths_excel()["Project"])
+    collated_data = read(paths["Project"])
     if collated_data.is_err():
         return collated_data.propagate()
     collated_data = collated_data.unwrap()
@@ -108,13 +109,13 @@ def collate_result(history: History) -> Result[Unit]:
     )
 
     # Save the collated result data to an Excel file
-    result_path: Path = get_paths_excel()["Result"]
+    result_path: Path = paths["Result"]
 
     result = write(collated_data, result_path)
     if result.is_err():
         return result.propagate()
 
     # Record the result in the history
-    record_result(history)
+    record_result(config, history)
 
     return Result.unit()

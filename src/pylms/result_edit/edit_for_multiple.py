@@ -1,18 +1,17 @@
-from pylms.info import print_info
-
-from ..cli import input_num, input_option, provide_serials
-from ..data import DataStore
-from ..errors import Result
-from ..result_utils import det_result_col
-
 import polars as pl
 
+from pylms.info import print_info
 
-def edit_multiple(
-    ds: DataStore, result_data: pl.DataFrame
-) -> Result[list[float]]:
+from ..cli import input_num, input_option
+from ..data import DataStore
+from ..errors import Result
+from ..query_data import run_query_data
+from ..result_utils import det_result_col
+
+
+def edit_multiple(ds: DataStore, result_data: pl.DataFrame) -> Result[list[float]]:
     result_col: str = det_result_col()
-    student_serials = provide_serials(ds)
+    student_serials = run_query_data(ds)
     if student_serials.is_err():
         return student_serials.propagate()
 

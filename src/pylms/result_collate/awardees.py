@@ -2,7 +2,7 @@ from typing import Literal
 
 import polars as pl
 
-from ..config import read_course_name
+from ..config import Config, read_course_name
 from ..constants import (
     AWARDEES,
     AWARDEES_BATCH,
@@ -32,7 +32,10 @@ Specifies whether to collate merit-based or fast-track awardees.
 
 
 def collate_awardees(
-    stream: DataStream, cohort_num: int, collate_type: CollateType = "merit"
+    config: Config,
+    stream: DataStream,
+    cohort_num: int,
+    collate_type: CollateType = "merit",
 ) -> Result[Unit]:
     """Collate awardees data for certificate generation.
 
@@ -40,6 +43,7 @@ def collate_awardees(
     for certificate generation, supporting both merit and fast-track categories.
 
     Args:
+        config (Config): Configuration object containing course settings.
         stream (DataStream): Stream containing student data.
         cohort_num (int): The cohort number to collate awardees for.
         collate_type (CollateType): Type of awardees to collate ("merit" or "fast track").
@@ -64,7 +68,7 @@ def collate_awardees(
     end_date = dates_list[-1]
     end_date = fmt_date(end_date)
 
-    course_name = read_course_name()
+    course_name = read_course_name(config)
     if course_name.is_err():
         return course_name.propagate()
     course_name = course_name.unwrap()
@@ -84,12 +88,12 @@ def collate_awardees(
         }
     )
 
-    merit_path = get_merit_path(cohort_num)
+    merit_path = get_merit_path(config, cohort_num)
     if merit_path.is_err():
         return merit_path.propagate()
     merit_path = merit_path.unwrap()
 
-    fast_track_path = get_fast_track_path(cohort_num)
+    fast_track_path = get_fast_track_path(config, cohort_num)
     if fast_track_path.is_err():
         return fast_track_path.propagate()
     fast_track_path = fast_track_path.unwrap()

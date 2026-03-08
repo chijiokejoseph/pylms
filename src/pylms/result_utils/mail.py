@@ -2,25 +2,27 @@ import re
 from email.message import EmailMessage
 from smtplib import SMTP
 
-from ..cli import input_option
-from ..config import read_course_name
-from ..constants import COHORT, EMAIL, GENDER, NAME, REASON, REMARK
+from ..cli import input_bool
+from ..config import Config, read_course_name
+from ..constants import COHORT, COMMA_DELIM, EMAIL, GENDER, NAME, REASON, REMARK
 from ..data import DataStore, DataStream, read
 from ..email import MailError, run_email
 from ..errors import LMSError, Result, Unit, eprint
-from ..paths import get_paths_excel, must_get_env
+from ..info import print_info
+from ..paths import get_paths_excel
 from .find import find_col
 
 type MailResultError = tuple[int, str, str, MailError]
 
 
-def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
+def _send_result(config: Config, ds: DataStore, server: SMTP) -> Result[Unit]:
     """Send individualized result breakdown emails to students.
 
     Reads result data from Excel file, extracts relevant columns for each student,
     formats personalized messages with scores and requirements, and sends emails.
 
     Args:
+        config (Config): Configuration object containing email settings.
         ds (DataStore): DataStore instance containing student data.
         server (SMTP): SMTP server instance for sending emails.
 
@@ -28,10 +30,18 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         Result[Unit]: Success or error with message.
     """
     # Get sender email and course info
-    sender_email = must_get_env("EMAIL")
-    path = get_paths_excel()["Result"]
+    sender_email = config.admin
 
-    course_name = read_course_name()
+    # format the facilitator names to be included in the message
+    names = [f.name.title() for f in config.facilitators]
+    first  = names[:-1]
+    last = names[-1]
+    names_print = COMMA_DELIM.join(first)
+    names_print = f"{names_print} and {last}"
+
+    path = get_paths_excel(config)["Result"]
+
+    course_name = read_course_name(config)
     if course_name.is_err():
         return course_name.propagate()
     course_name = course_name.unwrap()
@@ -207,7 +217,7 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 
 <footer>
   <p>Best regards,</p>
-  <p>Jason and Joseph</p>
+  <p>{names_print}</p>
 </footer>
         """
 
@@ -236,20 +246,19 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
 {msg}
               """
                 email_msg.add_alternative(mod_msg, subtype="html")
-                email1 = must_get_env("FACILITATOR_EMAIL1")
-                email2 = must_get_env("FACILITATOR_EMAIL2")
+                gmails = [f.gmail for f in config.facilitators]
+                gmails_print = COMMA_DELIM.join(gmails)
                 send_err = server.send_message(
-                    email_msg, from_addr=sender_email, to_addrs=[email1, email2]
+                    email_msg, from_addr=sender_email, to_addrs=gmails
                 )
 
-                option = input_option(
-                    ["Yes", "No"],
-                    prompt=f"Please confirm the format of the email as sent to either {email1} or {email2}. Is it okay? ",
+                confirm = input_bool(
+                    prompt=f"Please confirm the format of the email as sent to any of {gmails_print}. Is it okay? ",
                 )
-                if option.is_err():
-                    return option.propagate()
-                option_idx, _ = option.unwrap()
-                if option_idx != 1:
+                if confirm.is_err():
+                    return confirm.propagate()
+                confirm = confirm.unwrap()
+                if not confirm:
                     return Result.err(Exception("Email format not okay"))
 
             send_err = server.send_message(
@@ -262,13 +271,13 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
         if send_err != {}:
             bad_records.append((num, name, email, send_err))
         else:
-            print(
-                f"\nS/N: {num}. Successfully sent email to {name} with email: {email}"
+            print_info(
+                f"S/N: {num}. Successfully sent email to {name} with email: {email}"
             )
 
     # Report any errors
     for num, name, email, send_err in bad_records:
-        print(
+        eprint(
             f"\nS/N: {num}. Error sending email to {name} with email: {email}.\nError encountered: {send_err}"
         )
 
@@ -279,16 +288,17 @@ def _send_result(ds: DataStore, server: SMTP) -> Result[Unit]:
     return Result.unit()
 
 
-def mail_result(ds: DataStore) -> Result[Unit]:
+def mail_result(config: Config, ds: DataStore) -> Result[Unit]:
     """Initiate process of sending result emails to students.
 
     Delegates email sending to utility that manages SMTP connection
     and ensures each student receives individualized result email.
 
     Args:
+        config (Config): Configuration object containing email settings.
         ds (DataStore): DataStore instance containing student data.
 
     Returns:
         Result[Unit]: Success or error from email sending process.
     """
-    return run_email(lambda server: _send_result(ds, server))
+    return run_email(config, lambda server: _send_result(config, ds, server))

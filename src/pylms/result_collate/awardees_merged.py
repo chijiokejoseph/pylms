@@ -1,5 +1,6 @@
 import polars as pl
 
+from ..config import Config
 from ..constants import AWARDEES, COHORT
 from ..data import DataStore, DataStream, read, write
 from ..errors import Result, Unit
@@ -7,25 +8,26 @@ from ..paths import get_fast_track_path, get_merged_path, get_merit_path
 from ..result_utils import val_awardees
 
 
-def collate_merge(ds: DataStore) -> Result[Unit]:
+def collate_merge(config: Config, ds: DataStore) -> Result[Unit]:
     """Merge merit and fast-track awardees into single file.
 
     Combines merit-based and fast-track awardees data, removes duplicates,
     and formats the merged data for final certificate generation.
 
     Args:
+        config (Config): Configuration object with cohort details.
         ds (DataStore): DataStore containing cohort information.
 
     Returns:
         Result[Unit]: Success or error with message.
     """
     cohort_num = ds.as_ref()[0, COHORT]
-    merged_path = get_merged_path(cohort_num)
+    merged_path = get_merged_path(config, cohort_num)
     if merged_path.is_err():
         return merged_path.propagate()
     merged_path = merged_path.unwrap()
 
-    fast_track_path = get_fast_track_path(cohort_num)
+    fast_track_path = get_fast_track_path(config, cohort_num)
     if fast_track_path.is_err():
         return fast_track_path.propagate()
     fast_track_path = fast_track_path.unwrap()
@@ -39,7 +41,7 @@ def collate_merge(ds: DataStore) -> Result[Unit]:
         return fasttrack.propagate()
     fasttrack = fasttrack.unwrap()
 
-    merit_path = get_merit_path(cohort_num)
+    merit_path = get_merit_path(config, cohort_num)
     if merit_path.is_err():
         return merit_path.propagate()
     merit_path = merit_path.unwrap()

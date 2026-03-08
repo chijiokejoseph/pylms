@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from ..constants import RESULT_UPDATE
+from ..config import Config
 from ..data import DataStore, DataStream, read
 from ..errors import Result, Unit, eprint
 from ..paths import get_paths_excel
@@ -11,27 +12,30 @@ from .edit_for_multiple import edit_multiple
 from .select import Select, input_select_type
 
 
-def edit_result(ds: DataStore) -> Result[Unit]:
+def edit_result(config: Config, ds: DataStore) -> Result[Unit]:
     """
     Edit student result records in the result Excel file.
 
-    :param ds: (DataStore) - The DataStore object used for managing and accessing data throughout the operation.
-    :type ds: DataStore
+    This function allows the user to update student result records by adding a new result update column to the result Excel file. 
+    It supports editing all records, multiple records, or a batch of records, depending on the user's selection. 
 
-    :return: (Result[Unit]) - A Result object indicating success or failure of the operation.
-        On success, it contains a Unit value. On failure, it contains an error message.
-    :rtype: Result[Unit]
+    Args:
+        config (Config): The configuration object.
+        ds (DataStore): The data store object.
+
+    Returns:
+        Result[Unit]: A Result object indicating success or failure.
 
     Caught Exceptions:
         - FileNotFoundError: If the result file does not exist (i.e., results have not been generated yet).
         - PermissionError: If there is an error reading the result file, possibly because it is open in another program.
         - ValueError: If there is an error converting the result update number to an integer when determining the next update column.
 
-
-    This function allows the user to update student result records by adding a new result update column to the result Excel file. It supports editing all records, multiple records, or a batch of records, depending on the user's selection. The function ensures that the result file exists, loads the data, determines the next update column, and applies the updates accordingly. The new result update column is added, and the updated data is saved back to the result Excel file.
     """
+    paths = get_paths_excel(config)
+
     # Check if the result file exists
-    result_path: Path = get_paths_excel()["Result"]
+    result_path: Path = paths["Result"]
     # If the result file does not exist, raise an error
     if not result_path.exists():
         msg: str = "Results has not been generated yet. Please collate results before running this operation"
@@ -113,8 +117,8 @@ def edit_result(ds: DataStore) -> Result[Unit]:
             updates_list.extend(updates)
 
     # Reorder columns to place the new result update column correctly
-    unchanged_cols: list[str] = result_cols[: last_col_idx + 1]
-    remaining_cols: list[str] = result_cols[last_col_idx + 1 :]
+    unchanged_cols = result_cols[: last_col_idx + 1]
+    remaining_cols = result_cols[last_col_idx + 1 :]
     # Set the new result update column
     new_col = RESULT_UPDATE + f" {update_num}"
     # Add the new result update column and save the updated data
@@ -122,7 +126,7 @@ def edit_result(ds: DataStore) -> Result[Unit]:
     result_data = result_data[unchanged_cols + [new_col] + remaining_cols]
     result_stream = DataStream(result_data)
 
-    result = result_stream.write(get_paths_excel()["Result"])
+    result = result_stream.write(paths["Result"])
     if result.is_err():
         return result.propagate()
 

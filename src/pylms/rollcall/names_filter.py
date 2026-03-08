@@ -1,10 +1,9 @@
 import polars as pl
 
-from pylms.errors import Result
-
 from ..constants import COMMA_DELIM, DATE, DATE_FMT, NAME, TIME
 from ..data import DataStream
 from ..date import format_date
+from ..errors import Result
 
 
 def _get_time_idx(
@@ -59,13 +58,15 @@ def filter_names(turnout_stream: DataStream) -> Result[DataStream]:
 
     # Get date for which attendance is being marked
     class_date: str = turnout_data[0, DATE]
-    # Get the timestamps
-    timestamps: list[str] = turnout_data[TIME].to_list()
+    # # Get the timestamps
+    # timestamps: list[str] = turnout_data[TIME].to_list()
 
-    idx = _get_time_idx(timestamps, class_date, True)
-    if not any(idx):
-        idx = _get_time_idx(timestamps, class_date, False)
+    # idx = _get_time_idx(timestamps, class_date, True)
+    # if not any(idx):
+    #     idx = _get_time_idx(timestamps, class_date, False)
 
     # Filter data to include only matching dates
-    filtered_data = turnout_data.filter(pl.Series(idx))
+    filtered_data = turnout_data.filter(
+        pl.col(TIME).cast(pl.Datetime).dt.strftime(DATE_FMT) == pl.col(DATE)
+    )
     return Result.ok(DataStream(filtered_data))

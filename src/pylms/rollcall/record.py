@@ -1,3 +1,4 @@
+from pylms.query_dates import search_unmarked
 from ..data import DataStore
 from ..errors import Result, Unit
 from ..form_retrieve import ClassType, retrieve_class_form
@@ -5,27 +6,26 @@ from ..history import (
     History,
     add_marked_class,
     add_recorded_class_form,
-    match_date_index,
-    match_info_by_date,
+    get_class_info,
+    get_date_index,
 )
 from ..info import print_info, printpass
 from .absent import record_absent
 from .excused import record_excused
-from .input_dates import input_class_date
 from .present import record_present
 
 
 def run_record(ds: DataStore, history: History) -> Result[Unit]:
     """Record attendance for selected class dates.
-    
+
     Args:
         ds (DataStore): DataStore containing student data.
         history (History): History object for tracking operations.
-        
+
     Returns:
         Result[Unit]: Success or error message.
     """
-    dates = input_class_date(history)
+    dates = search_unmarked(history)
 
     if dates.is_err():
         return dates.propagate()
@@ -51,7 +51,10 @@ def run_record(ds: DataStore, history: History) -> Result[Unit]:
 
         # Record present students
         if not present_turnout.is_empty():
-            record_present(ds, present_turnout)
+            result = record_present(ds, present_turnout)
+            if result.is_err():
+                continue
+
             print_info(f"Attendance for {each_date} marked successfully")
         else:
             print_info(
@@ -60,7 +63,10 @@ def run_record(ds: DataStore, history: History) -> Result[Unit]:
 
         # Record excused students
         if not excused_turnout.is_empty():
-            record_excused(ds, excused_turnout)
+            result = record_excused(ds, excused_turnout)
+            if result.is_err():
+                continue
+
             print_info(f"Excused List for {each_date} marked successfully")
         else:
             print_info(
@@ -68,12 +74,12 @@ def run_record(ds: DataStore, history: History) -> Result[Unit]:
             )
 
         # Record absent students
-        result = record_absent(ds, present_turnout, each_date)
+        result = record_absent(ds, each_date)
         if result.is_err():
             continue
 
         # Update history with recorded form info
-        info = match_info_by_date(history, each_date)
+        info = get_class_info(history, each_date)
         if info.is_err():
             continue
         info = info.unwrap()
@@ -84,7 +90,7 @@ def run_record(ds: DataStore, history: History) -> Result[Unit]:
 
     # Print summary of recorded attendance
     for date in dates:
-        class_num = match_date_index(history, date).unwrap()
+        class_num = get_date_index(history, date).unwrap()
         printpass(f"Recorded attendance for Class {class_num} held on '{date}'")
 
     return Result.unit()

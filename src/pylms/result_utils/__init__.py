@@ -21,6 +21,8 @@ from .val import (
     val_assessment_in,
     val_attendance_data,
     val_awardees,
+    val_project_data,
+    val_project_in,
     val_result_data,
 )
 from .view import view_result
@@ -48,6 +50,8 @@ __all__ = [
     "val_assessment_data",
     "val_assessment_in",
     "val_attendance_data",
+    "val_project_data",
+    "val_project_in",
     "val_awardees",
     "val_result_data",
     "view_result",

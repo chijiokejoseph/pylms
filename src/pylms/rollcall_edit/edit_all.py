@@ -7,8 +7,8 @@ from ..history import (
     History,
     add_held_class,
     add_marked_class,
+    get_date_index,
     get_unmarked_classes,
-    match_date_index,
 )
 from ..info import print_info, printpass
 from ..record import RecordStatus, retrieve_record
@@ -26,12 +26,11 @@ def _edit_record(ds: DataStore, history: History, each_date: str) -> Result[Unit
     selected_record: RecordStatus = record.unwrap()
 
     data_ref: pl.DataFrame = ds.as_ref()
-    records = data_ref[each_date].astype(str).tolist()
+    records: list[str] = data_ref[each_date].to_list()
     class_record = [retrieve_record(record) for record in records]
     new_class_record = [
         str(_fill(old_record, selected_record)) for old_record in class_record
     ]
-    data_ref[each_date] = data_ref[each_date].astype(str)
     data_ref[each_date] = new_class_record
     return Result.unit()
 
@@ -98,7 +97,7 @@ def edit_all_records(
         if result.is_err():
             return result.propagate()
 
-        class_num = match_date_index(history, date).unwrap()
+        class_num = get_date_index(history, date).unwrap()
         printpass(f"Recorded attendance for Class {class_num} held on '{date}'")
 
     return Result.unit()

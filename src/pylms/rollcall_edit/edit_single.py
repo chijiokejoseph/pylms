@@ -1,14 +1,14 @@
-from ..cli import provide_serials
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
 from ..history import History
+from ..query_data import run_query_data
 from .edit_utils import edit_single_serial
 
 
 def edit_single_record(
     ds: DataStore, history: History, dates: list[str]
 ) -> Result[Unit]:
-    serials = provide_serials(ds)
+    serials = run_query_data(ds)
     if serials.is_err():
         return serials.propagate()
     serials = serials.unwrap()

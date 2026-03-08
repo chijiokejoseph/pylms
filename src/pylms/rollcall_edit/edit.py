@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import polars as pl
+
 from ..constants import TIMESTAMP_FMT
 from ..data import DataStore
 from ..errors import Result, Unit
@@ -11,11 +13,11 @@ from ..history import (
     get_unmarked_classes,
 )
 from ..models import ClassFormInfo
+from ..query_dates import run_query_dates
 from .edit_all import edit_all_records
 from .edit_multiple import edit_multiple_records
 from .edit_single import edit_single_record
 from .edit_type import EditType, input_edit_type
-from .input_dates import input_date_for_edit
 
 
 def edit_record(ds: DataStore, history: History) -> Result[Unit]:
@@ -25,7 +27,7 @@ def edit_record(ds: DataStore, history: History) -> Result[Unit]:
 
     edit_type = edit_type.unwrap()
 
-    edit_dates = input_date_for_edit(history)
+    edit_dates = run_query_dates(history)
     if edit_dates.is_err():
         return edit_dates.propagate()
 
@@ -52,10 +54,11 @@ def edit_record(ds: DataStore, history: History) -> Result[Unit]:
 
     data = ds.as_ref()
 
-    for date in edited_dates_to_mark:
-        data[date] = data[date].astype(str)
-        data.loc[:, date] = data[date].replace("nan", "Absent")  # pyright: ignore[reportUnknownMemberType]
+    data = data.with_columns(
+        [pl.col(date).cast(pl.String) for date in edited_dates_to_mark]
+    )
 
+    for date in edited_dates_to_mark:
         result = add_held_class(history, date)
         if result.is_err():
             return result.propagate()
