@@ -4,7 +4,7 @@ import numpy as np
 import polars as pl
 from dateutil.parser import ParserError, parse
 
-from ..cli import input_bool, input_option, input_str, provide_serials
+from ..cli import input_bool, input_option, input_str
 from ..cli_utils import verify_email
 from ..constants import (
     COHORT,
@@ -26,6 +26,7 @@ from ..constants import (
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
 from ..info import print_info
+from ..query_data import run_query_data
 from ..re_phone import match_and_clean
 
 type Array[K: np.generic] = np.ndarray[tuple[int, ...], np.dtype[K]]
@@ -33,11 +34,11 @@ type Array[K: np.generic] = np.ndarray[tuple[int, ...], np.dtype[K]]
 
 def _preprocess(col_name: str, value: str) -> Any | None:
     """Preprocess and validate input value for a given column.
-    
+
     Args:
         col_name (str): Column name to preprocess for.
         value (str): Input value to preprocess and validate.
-        
+
     Returns:
         Any | None: Processed value if valid, None otherwise.
     """
@@ -125,19 +126,19 @@ def _preprocess(col_name: str, value: str) -> Any | None:
 
 def edit(ds: DataStore) -> Result[Unit]:
     """Edit records for selected students in the DataStore.
-    
+
     Prompts user to select students, choose attributes to edit, and enter new values.
     Validates input and updates the DataStore with confirmed changes.
-    
+
     Args:
         ds (DataStore): DataStore containing student records to edit.
-        
+
     Returns:
         Result[Unit]: Success or error message.
     """
     print_info("Please select the students whose records you wish to edit")
 
-    serials = provide_serials(ds)
+    serials = run_query_data(ds)
     if serials.is_err():
         return serials.propagate()
 
@@ -203,4 +204,3 @@ def edit(ds: DataStore) -> Result[Unit]:
         print()
 
     return ds.copy_from(data_ref)
-

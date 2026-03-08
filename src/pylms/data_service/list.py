@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from ..config import Config
 from ..constants import COHORT, DATA_COLUMNS
 from ..data import DataStore, write
 from ..errors import Result, Unit
@@ -7,12 +8,13 @@ from ..info import printpass
 from ..paths import get_list_path
 
 
-def list_ds(ds: DataStore) -> Result[Unit]:
+def list_ds(config: Config, ds: DataStore) -> Result[Unit]:
     """Export DataStore to file for listing students.
-    
+
     Args:
-        ds (DataStore): DataStore containing student data.
-        
+        config: Application configuration.
+        ds: DataStore containing student data.
+
     Returns:
         Result[Unit]: Success or error message.
     """
@@ -20,7 +22,7 @@ def list_ds(ds: DataStore) -> Result[Unit]:
     cohort: int = pretty[0, COHORT]
     records = pretty[DATA_COLUMNS]
 
-    save_path: Path = get_list_path(cohort)
+    save_path: Path = get_list_path(config, cohort)
 
     result = write(records, save_path)
     if result.is_err():
