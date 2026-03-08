@@ -92,8 +92,8 @@ def clean_date(
             bool: True when `str_input` matches the `dd/mm/yyyy` pattern and
                 represents a date on or after `test_date`.
         """
-        pattern: re.Pattern[str] = re.compile(r"\d{2}/\d{2}/\d{4}")
-        matches: re.Match[str] | None = pattern.match(str_input)
+        pattern = re.compile(r"\d{2}/\d{2}/\d{4}")
+        matches = pattern.match(str_input)
         if matches is None:
             diagnosis_map["result"] = bad_pattern_msg
             return False

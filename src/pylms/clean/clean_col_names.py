@@ -2,7 +2,8 @@ import re
 
 import polars as pl
 
-from pylms.constants import COMPLETION, DATA_COLUMNS
+from ..constants import COMPLETION, DATA_COLUMNS
+
 
 def preprocess_col(col: str) -> str:
     """Normalize a single column name.
@@ -23,6 +24,7 @@ def preprocess_col(col: str) -> str:
             return COMPLETION
         case _:
             return col.strip().title()
+
 
 def clean_col_names(data: pl.DataFrame) -> pl.DataFrame:
     """Clean and normalize column names in a pl.DataFrame.
@@ -46,8 +48,8 @@ def clean_col_names(data: pl.DataFrame) -> pl.DataFrame:
     for old_column in data.columns:
         new_column: str = old_column.strip().title()
 
-        regex_nysc: re.Pattern[str] = re.compile(r"nysc", flags=re.IGNORECASE)
-        regex_siwes: re.Pattern[str] = re.compile(r"siwes", flags=re.IGNORECASE)
+        regex_nysc = re.compile(r"nysc", flags=re.IGNORECASE)
+        regex_siwes = re.compile(r"siwes", flags=re.IGNORECASE)
 
         matches_nysc: list[str] = re.findall(regex_nysc, new_column)
         matches_siwes: list[str] = re.findall(regex_siwes, new_column)

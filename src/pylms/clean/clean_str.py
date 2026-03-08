@@ -1,34 +1,11 @@
-from typing import Any
-
-import numpy as np
 import polars as pl
-
-from pylms.data import datamap
 
 from ..constants import NA
 
 
-def str_conv(entry: Any, default: str) -> str:
-    """convert entry to python strings
-
-    Args:
-        entry (Any): any value
-        default (str): the default to use in the hypothetical 
-            case that string converstion fails
-
-    Returns:
-        str: string form of `entry` or default if the string
-            conversion should actually fail
-    """
-    try:
-        return str(entry)
-    except ValueError:
-        return default
-
-
 def clean_str(
     data: pl.DataFrame,
-    target_cols: str | list[str],
+    target: str | list[str],
     fill: str = NA,
 ) -> pl.DataFrame:
     """Ensure specified DataFrame columns contain string values.
@@ -41,7 +18,7 @@ def clean_str(
     Args:
         data (pl.DataFrame): The
             DataFrame to process.
-        target_cols (str | list[str]): Column name or list of column names to
+        target (str | list[str]): Column name or list of column names to
             normalize to strings.
         fill (str): String used to replace elements that cannot be converted.
 
@@ -49,15 +26,9 @@ def clean_str(
         None
     """
 
-    def _clean_str(entry: Any):
-        return str_conv(entry, fill)
-
-    if isinstance(target_cols, str):
-        data = datamap(
-            data, target_cols, np.vectorize(_clean_str), np.str_, pl.String()
-        )
-    else:
-        for col in target_cols:
-            data = datamap(data, col, np.vectorize(_clean_str), np.str_, pl.String())
+    target = [target] if isinstance(target, str) else target
+    data = data.with_columns(
+        [pl.col(col).cast(pl.String).fill_null(fill).alias(col) for col in target]
+    )
 
     return data

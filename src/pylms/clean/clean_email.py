@@ -17,13 +17,5 @@ def clean_email(data: pl.DataFrame) -> pl.DataFrame:
         pl.DataFrame: The processed DataFrame
     """
 
-    # email: np.ndarray = data[EMAIL].to_numpy()
-    # email = apply(email)
-    # email = np.array(email, dtype=np.str_)
-
-    # data = data.with_columns(
-    #     pl.Series(EMAIL, email, dtype=pl.String)
-    # )
-
     data = data.with_columns(pl.col(EMAIL).str.to_lowercase().str.strip_chars())
     return data

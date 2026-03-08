@@ -1,6 +1,7 @@
 import polars as pl
 
 from ..cli import input_option
+from ..config import Config
 from ..constants import COMMA_DELIM, WEEK_DAYS
 from ..data import DataStore
 from ..errors import Result, Unit
@@ -45,7 +46,7 @@ def input_class_days() -> Result[list[str]]:
     return Result.ok(days)
 
 
-def normalize(ds: DataStore, history: History) -> Result[Unit]:
+def normalize(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     """Normalize stateful settings and prepare weekly data files.
 
     Orchestrates a sequence of interactive and persistence operations used to
@@ -62,6 +63,7 @@ def normalize(ds: DataStore, history: History) -> Result[Unit]:
     Each step propagates any error `Result` returned by the underlying calls.
 
     Args:
+        config (Config): The application configuration object.
         ds (DataStore): The DataStore to prepare and write weekly files for.
         history (History): History object to update with class days and cohort.
 
@@ -81,7 +83,7 @@ def normalize(ds: DataStore, history: History) -> Result[Unit]:
     if result.is_err():
         return result.propagate()
 
-    result = save_history(history)
+    result = save_history(config, history)
     if result.is_err():
         return result.propagate()
 

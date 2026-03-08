@@ -1,8 +1,7 @@
-import numpy as np
 import polars as pl
 
-from ..constants import ARABIC_APOSTROPHE, COMMA_DELIM, NAME, SPACE_DELIM
-from ..data import datamap
+from ..constants import NAME
+from .rclean import clean_names
 
 
 def clean_name(data: pl.DataFrame) -> pl.DataFrame:
@@ -24,37 +23,5 @@ def clean_name(data: pl.DataFrame) -> pl.DataFrame:
     # data = data.with_columns(
     #     pl.Series(NAME, data, dtype=pl.String)
     # )
-    data = datamap(data, NAME, _clean_name, np.str_, pl.String())
+    data = data.with_columns(pl.col(NAME).map_batches(clean_names))
     return data
-
-
-@np.vectorize
-def _clean_name(entry: str) -> str:
-    """Normalize an individual's name string.
-
-    If the entry contains no commas, whitespace-separated tokens are joined
-    with the `COMMA_DELIM`. The result is then converted to title case.
-
-    Args:
-        entry (str): The input name string.
-
-    Returns:
-        str: The formatted name string.
-    """
-    entry = entry.strip()
-    if entry.find(COMMA_DELIM) == -1:
-        delim = SPACE_DELIM
-    else:
-        delim = COMMA_DELIM
-
-    entries = entry.split(delim)
-    entries = [entry.strip().title() for entry in entries]
-    entry = COMMA_DELIM.join(entries)
-
-    idx = entry.find(ARABIC_APOSTROPHE)
-
-    if idx != -1:
-        seq = entry[idx : idx + 2]
-        entry = entry.replace(seq, seq.lower())
-
-    return entry

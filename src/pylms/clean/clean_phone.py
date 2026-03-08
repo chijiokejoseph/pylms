@@ -1,7 +1,6 @@
-import numpy as np
 import polars as pl
 
-from pylms.data import DataStream, datamap
+from pylms.data import DataStream
 
 from ..constants import PHONE
 from ..errors import Result
@@ -45,25 +44,15 @@ def clean_phone(data: pl.DataFrame) -> Result[pl.DataFrame]:
         if not test1:
             return False, f"Column '{PHONE}' is missing"
 
-        # Test if `test_data` does not contain any missing values
-        test2: bool = test_data[PHONE].is_null().any()
-        if test2:
-            return False, f"Column '{PHONE}' contains missing values"
-
-        @np.vectorize
-        def is_str(data: object) -> bool:
-            return isinstance(data, str)
-
-        # Test that `test_data` only contains values of type `str`
-        test3 = datamap(data[PHONE], PHONE, is_str, np.bool_, pl.Boolean()).all()
-        if not test3:
-            return True, f"Column '{PHONE} contains non-string values"
-
         return True, ""
 
     result = DataStream.verify(data, validate_data)
     if result.is_err():
         return result.propagate()
 
-    data = datamap(data, PHONE, np.vectorize(match_and_clean), np.str_, pl.String())
+    data = data.with_columns(
+        pl.col(PHONE)
+        .cast(pl.String)
+        .map_elements(match_and_clean, return_dtype=pl.String)
+    )
     return Result.ok(data)
