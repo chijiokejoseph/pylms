@@ -3,6 +3,7 @@ from pathlib import Path
 import polars as pl
 
 from ..cli import input_bool, input_num
+from ..config import Config
 from ..constants import GROUP, NAME, SERIAL
 from ..data import DataStore, write
 from ..errors import Result, Unit, eprint
@@ -11,14 +12,14 @@ from ..info import print_info
 from ..paths import get_group_dir, get_group_path
 
 
-def group(ds: DataStore, history: History) -> Result[Unit]:
+def group(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     if len(history.recorded_update_forms) < len(history.update_forms):
         msg = "You need to record all of the update forms you created for the cohort before grouping students\n"
         eprint(msg)
         return Result.err(msg)
 
-    groups_path: Path = get_group_path()
-    group_dir: Path = get_group_dir()
+    groups_path: Path = get_group_path(config)
+    group_dir: Path = get_group_dir(config)
     if groups_path.exists():
         print_info(
             f"You have already grouped students. \nPlease check the path {groups_path.resolve()} for the previous grouping operation you performed."
@@ -57,10 +58,10 @@ def group(ds: DataStore, history: History) -> Result[Unit]:
 
     for group in range(1, num_groups + 1):
         group_df = groups_df.filter(pl.col(GROUP) == group)
-        group_path: Path = get_group_path(group)
+        group_path: Path = get_group_path(config, group)
 
         result = write(group_df, group_path)
         if result.is_err():
             return result.propagate()
 
-    return set_group(history, num_groups)
+    return set_group(config, history, num_groups)
