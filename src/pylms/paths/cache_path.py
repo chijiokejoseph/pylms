@@ -1,11 +1,15 @@
 from pathlib import Path
 from uuid import UUID
 
-from .path_fns import get_cache_path, get_data_path
+from ..constants import DATA_PATH
+
+
+def get_cache_path() -> Path:
+    return DATA_PATH / ".cache"
 
 
 def get_snapshot_path(snapshot_id: UUID) -> Path:
-    return get_data_path() / ".cache" / f"Snapshot{snapshot_id}"
+    return get_cache_path() / f"Snapshot{snapshot_id}"
 
 
 def get_metadata_path() -> Path:
