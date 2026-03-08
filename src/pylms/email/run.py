@@ -1,26 +1,28 @@
 from smtplib import SMTP, SMTP_SSL, SMTPException
 from typing import Callable
 
+from ..config import Config
 from ..errors import Result, Unit
-from ..paths import must_get_env
+
 
 # Define the type for a mail error
 type MailError = dict[str, tuple[int, bytes]]
 
 
-def run_email(mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
+def run_email(config: Config, mail_fn: Callable[[SMTP], Result[Unit]]) -> Result[Unit]:
     """Establish SMTP connection, authenticate, execute mail function, and close connection.
-    
+
     Args:
+        config (Config): Configuration object containing admin email and password.
         mail_fn (Callable[[SMTP], Result[Unit]]): Function that performs email operations
             using the authenticated SMTP object.
-            
+
     Returns:
         Result[Unit]: Success or error message from email operation.
     """
     # Retrieve email credentials from environment variables
-    email: str = must_get_env("EMAIL")
-    password: str = must_get_env("PASSWORD")
+    email: str = config.admin
+    password: str = config.get_password()
 
     server: SMTP | None = None
     try:
