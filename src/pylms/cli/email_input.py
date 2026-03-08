@@ -1,32 +1,35 @@
-from ..cli_utils import verify_email
+from ..cli_utils import verify_email, verify_gmail
 from ..errors import Result
 from ..info import print_info
 from .custom_inputs import input_str
 
 
 def input_email(
-    msg: str, diagnosis: str = "Email entered is not a valid email address"
+    msg: str,
+    diagnosis: str | None = None,
+    gmail: bool = True,
 ) -> Result[str]:
     """Prompt the user to enter and validate an email address.
 
-    This function wraps `input_str` supplying the `validate_email` validator to
-    prompt the user for an email address (a Gmail address is expected by the
-    validator). If the user input validates, the validated email is returned
-    inside `Result.ok`. If the interactive prompt returns an error, that
-    error `Result` is propagated.
-
     Args:
-        msg (str): The prompt message shown to the user.
-        diagnosis (str): Optional diagnosis message shown when validation
-            fails. Defaults to "Email entered is not a valid email address".
+        msg: The prompt message shown to the user.
+        diagnosis: Diagnosis message shown when validation fails.
+        gmail: If True, validates Gmail addresses only. If False, validates any email format.
 
     Returns:
-        Result[str]: `Result.ok` containing the validated email on success, or
-            an error `Result` propagated from the input helper on failure.
+        Result[str]: Result.ok containing the validated email on success, or error Result on failure.
     """
-    result: Result[str] = input_str(msg, verify_email, diagnosis)
+    # Use Gmail validator if gmail=True, otherwise use general email validator
+    validator = verify_gmail if gmail else verify_email
+
+    if diagnosis is None:
+        keyword = "gmail" if gmail else "email"
+        diagnosis = f"Email entered is not a valid {keyword} address"
+    
+    result: Result[str] = input_str(msg, validator, diagnosis)
     if result.is_err():
         return result.propagate()
+    
     chosen_email: str = result.unwrap()
     print_info(f"Email entered: {chosen_email} has been validated. You may proceed\n")
     return Result.ok(chosen_email)
