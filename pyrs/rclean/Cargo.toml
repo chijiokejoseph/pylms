@@ -1,0 +1,17 @@
+[package]
+name = "rclean"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "rclean"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = {version = "0.27", features = ["extension-module", "chrono"]}
+chrono = {version = "0.4.41", features = ["default", "std"] }
+polars = {version = "0.53.0", features = ["lazy"]}
+pyo3-polars = "0.26.0"
+rlib = {path = "../rlib"}
+
+
