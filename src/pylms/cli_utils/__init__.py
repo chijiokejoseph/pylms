@@ -14,17 +14,23 @@ Exports are chosen to provide a compact API for CLI modules:
 """
 
 from .class_dates import parse_class_dates
-from .class_nums import parse_class_nums
-from .class_parser import parse_classes
 from .class_verify import verify_class
 from .colors import emphasis
 from .email_verify import verify_email
+from .gmail_verify import verify_gmail
+from .month_parser import parse_month, parse_single_month
+from .name_verify import verify_name
+from .nums import parse_nums, verify_nums
 
 __all__ = [
     "parse_class_dates",
-    "parse_class_nums",
-    "parse_classes",
+    "parse_nums",
+    "verify_nums",
     "verify_class",
     "verify_email",
+    "verify_gmail",
+    "verify_name",
     "emphasis",
+    "parse_month",
+    "parse_single_month",
 ]

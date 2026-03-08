@@ -20,36 +20,38 @@ def verify_class(entry: str) -> bool:
         bool: True if `entry` matches an accepted date-selection format,
             False otherwise.
     """
-
-    # normalize the entry by stripping and lowercasing it
     entry = entry.strip().lower()
-    match str(entry):
-        # matches "1", "12", "13", etc.,
-        case _ if re.fullmatch(r"^\d{1,2}$", entry):
-            return True
-        # matches "1, 2, 3," ; "12, 1, 2"
-        case _ if re.fullmatch(r"^(\d{1,2},\s)+\d{1,2}(?:,|\b)$", entry):
-            return True
-        # matches "12/11/2023", "09/03/2004"
-        case _ if re.fullmatch(r"^\d{2}/\d{2}/\d{4}$", entry):
-            return True
-        # matches "12/11/2023, 01/05/2024"; "14/09/2007, 13/02/2014,"
-        case _ if re.fullmatch(
-            r"^(\d{2}/\d{2}/\d{4},\s)+\d{2}/\d{2}/\d{4}(?:,|\b)$", entry
-        ):
-            return True
-        # matches "1-5", "1, 2-5"
-        case _ if (
-            re.fullmatch(
-                r"^\s*((\d+\s*-\s*\d+\s*)|(\d+\s*))((,\s*\d+\s*-\s*\d+\s*)|(,\s*\d+\s*))*(?:,|\b)$",
-                entry,
-            )
-            is not None
-        ):
-            return True
-        # matches valid date input "all"
-        case "all":
-            return True
-        # no match
-        case _:
-            return False
+
+    if entry == "all":
+        return True
+
+    # Single or double digit number
+    if re.fullmatch(r"\d{1,2}", entry):
+        return True
+
+    # Date format dd/mm/yyyy
+    if re.fullmatch(r"\d{2}/\d{2}/\d{4}", entry):
+        return True
+
+    # Check for valid characters (digits, spaces, commas, hyphens, slashes)
+    if not re.fullmatch(r"[\d\s,/-]+", entry):
+        return False
+
+    # Comma-separated list
+    if "," in entry:
+        parts = [p.strip() for p in entry.split(",") if p.strip()]
+        for part in parts:
+            # Each part should be a number, range, or date
+            if not (
+                re.fullmatch(r"\d{1,2}", part)
+                or re.fullmatch(r"\d+-\d+", part)
+                or re.fullmatch(r"\d{2}/\d{2}/\d{4}", part)
+            ):
+                return False
+        return True
+
+    # Range format
+    if re.fullmatch(r"\d+-\d+", entry):
+        return True
+
+    return False

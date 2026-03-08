@@ -1,6 +1,6 @@
 import unittest
 
-from .class_nums import parse_class_nums
+from .nums import parse_nums
 
 
 class TestParseClassNum(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestParseClassNum(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_class_nums("12").unwrap(), [12])
+        self.assertEqual(parse_nums("12").unwrap(), [12])
 
     def test_multiple_ints(self) -> None:
         """Parse multiple comma-separated integers.
@@ -30,7 +30,7 @@ class TestParseClassNum(unittest.TestCase):
             None
         """
         self.assertEqual(
-            parse_class_nums("1, 3, 5").unwrap(),
+            parse_nums("1, 3, 5").unwrap(),
             [1, 3, 5],
         )
 
@@ -43,7 +43,7 @@ class TestParseClassNum(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_class_nums("1 - 6, 8").unwrap(), [1, 2, 3, 4, 5, 6, 8])
+        self.assertEqual(parse_nums("1 - 6, 8").unwrap(), [1, 2, 3, 4, 5, 6, 8])
 
     def test_invalid_input(self) -> None:
         """Handle completely invalid input gracefully.
@@ -54,7 +54,7 @@ class TestParseClassNum(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_class_nums("invalid date").unwrap(), [])
+        self.assertEqual(parse_nums("invalid date").unwrap(), [])
 
     def test_malformed_string(self) -> None:
         """Handle malformed numeric strings.
@@ -65,7 +65,7 @@ class TestParseClassNum(unittest.TestCase):
         Returns:
             None
         """
-        self.assertEqual(parse_class_nums("1 -* 52").unwrap(), [])
+        self.assertEqual(parse_nums("1 -* 52").unwrap(), [])
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import re
 
-from ..constants import COMMA_DELIM
+from ..constants import COMMA
 
 
 def parse_class_dates(entry: str) -> list[str]:
@@ -19,27 +19,18 @@ def parse_class_dates(entry: str) -> list[str]:
         list[str]: Parsed date strings. Returns an empty list when the input
             does not match the supported formats.
     """
-    match entry:
-        # matches a single date string like "12/11/2030" or "09/03/2004"
-        case _ if re.fullmatch(r"^\d{2}/\d{2}/\d{4}$", entry):
-            return [entry]
-
-        # matches multiple date strings separated by commas, e.g. "12/11/2023, 01/05/1019"
-        case _ if re.fullmatch(
-            r"^(\d{2}/\d{2}/\d{4},\s)+\d{2}/\d{2}/\d{4}(?:,|\b)$", entry
-        ):
-            # Remove any trailing commas
-            entry = entry.removesuffix(",")
-
-            # Split the entry by commas (not including spaces)
-            choices_str = entry.split(COMMA_DELIM.strip())
-
-            # Strip whitespace from each date string
-            choices_str = [char_seq.strip() for char_seq in choices_str]
-
-            # Return the list of cleaned date strings
-            return [choice_str for choice_str in choices_str]
-
-        # If input does not match expected formats, return empty list
-        case _:
-            return []
+    entry = entry.strip()
+    
+    # Single date
+    if re.fullmatch(r"\d{2}/\d{2}/\d{4}", entry):
+        return [entry]
+    
+    # Comma-separated dates
+    if COMMA in entry:
+        entry = entry.rstrip(",")
+        parts = [p.strip() for p in entry.split(",") if p.strip() != ""]
+        # Validate all parts are dates
+        if all(re.fullmatch(r"\d{2}/\d{2}/\d{4}", p) for p in parts):
+            return parts
+    
+    return []
