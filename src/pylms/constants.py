@@ -2,16 +2,27 @@ from datetime import datetime
 from pathlib import Path
 from typing import TypedDict
 
-PARENT_PATH: Path = Path(__file__).resolve().parents[2]
-ENV_PATH: Path = PARENT_PATH / ".env"
-DEFAULT_DATA_PATH: Path = PARENT_PATH / "data"
-STATE_PATH: Path = DEFAULT_DATA_PATH / "state.toml"
-SECRETS_PATH: Path = PARENT_PATH / "secrets.json"
-HISTORY_PATH: Path = DEFAULT_DATA_PATH / "history.json"
-HISTORY_JSON: str = "history.json"
+# Code Directory Storage
+PARENT_PATH = Path(__file__).resolve().parents[2]
+PARENT_DATA_PATH = PARENT_PATH / "data"
+ENV_PATH = PARENT_PATH / ".env"
+STATE_PATH = PARENT_DATA_PATH / "state.toml"
+SECRETS_PATH = PARENT_PATH / "secrets.json"
+
+# Home Directory Storage
+HOME = Path.home() / ".pylms"
+DATA_PATH = HOME / "data"
+HISTORY_PATH = DATA_PATH / "history.json"
+HISTORY_JSON = "history.json"
+CONFIG_PATH = DATA_PATH / "config.json"
+CONFIG_JSON = "config.json"
+
+
 # RollCall Global Data
-GLOBAL_RECORD_PATH: Path = DEFAULT_DATA_PATH / "global_record.json"
-GLOBAL_RECORD_JSON: str = "global_record.json"
+GLOBAL_RECORD_PATH = DATA_PATH / "global_record.json"
+GLOBAL_RECORD_JSON = "global_record.json"
+
+
 DISCOVERY_DOC = "https://forms.googleapis.com/$discovery/rest?version=v1"
 SCOPES = "https://www.googleapis.com/auth/forms.body"
 
@@ -238,6 +249,21 @@ COURSES_REGISTERED = "Select the course(s) you registered for"
 
 WEEK_DAY_FMT: str = "%A"
 MONTH_STR_FMT: str = "%B"
+
+MONTHS: list[str] = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
 
 
 ############################################################################
