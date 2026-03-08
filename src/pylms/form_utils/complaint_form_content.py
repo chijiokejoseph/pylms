@@ -1,8 +1,6 @@
 from collections.abc import Generator
 from datetime import datetime
 
-from pylms.data import DataStore
-
 from ..constants import (
     COHORT,
     CONFIRM_REG,
@@ -26,6 +24,7 @@ from ..constants import (
     REASON,
     WEEK_DAY_FMT,
 )
+from ..data import DataStore
 from ..models import (
     ChoiceQuestion,
     Content,
@@ -43,10 +42,10 @@ from ..models import (
 
 def new_complaint_form(ds: DataStore) -> ContentBody:
     """Create content body for complaint form with student information fields.
-    
+
     Args:
         ds (DataStore): DataStore containing cohort and orientation date information.
-        
+
     Returns:
         ContentBody: Form content with complaint form fields.
     """
