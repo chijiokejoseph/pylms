@@ -1,12 +1,13 @@
 from email.message import EmailMessage
 from smtplib import SMTP
 
+from pylms.config import Config
+
 from ..cli import provide_emails
 from ..email import MailError, run_email
 from ..errors import Result, Unit
 from ..history import History
 from ..info import print_info, printpass
-from ..paths import must_get_env
 from .message_record import MessageRecord
 from .select_msg_builders import (
     build_custom_select_msg,
@@ -15,12 +16,15 @@ from .select_msg_builders import (
 from .utils import MessageBuilder, TextBody
 
 
-def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]]:
+def _build_select_message(
+    config: Config, builder: MessageBuilder
+) -> Result[list[MessageRecord]]:
     """Build message records for selected email recipients.
-    
+
     Args:
+        config (Config): Configuration object containing admin email address.
         builder (MessageBuilder): Function to build message content.
-        
+
     Returns:
         Result[list[MessageRecord]]: Success with message records or error.
     """
@@ -35,7 +39,7 @@ def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]
     messages: list[MessageRecord] = []
 
     # Retrieve the sender's email address from environment variables
-    sender: str = must_get_env("EMAIL")
+    sender: str = config.admin
 
     # Construct the HTML body of the email with styling and content
     text_body = builder()
@@ -62,13 +66,16 @@ def _build_select_message(builder: MessageBuilder) -> Result[list[MessageRecord]
     return Result.ok(messages)
 
 
-def message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]:
+def message_select_emails(
+    server: SMTP, config: Config, builder: MessageBuilder
+) -> Result[Unit]:
     """Send emails to selected recipients using SMTP server.
-    
+
     Args:
         server (SMTP): SMTP server instance for sending emails.
+        config (Config): Configuration object containing admin email address.
         builder (MessageBuilder): Function to build message content.
-        
+
     Returns:
         Result[Unit]: Success or error from email sending operation.
     """
@@ -76,10 +83,10 @@ def message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]
 
     errors: list[MailError] = []
     # retrieve the sender email from the environment
-    sender: str = must_get_env("EMAIL")
+    sender: str = config.admin
 
     # get the messages to be sent by calling the passed in builder
-    result = _build_select_message(builder)
+    result = _build_select_message(config, builder)
     if result.is_err():
         # handle errors that occur during the building process
         return result.propagate()
@@ -144,33 +151,40 @@ def message_select_emails(server: SMTP, builder: MessageBuilder) -> Result[Unit]
     return Result.unit()
 
 
-def custom_message_select() -> Result[Unit]:
+def custom_message_select(config: Config) -> Result[Unit]:
     """Send custom message to selected email addresses.
-    
+
     Manages SMTP connection and delegates email sending to helper function.
     Message content is generated from user input.
-    
+
+    Args:
+        config (Config): Configuration object containing admin email address.
+
     Returns:
         Result[Unit]: Success or error from email sending operation.
     """
     # Invoke the helper utility to send emails to user-provided email addresses
     return run_email(
-        lambda service: message_select_emails(service, build_custom_select_msg)
+        config,
+        lambda service: message_select_emails(service, config, build_custom_select_msg),
     )
 
 
-def update_message_select(history: History) -> Result[Unit]:
+def update_message_select(config: Config, history: History) -> Result[Unit]:
     """Send update message to selected email addresses.
-    
+
     Args:
+        config (Config): Configuration object containing email settings.
         history (History): History object for building update message.
-        
+
     Returns:
         Result[Unit]: Success or error from email sending operation.
     """
+
     def _builder_intermediary() -> Result[TextBody]:
         return build_update_msg(history)
 
     return run_email(
-        lambda server: message_select_emails(server, _builder_intermediary)
+        config,
+        lambda server: message_select_emails(server, config, _builder_intermediary),
     )

@@ -5,11 +5,12 @@ from ..errors import Result
 
 class TextBody(NamedTuple):
     """Text body container for email messages.
-    
+
     Attributes:
         title (str): Email title/subject.
         body (str): Email body content.
     """
+
     title: str
     body: str
 

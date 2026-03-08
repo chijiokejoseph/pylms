@@ -1,12 +1,12 @@
 from email.message import EmailMessage
 from smtplib import SMTP
 
+from ..config import Config
 from ..constants import COMMA_DELIM, EMAIL, GENDER, NAME, SPACE_DELIM
 from ..data import DataStore
 from ..email import MailError, run_email
 from ..errors import Result, Unit
 from ..history import History
-from ..paths import must_get_env
 from .all_msg_builders import (
     build_assessment_all_msg,
     build_custom_all_msg,
@@ -45,11 +45,12 @@ def _construct_html_message(
 
 
 def _build_all_message(
-    ds: DataStore, builder: MessageBuilder
+    config: Config, ds: DataStore, builder: MessageBuilder
 ) -> Result[list[MessageRecord]]:
     """Build personalized email messages for each student in DataStore.
 
     Args:
+        config (Config): Configuration object containing admin email address.
         ds (DataStore): DataStore containing student data.
         builder (MessageBuilder): Builder function to create message content.
 
@@ -62,7 +63,7 @@ def _build_all_message(
     messages: list[MessageRecord] = []
 
     # Get sender email from environment
-    sender: str = must_get_env("EMAIL")
+    sender: str = config.admin
 
     result: Result[TextBody] = builder()
     if result.is_err():
@@ -102,12 +103,13 @@ def _build_all_message(
 
 
 def _message_all_emails(
-    server: SMTP, ds: DataStore, builder: MessageBuilder
+    server: SMTP, config: Config, ds: DataStore, builder: MessageBuilder
 ) -> Result[Unit]:
     """Send personalized emails to all students using SMTP server.
 
     Args:
         server (SMTP): SMTP server instance for sending emails.
+        config (Config): Configuration object containing admin email address.
         ds (DataStore): DataStore containing student data.
         builder (MessageBuilder): Function to build message content.
 
@@ -116,10 +118,10 @@ def _message_all_emails(
     """
     # Initialize error collection
     errors: list[MailError] = []
-    sender: str = must_get_env("EMAIL")
+    sender: str = config.admin
 
     # Build messages for all students
-    result: Result[list[MessageRecord]] = _build_all_message(ds, builder)
+    result: Result[list[MessageRecord]] = _build_all_message(config, ds, builder)
     if result.is_err():
         return result.propagate()
 
@@ -167,31 +169,37 @@ def _message_all_emails(
     return Result.unit()
 
 
-def custom_message_all(ds: DataStore) -> Result[Unit]:
+def custom_message_all(config: Config, ds: DataStore) -> Result[Unit]:
     """Send custom message to all email addresses in DataStore.
 
     Initiates process of sending personalized messages to all recipients in the DataStore.
     Uses managed SMTP session to ensure proper connection handling.
 
     Args:
+        config (Config): Configuration object containing admin email address.
         ds (DataStore): DataStore containing recipient information with gender, name, and email columns.
 
     Returns:
         Result[Unit]: Success or error from email sending operation.
     """
     return run_email(
+        config,
         lambda service: _message_all_emails(
             service,
+            config,
             ds,
             build_custom_all_msg,
-        )
+        ),
     )
 
 
-def assessment_message_all(ds: DataStore, history: History) -> Result[Unit]:
+def assessment_message_all(
+    config: Config, ds: DataStore, history: History
+) -> Result[Unit]:
     """Send assessment message to all students.
 
     Args:
+        config (Config): Configuration object containing admin email address.
         ds (DataStore): DataStore containing student data.
         history (History): History object for building assessment message.
 
@@ -203,5 +211,6 @@ def assessment_message_all(ds: DataStore, history: History) -> Result[Unit]:
         return build_assessment_all_msg(history)
 
     return run_email(
-        lambda service: _message_all_emails(service, ds, _builder_intermediary)
+        config,
+        lambda service: _message_all_emails(service, config, ds, _builder_intermediary),
     )
