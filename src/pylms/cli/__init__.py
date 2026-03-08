@@ -15,30 +15,34 @@ Exports:
 - input_path, test_path_in: Functions to input and test paths.
 - input_record: Function to input records.
 - provide_emails: Function to provide email addresses in various formats.
+- query_emails: Query-based email input with automatic type detection.
+- interactive_email_input: Interactive menu-based email input.
 - provide_serials: Function to provide student serial numbers in various formats.
 - select_class_date: Function to select class dates.
+- input_dates: Function to get validated date input.
+- print_date_menu: Function to print simple date menu.
+- display_dates: Function to display date menu with class numbers.
 - select_student: Function to select students.
 """
 
-from .classes_input import select_class_date
 from .custom_inputs import (
     input_num,
     input_str,
 )
+from .dates_input import input_dates
+from .dates_print import print_date_menu
 from .email_input import input_email
 from .emails_input import provide_emails
-from .input_interlude import get_interlude_dates
-from .input_to_config import input_course_name, input_dir
+from .emails_inputs import input_emails
+from .emails_query import query_emails
 from .input_with_quit import input_fn
 from .interact import interact
+from .menu_input import input_menu
 from .option_input import input_bool, input_option
 from .path_input import input_path, test_path_in
-from .serials_input import provide_serials
 
 __all__ = [
     "interact",
-    "input_course_name",
-    "input_dir",
     "input_num",
     "input_option",
     "input_bool",
@@ -47,8 +51,10 @@ __all__ = [
     "input_str",
     "input_fn",
     "input_email",
-    "select_class_date",
+    "input_menu",
+    "input_dates",
+    "print_date_menu",
     "provide_emails",
-    "provide_serials",
-    "get_interlude_dates",
+    "query_emails",
+    "input_emails",
 ]

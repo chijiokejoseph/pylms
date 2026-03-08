@@ -13,7 +13,7 @@ Note:
 
 from unittest import TestCase
 
-from ..errors import Result, eprint
+from ..errors import eprint
 from ..info import print_info
 from .custom_inputs import input_num
 
@@ -43,7 +43,7 @@ class TestInputs(TestCase):
         Raises:
             None
         """
-        value: Result[int] = input_num(
+        value = input_num(
             "Enter your age: ",
             1,
         )
@@ -52,3 +52,4 @@ class TestInputs(TestCase):
             return
         age = value.unwrap()
         print_info(f"Your age is {age}")
+        assert isinstance(age, int)
