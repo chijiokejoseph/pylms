@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Self, overload
+from typing import Self
 
 from ..constants import DATE_FMT
 from ..date import to_date

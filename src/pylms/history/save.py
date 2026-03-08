@@ -1,26 +1,22 @@
 import json
 
+from ..config import Config
 from ..constants import DATE_FMT, HISTORY_PATH
 from ..errors import Result, Unit
-from ..paths import get_history_path
+from ..paths import display_path, get_history_path
 from .history import History
 
 
-def save_history(history: History) -> Result[Unit]:
+def save_history(config: Config, history: History) -> Result[Unit]:
     """Save current history data to JSON file.
 
-    Saves history data to both the main history file and updates the dates
-    JSON file if dates have changed.
-
     Args:
-        history (History): History instance to save.
+        config: Application configuration.
+        history: History instance to save.
 
     Returns:
         Result[Unit]: Success or error message.
     """
-
-    from ..paths_state import display_path
-
     data = {
         "cohort": history.cohort,
         "class_days": list(history.class_days),
@@ -34,18 +30,19 @@ def save_history(history: History) -> Result[Unit]:
         else None,
         "held_classes": [date.strftime(DATE_FMT) for date in history.held_classes],
         "marked_classes": [date.strftime(DATE_FMT) for date in history.marked_classes],
-        "class_forms": [data.model_dump(mode="json") for data in history.class_forms],
+        "class_forms": [form.model_dump(mode="json") for form in history.class_forms],
         "recorded_class_forms": [
-            data.model_dump(mode="json") for data in history.recorded_class_forms
+            form.model_dump(mode="json") for form in history.recorded_class_forms
         ],
-        "cds_forms": [data.model_dump(mode="json") for data in history.cds_forms],
+        "cds_forms": [form.model_dump(mode="json") for form in history.cds_forms],
         "recorded_cds_forms": [
-            data.model_dump(mode="json") for data in history.recorded_cds_forms
+            form.model_dump(mode="json") for form in history.recorded_cds_forms
         ],
-        "update_forms": [data.model_dump(mode="json") for data in history.update_forms],
+        "update_forms": [form.model_dump(mode="json") for form in history.update_forms],
         "recorded_update_forms": [
-            data.model_dump(mode="json") for data in history.recorded_update_forms
+            form.model_dump(mode="json") for form in history.recorded_update_forms
         ],
+        "group": history.group,
         "attendance": [history.attendance[0], str(history.attendance[1])],
         "assessment": [history.assessment[0], str(history.assessment[1])],
         "project": [history.project[0], str(history.project[1])],
@@ -54,11 +51,11 @@ def save_history(history: History) -> Result[Unit]:
     }
 
     # Save history data to JSON files
-    with get_history_path().open("w", encoding="utf-8") as file:
+    with get_history_path(config).open("w", encoding="utf-8") as file:
         json.dump(data, file, indent=2)
 
     with HISTORY_PATH.open("w") as file:
         json.dump(data, file, indent=2)
 
-    display_path("History")
+    display_path(config, "History")
     return Result.unit()

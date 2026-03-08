@@ -9,7 +9,7 @@ from .dates_with_history import all_dates
 from .history import History
 
 
-def match_date_index(history: History, date: str) -> Result[int]:
+def get_date_index(history: History, date: str) -> Result[int]:
     """Get the class number (1-based index) for a given date.
 
     Args:
@@ -28,7 +28,7 @@ def match_date_index(history: History, date: str) -> Result[int]:
     return Result.ok(dates.index(date) + 1)
 
 
-def match_info_by_date(history: History, class_date: str) -> Result[ClassFormInfo]:
+def get_class_info(history: History, class_date: str) -> Result[ClassFormInfo]:
     """Find ClassFormInfo that matches the given date.
 
     Args:
@@ -110,20 +110,22 @@ def get_classes(
     """
     if prop == "held":
         dates = history.held_classes
+        src = history.dates
     else:
         dates = history.marked_classes
+        src = history.held_classes
 
     if isinstance(sample, datetime):
         if present:
             return dates
         else:
-            return [date for date in history.dates if date not in dates]
+            return [date for date in src if date not in dates]
     else:
         if present:
             return [date.strftime(DATE_FMT) for date in dates]
         else:
             return [
-                date.strftime(DATE_FMT) for date in history.dates if date not in dates
+                date.strftime(DATE_FMT) for date in src if date not in dates
             ]
 
 

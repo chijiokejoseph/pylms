@@ -114,7 +114,7 @@ def set_class_days(
     """
     # Ensure exactly three days
     if len(days) != 3:
-        msg = "Class days must contain exactly 3 integers corresponding to the weekdays on which classes are held."
+        msg = "Class days must contain exactly 3 values corresponding to the weekdays on which classes are held."
         eprint(msg)
         return Result.err(msg)
 
@@ -175,8 +175,8 @@ def extend_weeks(history: History, additional_weeks: int) -> Result[Unit]:
     Returns:
         Result[Unit]: Success or error message.
     """
-    if additional_weeks < 0:
-        msg = "Additional weeks must be a non-negative integer."
+    if additional_weeks < 1:
+        msg = "Additional weeks must be a positive non-zero integer."
         eprint(msg)
         return Result.err(msg)
     history.weeks += additional_weeks

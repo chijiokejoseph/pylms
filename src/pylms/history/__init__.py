@@ -4,10 +4,24 @@ It includes methods for adding held and marked classes and updating class dates.
 from .classes import extend_weeks, replan_weeks, set_class_days, sync_classes
 from .dates import retrieve_dates
 from .dates_with_history import all_dates
+from .get_props import (
+    get_available_cds_forms,
+    get_available_class_forms,
+    get_available_update_forms,
+    get_class_info,
+    get_classes,
+    get_date_index,
+    get_held_classes,
+    get_marked_classes,
+    get_unheld_classes,
+    get_unmarked_classes,
+    get_unrecorded_classes,
+)
 from .groups import get_num_groups, set_group
 from .history import History
+from .interlude_input import new_interlude
 from .interlude import Interlude
-from .interlude_funcs import add_interlude
+from .interlude_add import add_interlude
 from .lms_records import (
     record_assessment,
     record_attendance,
@@ -15,21 +29,9 @@ from .lms_records import (
     record_project,
     record_result,
 )
+from .match_classes import match_classes
 from .new import init_history, load_history
 from .num_cohort import set_cohort
-from .retrieve import (
-    get_available_cds_forms,
-    get_available_class_forms,
-    get_available_update_forms,
-    get_classes,
-    get_held_classes,
-    get_marked_classes,
-    get_unheld_classes,
-    get_unmarked_classes,
-    get_unrecorded_classes,
-    match_date_index,
-    match_info_by_date,
-)
 from .save import save_history
 from .update import (
     add_cds_form,
@@ -80,8 +82,10 @@ __all__ = [
     "get_unheld_classes",
     "get_unmarked_classes",
     "get_unrecorded_classes",
-    "match_date_index",
-    "match_info_by_date",
+    "get_date_index",
+    "get_class_info",
+    "new_interlude",
+    "match_classes",
     "save_history",
     "retrieve_dates",
 ]

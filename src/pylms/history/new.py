@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from ..config import Config
 from ..date import parse_dates, to_date
 from ..errors import Result, eprint
 from ..info import print_info
@@ -13,20 +14,21 @@ from .interlude import Interlude
 from .save import save_history
 
 
-def init_history() -> Result[History]:
+def init_history(config: Config) -> Result[History]:
     """Initialize history data storage.
 
-    Creates a new history file if it doesn't exist, otherwise loads existing data.
+    Args:
+        config: Application configuration.
 
     Returns:
         Result[History]: Success with new or loaded History instance, or error message.
     """
-    history_path = get_history_path()
+    history_path = get_history_path(config)
     if history_path.exists():
-        history = load_history()
+        history = load_history(config)
         if history.is_err():
             return history.propagate()
-        
+
         history = history.unwrap()
         print_info("History has been loaded")
         return Result.ok(history)
@@ -35,21 +37,24 @@ def init_history() -> Result[History]:
 
     print_info("App history records have just been initialized")
 
-    result = save_history(history)
+    result = save_history(config, history)
     if result.is_err():
         return result.propagate()
 
     return Result.ok(history)
 
 
-def load_history() -> Result[History]:
+def load_history(config: Config) -> Result[History]:
     """Load history data from JSON file and initialize History object.
+
+    Args:
+        config: Application configuration.
 
     Returns:
         Result[History]: Success with loaded History instance or error message.
     """
     history = History()
-    history_path: Path = get_history_path()
+    history_path: Path = get_history_path(config)
 
     if not history_path.exists():
         msg = f"path to history.json '{history_path}' does not exist"
@@ -122,7 +127,7 @@ def load_history() -> Result[History]:
             return Result.err(msg)
         history.weeks = data["weeks"]
 
-    if "interlude" in data:
+    if "interlude" in data and data["interlude"] is not None:
         interlude = Interlude.from_dict(data["interlude"])
         if interlude.is_err():
             return interlude.propagate()
@@ -225,6 +230,18 @@ def load_history() -> Result[History]:
         ]
 
     # Load collation status and paths
+    if "group" in data:
+        if not isinstance(data["group"], list) and len(data["groups"] != 2):
+            msg = "Group field must be an integer"
+            eprint(msg)
+            return Result.err(msg)
+        if not isinstance(data["group"][0], bool) or not isinstance(data["group"][1], int):
+            msg = "Group field must be a list of integers"
+            eprint(msg)
+            return Result.err(msg)
+        groups = data["group"]
+        history.group = groups[0], groups[1]
+        
     if "attendance" in data:
         if not isinstance(data["attendance"], list) or len(data["attendance"]) != 2:
             msg = "Attendance must be a list with two elements: a boolean and a file path."

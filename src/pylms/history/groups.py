@@ -1,26 +1,28 @@
 import re
 from pathlib import Path
 
+from ..config import Config
 from ..errors import Result, Unit, eprint
 from ..info import print_info
 from ..paths import get_excel_path
 from .history import History
 
 
-def set_group(history: History, num: int) -> Result[Unit]:
+def set_group(config: Config, history: History, num: int) -> Result[Unit]:
     """Set group information in history based on existing group files.
-    
+
     Validates that the specified number of groups matches the actual
     group files found in the groups directory.
-    
+
     Args:
+        config: (Config): Configuration object holding application settings
         history (History): History instance to update.
         num (int): Expected number of groups.
-        
+
     Returns:
         Result[Unit]: Success or error message.
     """
-    group_path: Path = get_excel_path() / "groups"
+    group_path: Path = get_excel_path(config) / "groups"
     if not group_path.exists():
         msg = "Unable to set group field of History because no group path exists."
         eprint(msg)
@@ -36,7 +38,7 @@ def set_group(history: History, num: int) -> Result[Unit]:
         ]
     )
     print_info(f"Found {num_groups} groups\n")
-    
+
     # Validate group count matches expectation
     if num != num_groups:
         msg = "Unable to set group due to mismatch between the actual directory items in the path and the number specified"
@@ -49,10 +51,10 @@ def set_group(history: History, num: int) -> Result[Unit]:
 
 def get_num_groups(history: History) -> int:
     """Get the number of groups students have been divided into.
-    
+
     Args:
         history (History): History instance containing group information.
-        
+
     Returns:
         int: Number of groups.
     """
