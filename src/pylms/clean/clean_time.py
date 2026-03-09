@@ -16,4 +16,4 @@ def clean_time(data: pl.DataFrame) -> pl.DataFrame:
     Returns:
         pl.DataFrame: The processed DataFrame
     """
-    return data.with_columns(pl.col(TIME).dt.strftime(TIME_FMT))
+    return data.with_columns(pl.col(TIME).str.to_datetime().dt.strftime(TIME_FMT))

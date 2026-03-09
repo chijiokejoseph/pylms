@@ -22,5 +22,7 @@ def clean_completion_date(
         invalid selection occurs.
     """
 
-    data = data.with_columns(pl.col(COMPLETION).dt.strftime(COMPLETION_FMT))
+    data = data.with_columns(
+        pl.col(COMPLETION).str.to_datetime().dt.strftime(COMPLETION_FMT)
+    )
     return Result.ok(data)

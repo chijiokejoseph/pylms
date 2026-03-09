@@ -71,7 +71,7 @@ def clean_col_names(data: pl.DataFrame) -> pl.DataFrame:
     data = data.drop(columns_to_drop)
     # add missing columns from `DATA_COLUMNS` with null values
     data = data.with_columns(
-        [pl.col(col) for col in DATA_COLUMNS if col not in data.columns]
+        [pl.lit("").alias(col) for col in DATA_COLUMNS if col not in data.columns]
     )
 
     return data
