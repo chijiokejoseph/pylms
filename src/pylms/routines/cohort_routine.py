@@ -1,5 +1,5 @@
-from ..cli import input_option, interact
-from ..config import Config, init_config, is_open, mark_closed, mark_open, save_config
+from ..cli import input_bool, input_option, interact
+from ..config import Config, is_open, mark_closed, mark_open, save_config
 from ..constants import DATA_PATH, DATE_FMT
 from ..data import DataStore
 from ..data_service import save_ds
@@ -60,15 +60,13 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
                 if is_open(config):
                     print_info("Cohort is already open.\n")
                     continue
-                result = input_option(
-                    ["Yes", "No"],
-                    "Reopen Cohort",
-                    prompt="Do you wish to reopen the closed cohort?",
+                result = input_bool(
+                    "Do you wish to reopen the closed cohort?",
                 )
                 if result.is_err():
                     continue
-                _, choice = result.unwrap()
-                if choice == "Yes":
+                choice = result.unwrap()
+                if choice:
                     mark_open(config)
                     printpass("The Cohort, which was previously closed, is now open.\n")
             case 4:
@@ -80,12 +78,13 @@ def handle_cohort(config: Config, ds: DataStore, history: History) -> None:
                 if result.is_err():
                     continue
 
-                new_config = init_config()
-                if new_config.is_err():
-                    continue
-                new_config = new_config.unwrap()
-                config.copy_from(new_config)
+                # convert config to hold an empty Config value
+                config.copy_from(Config())
+
                 printpass("You have a new open cohort\n")
+
+                # return immediately to avoid trying to save data to deleted paths.
+                return None
             case _:
                 break
         result = save_config(config)
