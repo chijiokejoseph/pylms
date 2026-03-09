@@ -7,5 +7,6 @@ edition = "2024"
 members = [
     "rclean",
     "rlib",
+    "rmpath",
 ]
 resolver = "2"

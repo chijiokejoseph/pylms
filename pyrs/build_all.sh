@@ -14,5 +14,10 @@ cd rclean
 maturin develop --release
 cd ..
 
+echo "Building rmpath..."
+cd rmpath
+maturin develop --release
+cd ..
+
 echo "All modules built successfully!"
 cd ..
