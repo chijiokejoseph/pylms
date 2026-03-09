@@ -34,7 +34,7 @@ def init_ds(config: Config, history: History) -> Result[DataStore]:
         return ds.propagate()
     ds = ds.unwrap()
 
-    result = normalize(ds, history)
+    result = normalize(config, ds, history)
     if result.is_err():
         return result.propagate()
 
