@@ -26,6 +26,13 @@ uv venv
 uv sync
 ```
 
+- build Rust dependencies
+
+```bash
+chmod +x pyrs/build_all.sh
+./pyrs/build_all.sh
+```
+
 - activate your virtual environment
 
 ```bash
@@ -232,6 +239,7 @@ Architecture:
 pylms/
 
 - ├── main.py # Main application entry point
+- ├── pyrs/ # Rust dependencies for python project
 - ├── src/pylms/
 - │ ├── cache/ # Transaction caching and rollback system
 - │ ├── clean/ # Transaction caching and rollback system

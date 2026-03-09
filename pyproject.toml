@@ -30,8 +30,14 @@ dependencies = [
     "polars[excel]>=1.37.1",
     "pyarrow>=22.0.0",
     "pyarrow-stubs>=20.0.0.20251215",
+    "cryptography>=46.0.5",
 ]
 
 [build-system]
 requires = ["uv_build>=0.8.16,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "maturin>=1.11.5",
+]
