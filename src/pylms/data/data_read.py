@@ -5,7 +5,7 @@ import polars as pl
 from ..errors import Result, eprint
 
 
-def read(path: Path) -> Result[pl.DataFrame]:
+def read(path: Path, raw: bool = False) -> Result[pl.DataFrame]:
     """Read a tabular file (Excel or CSV) into a pandas DataFrame.
 
     Attempts to read the file located at `path` as either an Excel (.xlsx)
@@ -41,9 +41,9 @@ def read(path: Path) -> Result[pl.DataFrame]:
     try:
         # choose the appropriate polars method based on the file type
         if path.name.endswith("xlsx"):
-            data = pl.read_excel(path, has_header=True)
+            data = pl.read_excel(path, has_header=True) if not raw else pl.read_excel(path, has_header=True, infer_schema_length=0)
         elif path.name.endswith("csv"):
-            data = pl.scan_csv(path, has_header=True).collect()
+            data = pl.scan_csv(path, has_header=True).collect() if not raw else pl.read_csv(path, has_header=True, infer_schema=False)
         elif path.name.endswith("parquet"):
             data = pl.scan_parquet(path).collect()
         else:

@@ -100,7 +100,7 @@ Enter the path:  """
     if result.is_err():
         return result.propagate()
     register_path = result.unwrap()
-    dataframe = read(register_path)
+    dataframe = read(register_path, True)
     if dataframe.is_err():
         return dataframe.propagate()
     dataframe = dataframe.unwrap()
