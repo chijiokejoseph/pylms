@@ -213,9 +213,5 @@ secrets.json
 /data/
 .private
 
-# Test Html files
-src/html/
-
-
-# Tests
-test.py
+# Amazonq
+/.amazonq/
