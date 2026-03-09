@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ..cli import input_bool, input_email, input_option, input_path, input_str
-from ..cli_utils import verify_gmail
+from ..cli_utils import emphasis, verify_gmail
 from ..constants import COURSES, DATA_PATH
 from ..errors import ForcedExitError, Result, eprint
 from ..info import print_info, printpass
@@ -9,7 +9,7 @@ from .config import Config
 from .facilitator import Facilitator
 
 
-def input_dir() -> Result[str]:
+def input_dir() -> Result[Path]:
     """Prompt for and validate the project's data directory.
 
     Returns:
@@ -25,12 +25,12 @@ def input_dir() -> Result[str]:
                 return result.propagate()
             eprint(f"{err}")
             continue
-        data_dir: Path = result.unwrap()
+        data_dir = result.unwrap()
 
         if data_dir.name.lower() == "s":
             print("Skipping Data Path setup")
             print(f"Data Path not set. Defaulting to {DATA_PATH}")
-            return Result.ok(str(DATA_PATH))
+            return Result.ok(DATA_PATH)
 
         if not data_dir.is_dir():
             eprint("The save path entered is not a directory")
@@ -49,8 +49,9 @@ def input_dir() -> Result[str]:
             eprint("The save path entered does not exist")
             continue
 
-        printpass(f"Data Path has been successfully initialized to {data_dir}")
-        return Result.ok(str(data_dir))
+        data_dir = data_dir / "data"
+        printpass(f"Data Path has been successfully initialized to {emphasis(str(data_dir))}")
+        return Result.ok(data_dir)
 
 
 def input_course_name() -> Result[str]:
@@ -194,10 +195,12 @@ def setup_new_config() -> Result[Config]:
     admin, password = result.unwrap()
 
     config = Config()
-    config.data_dir = data_dir
+    config.data_dir = str(data_dir)
     config.course_name = course_name
     config.facilitators = facilitators
     config.admin = admin
     config.set_password(password)
 
+    DATA_PATH.mkdir(parents=True, exist_ok=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
     return Result.ok(config)
