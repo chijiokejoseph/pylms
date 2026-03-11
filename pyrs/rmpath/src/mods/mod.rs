@@ -24,6 +24,7 @@ pub fn rm_path(file: Py<PyString>) -> PyResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn make(path: &Path) -> io::Result<()> {
     if path.exists() {
         return Ok(())
@@ -47,6 +48,7 @@ fn make(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn rm(file: &Path) -> PyResult<()> {
     let file = Path::new(&file);
     let contents = fs::read_dir(file)
