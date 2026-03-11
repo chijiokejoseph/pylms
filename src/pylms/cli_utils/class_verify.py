@@ -1,5 +1,7 @@
 import re
 
+from ..constants import COMMA, SEMI
+
 
 def verify_class(entry: str) -> bool:
     """Validate a user's date-selection input string.
@@ -33,13 +35,10 @@ def verify_class(entry: str) -> bool:
     if re.fullmatch(r"\d{2}/\d{2}/\d{4}", entry):
         return True
 
-    # Check for valid characters (digits, spaces, commas, hyphens, slashes)
-    if not re.fullmatch(r"[\d\s,/-]+", entry):
-        return False
-
     # Comma-separated list
-    if "," in entry:
-        parts = [p.strip() for p in entry.split(",") if p.strip()]
+    delim = COMMA if COMMA in entry else SEMI if SEMI in entry else None
+    if delim is not None:
+        parts = [p.strip() for p in entry.split(delim) if p.strip() != ""]
         for part in parts:
             # Each part should be a number, range, or date
             if not (
@@ -51,7 +50,7 @@ def verify_class(entry: str) -> bool:
         return True
 
     # Range format
-    if re.fullmatch(r"\d+-\d+", entry):
+    if re.fullmatch(r"\d+\s*-\s*\d+", entry):
         return True
 
     return False

@@ -63,6 +63,15 @@ def parse_nums(entry: str) -> Result[list[int]]:
     # Single number
     if re.fullmatch(r"\d+", entry):
         return Result.ok([int(entry)])
+
+    # Single Range
+    if re.fullmatch(r"\d+\s*-\s*\d+", entry):
+        range_parts = entry.split(HYPHEN)
+        start = int(range_parts[0].strip())
+        end = int(range_parts[1].strip())
+        if start >= end:
+            return Result.err(f"Invalid range '{entry}': start must be less than end")
+        return Result.ok(list(range(start, end + 1)))
     
     # Determine delimiter
     delimiter = COMMA if COMMA in entry else SEMI if SEMI in entry else None
