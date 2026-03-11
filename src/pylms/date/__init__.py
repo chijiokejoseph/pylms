@@ -11,6 +11,7 @@ from .features import (
     to_week_nums,
 )
 from .parser import parse_dates, to_date
+from .sort import sort_dates
 
 
 def format_date(
@@ -58,4 +59,5 @@ __all__ = [
     "format_form_timestamp",
     "parse_dates",
     "to_date",
+    "sort_dates",
 ]
