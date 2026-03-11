@@ -21,7 +21,7 @@ def clean_duplicates_with_cols(
     Returns:
         pl.DataFrame: A deduplicated DataFrame
     """
-    return data.unique(subset=identifier_columns)
+    return data.unique(subset=identifier_columns, keep="first")
 
 
 def clean_duplicates(data: pl.DataFrame) -> pl.DataFrame:
@@ -38,4 +38,7 @@ def clean_duplicates(data: pl.DataFrame) -> pl.DataFrame:
     Returns:
         pl.DataFrame: A deduplicated DataFrame
     """
-    return data.unique(UNIQUE_COLUMNS)
+    for pair in UNIQUE_COLUMNS:
+        data = data.unique(pair, keep="first")
+    
+    return data

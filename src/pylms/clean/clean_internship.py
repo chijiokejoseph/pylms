@@ -19,4 +19,4 @@ def clean_internship(data: pl.DataFrame) -> pl.DataFrame:
         pl.DataFrame: The normalized DataFrame
     """
 
-    return data.with_columns(pl.col(INTERNSHIP).str.to_uppercase().alias(INTERNSHIP))
+    return data.with_columns(pl.col(INTERNSHIP).str.to_uppercase().cast(pl.Categorical).alias(INTERNSHIP))
