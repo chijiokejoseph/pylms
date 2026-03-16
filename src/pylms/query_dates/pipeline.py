@@ -24,7 +24,7 @@ def apply_selector_pipeline(
         return Result.err("No selectors provided")
 
     # Pop first selector to initialize sink
-    first_selector = selectors.pop()
+    first_selector = selectors[0]
     sink = DateSink.from_history(history, first_selector)
     if sink.is_err():
         return sink.propagate()
@@ -47,7 +47,7 @@ def apply_selector_pipeline(
     
     # Check if any dates remain after all filters
     if len(dates) == 0:
-        return Result.err("No dates match all selected criteria")
+        return Result.err("No dates match selected criteria")
 
     # Return sorted dates
     return Result.ok(sorted(dates))

@@ -31,7 +31,6 @@ def select_from_sink(
     # Convert matched dates to set and perform intersection
     matched_set = set(matched)
     result = list(dates_set.intersection(matched_set))
-    
     return Result.ok(result)
 
 

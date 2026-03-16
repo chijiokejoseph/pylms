@@ -22,7 +22,7 @@ def run_query_dates(history: History) -> Result[list[str]]:
         Result[list[str]]: Success with list of selected dates or ForcedExitError.
     """
     # Define detailed prompt message
-    prompt = """Enter query to select class dates:
+    prompt = """\nEnter query to select class dates:
   - Held: held
   - Unheld: unheld
   - Marked: marked
@@ -39,10 +39,9 @@ Query: """
         )
 
         # Check for forced exit
-        if result.is_err():
-            err = result.unwrap_err()
-            if isinstance(err, ForcedExitError):
-                return result.propagate()
+        if result.is_err() and isinstance(result.error, ForcedExitError):
+            return result.propagate()
+        elif result.is_err():
             result.print_if_err()
             continue
 
