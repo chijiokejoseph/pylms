@@ -108,7 +108,7 @@ DATE_FMT: str = "%d/%m/%Y"
 COMPLETION: str = "NYSC/SIWES Completion Month"
 COMPLETION_FMT: str = "%Y/%m/%d"
 TRAINING: str = "Choose A Training Course"
-UNIQUE_COLUMNS: list[str] = [NAME, EMAIL, PHONE]
+UNIQUE_COLUMNS = [[NAME, EMAIL], [NAME, PHONE], [EMAIL, PHONE]]
 TIME: str = "Timestamp"
 TIME_FMT: str = "%Y-%m-%d %H:%M:%S"
 
