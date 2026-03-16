@@ -11,12 +11,10 @@ from ..clean import (
     clean_order,
     clean_phone,
     clean_sort,
-    clean_str,
     clean_time,
     clean_training,
 )
 from ..cli import input_path
-from ..constants import NAME, PHONE
 from ..data import DataStore, DataStream, read
 from ..errors import Result
 
@@ -43,13 +41,14 @@ def clean_reg(data_stream: DataStream) -> Result[DataStore]:
 
     data = result.unwrap()
 
-    data = clean_str(data, [NAME, PHONE])
     data = clean_email(data)
     data = clean_name(data)
     result = clean_phone(data)
     if result.is_err():
         return result.propagate()
 
+    data = result.unwrap()
+    
     result = clean_cohort(data)
     if result.is_err():
         return result.propagate()
