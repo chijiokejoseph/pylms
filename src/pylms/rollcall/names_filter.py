@@ -2,30 +2,8 @@ import polars as pl
 
 from ..constants import COMMA_DELIM, DATE, DATE_FMT, NAME, TIME
 from ..data import DataStream
-from ..date import format_date
 from ..errors import Result
-
-
-def _get_time_idx(
-    form_timestamps: list[str], class_date_in: str, day_first: bool
-) -> list[bool]:
-    """Get boolean index for timestamps matching class date.
-
-    Args:
-        form_timestamps (list[str]): List of timestamp strings.
-        class_date_in (str): Target class date to match.
-        day_first (bool): Whether day comes first in date format.
-
-    Returns:
-        list[bool]: Boolean list indicating matching timestamps.
-    """
-    # Convert timestamps to date strings
-    timestamp_list = [
-        format_date(each_timestamp, DATE_FMT, day_first=day_first)
-        for each_timestamp in form_timestamps
-    ]
-    # Check if each timestamp matches the class date
-    return [timestamp_as_date == class_date_in for timestamp_as_date in timestamp_list]
+from ..form_utils import defmt_name
 
 
 def filter_names(turnout_stream: DataStream) -> Result[DataStream]:
@@ -56,17 +34,9 @@ def filter_names(turnout_stream: DataStream) -> Result[DataStream]:
 
     turnout_data = turnout_stream.as_ref()
 
-    # Get date for which attendance is being marked
-    class_date: str = turnout_data[0, DATE]
-    # # Get the timestamps
-    # timestamps: list[str] = turnout_data[TIME].to_list()
-
-    # idx = _get_time_idx(timestamps, class_date, True)
-    # if not any(idx):
-    #     idx = _get_time_idx(timestamps, class_date, False)
-
     # Filter data to include only matching dates
     filtered_data = turnout_data.filter(
         pl.col(TIME).cast(pl.Datetime).dt.strftime(DATE_FMT) == pl.col(DATE)
-    )
-    return Result.ok(DataStream(filtered_data))
+    ).unique(pl.col(NAME))
+    filtered_data = defmt_name(DataStream(filtered_data))
+    return filtered_data

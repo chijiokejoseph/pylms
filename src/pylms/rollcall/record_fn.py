@@ -1,6 +1,6 @@
 import polars as pl
 
-from ..constants import DATE, NAME
+from ..constants import COMMA_DELIM, DATE, NAME
 from ..data import DataStore, DataStream
 from ..record import RecordStatus
 from .names_filter import filter_names
@@ -24,13 +24,16 @@ def record(ds: DataStore, turnout_stream: DataStream, fill_value: RecordStatus) 
     turnout_stream = turnout.unwrap()
     turnout_data = turnout_stream.as_ref()
     
-    # Get student names and class date
-    present_names: list[str] = turnout_data[NAME].to_list()
+    # Get class date
     class_date: str = turnout_data[0, DATE]
+
+    if class_date not in data_ref.columns:
+        cols_print = COMMA_DELIM.join(data_ref.columns)
+        raise Result.fail(f"class date from form '{class_date}' should be in '{cols_print}'")
 
     # Mark students with `fill_value`
     data_ref = data_ref.with_columns(
-        pl.when(pl.col(NAME).is_in(present_names))
+        pl.when(pl.col(NAME).is_in(turnout_data[NAME].implode()))
         .then(pl.lit(str(fill_value)))
         .otherwise(pl.col(class_date))
         .alias(class_date)
