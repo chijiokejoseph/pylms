@@ -15,6 +15,7 @@ from .update_form_details import (
     UpdateFormDetails,
     extract_update_details,
 )
+from .fmt import fmt_name, defmt_name
 
 __all__ = [
     "CDSFormInfo",
@@ -29,4 +30,6 @@ __all__ = [
     "new_update_content",
     "select_form",
     "return_name",
+    "fmt_name",
+    "defmt_name",
 ]

@@ -1,6 +1,4 @@
-from collections.abc import Generator
-
-from ..constants import EMAIL, NAME
+from ..constants import NAME
 from ..models import (
     ChoiceQuestion,
     Content,
@@ -15,17 +13,16 @@ from ..models import (
 )
 
 
-def new_assessment_content(names: list[str], emails: list[str]) -> ContentBody:
+def new_assessment_content(fmt_names: list[str]) -> ContentBody:
     """Create content body for assessment form with name and email dropdowns.
-    
+
     Args:
-        names (list[str]): List of student names for dropdown.
-        emails (list[str]): List of student emails for dropdown.
-        
+        fmt_names (list[str]): List of student names for dropdown.
+
     Returns:
         ContentBody: Form content with name and email selection fields.
     """
-    counter: Generator[int, None, None] = counter_setup()
+    counter = counter_setup()
     return ContentBody(
         requests=[
             Content(
@@ -37,7 +34,9 @@ def new_assessment_content(names: list[str], emails: list[str]) -> ContentBody:
                                 choiceQuestion=ChoiceQuestion(
                                     type="DROP_DOWN",
                                     shuffle=False,
-                                    options=[OptionDict(value=name) for name in names],
+                                    options=[
+                                        OptionDict(value=name) for name in fmt_names
+                                    ],
                                 ),
                                 required=True,
                             )
@@ -46,27 +45,6 @@ def new_assessment_content(names: list[str], emails: list[str]) -> ContentBody:
                     ),
                     location=Location(index=next(counter)),
                 ),
-            ),
-            Content(
-                createItem=CreateItem(
-                    item=Item(
-                        title=EMAIL,
-                        questionItem=QuestionItem(
-                            question=Question(
-                                choiceQuestion=ChoiceQuestion(
-                                    type="DROP_DOWN",
-                                    shuffle=False,
-                                    options=[
-                                        OptionDict(value=email) for email in emails
-                                    ],
-                                ),
-                                required=True,
-                            )
-                        ),
-                        description="Select your email from the dropdown",
-                    ),
-                    location=Location(index=next(counter)),
-                )
             ),
         ]
     )
