@@ -7,49 +7,79 @@ from ..history import (
     History,
     add_held_class,
     add_marked_class,
-    get_date_index,
+    get_unheld_classes,
     get_unmarked_classes,
 )
-from ..info import print_info, printpass
-from ..record import RecordStatus, retrieve_record
+from ..info import printpass
+from ..record import RecordStatus
 from .record_input import input_record
 
 
-def _edit_record(ds: DataStore, history: History, each_date: str) -> Result[Unit]:
-    record = input_record(
-        history,
-        each_date,
-        [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.NO_CLASS],
+def multi_input_record(
+    history: History, dates: list[str]
+) -> Result[list[RecordStatus]]:
+    dates_str = ", ".join(dates)
+
+    if len(dates) == 1:
+        choice = True
+    else:
+        result = input_bool(f"Are you making the same edit for dates: {dates_str}")
+        if result.is_err():
+            return result.propagate()
+
+        choice = result.unwrap()
+
+    if choice:
+        first_date = dates[0]
+        record = input_record(
+            history,
+            first_date,
+            [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.NO_CLASS],
+        )
+        if record.is_err():
+            return record.propagate()
+        record = record.unwrap()
+        return Result.ok([record])
+
+    records: list[RecordStatus] = []
+    for each_date in dates:
+        result = input_record(
+            history,
+            each_date,
+            [RecordStatus.PRESENT, RecordStatus.ABSENT, RecordStatus.NO_CLASS],
+        )
+        if result.is_err():
+            return result.propagate()
+        record = result.unwrap()
+        records.append(record)
+
+    return Result.ok(records)
+
+
+def return_expr(record: RecordStatus, date: str) -> pl.Expr:
+    return (  # if new record is NO_CLASS
+        pl.when(record == RecordStatus.NO_CLASS)
+        # return NO_CLASS
+        .then(pl.lit(str(RecordStatus.NO_CLASS)))
+        .otherwise(
+            # if existing record is CDS
+            pl.when(pl.col(date) == str(RecordStatus.CDS))
+            # return CDS
+            .then(pl.lit(str(RecordStatus.CDS)))
+            .otherwise(
+                # if existing record is EXCUSED and new is ABSENT
+                pl.when(
+                    (pl.col(date) == str(RecordStatus.EXCUSED))
+                    & (record == RecordStatus.ABSENT)
+                )
+                # return EXCUSED
+                .then(pl.lit(str(RecordStatus.EXCUSED)))
+                # else return new record
+                .otherwise(pl.lit(str(record)))
+            )
+        )
+        .alias(date)
     )
-    if record.is_err():
-        return record.propagate()
-    selected_record: RecordStatus = record.unwrap()
-
-    data_ref: pl.DataFrame = ds.as_ref()
-    records: list[str] = data_ref[each_date].to_list()
-    class_record = [retrieve_record(record) for record in records]
-    new_class_record = [
-        str(_fill(old_record, selected_record)) for old_record in class_record
-    ]
-    data_ref[each_date] = new_class_record
-    return Result.unit()
-
-
-def _fill(existing_record: RecordStatus, fill_record: RecordStatus) -> RecordStatus:
-    # If no class is held that day return no class
-    if fill_record == RecordStatus.NO_CLASS:
-        return fill_record
-
-    # If the student's record indicates that that day is his CDS, then prefer the CDS record
-    if existing_record == RecordStatus.CDS:
-        return existing_record
-
-    # If all the students are marked absent but a student is marked excused, prefer his excused record
-    if fill_record == RecordStatus.ABSENT and existing_record == RecordStatus.EXCUSED:
-        return existing_record
-
-    # Else unequivocally return the fill record set by the user.
-    return fill_record
 
 
 def edit_all_records(
@@ -60,44 +90,39 @@ def edit_all_records(
         eprint(msg)
         return Result.err(msg)
 
-    dates_str = ", ".join(dates_to_mark)
+    records = multi_input_record(history, dates_to_mark)
+    if records.is_err():
+        return records.propagate()
 
-    if len(dates_to_mark) == 1:
-        choice = True
-    else:
-        result = input_bool(f"Are you making the same edit for dates: {dates_str}")
-        if result.is_err():
-            return result.propagate()
+    records = records.unwrap()
 
-        choice = result.unwrap()
-
-    if choice:
-        first_date = dates_to_mark[0]
-        print_info(
-            f"Enter the record for the first date: '{first_date}' and it will be used for all specified dates."
+    data_ref = ds.as_ref()
+    if len(records) == 1:
+        record = records[0]
+        data_ref = data_ref.with_columns(
+            [return_expr(record, date) for date in dates_to_mark]
         )
-        result = _edit_record(ds, history, first_date)
-        if result.is_err():
-            return result.propagate()
     else:
-        for each_date in dates_to_mark:
-            result = _edit_record(ds, history, each_date)
-            if result.is_err():
-                return result.propagate()
+        for record, date in zip(records, dates_to_mark):
+            data_ref = data_ref.with_columns(return_expr(record, date))
 
-    unmarked_dates = get_unmarked_classes(history, "")
-    edited_dates = [date for date in dates_to_mark if date in unmarked_dates]
-
-    for date in edited_dates:
+    ds.copy_from(data_ref)
+    unheld_dates = get_unheld_classes(history, "")
+    for date in dates_to_mark:
+        if date not in unheld_dates:
+            continue
         result = add_held_class(history, date)
         if result.is_err():
             return result.propagate()
+        printpass(f"Recorded that Class held on '{date}'")
 
+    unmarked_dates = get_unmarked_classes(history, "")
+    for date in dates_to_mark:
+        if date not in unmarked_dates:
+            continue
         result = add_marked_class(history, date)
         if result.is_err():
             return result.propagate()
-
-        class_num = get_date_index(history, date).unwrap()
-        printpass(f"Recorded attendance for Class {class_num} held on '{date}'")
+        printpass(f"Recorded that Class marked on '{date}'")
 
     return Result.unit()
