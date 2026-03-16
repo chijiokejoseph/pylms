@@ -116,8 +116,8 @@ class DataStore(DataStream):
             self.as_ref()
             .lazy()
             .with_columns(
-                pl.col(NAME).str.replace(COMMA, "").alias(NAME),
-                pl.col(PHONE).str.replace(SEMI, ""),
+                pl.col(NAME).str.replace_all(COMMA, "").alias(NAME),
+                pl.col(PHONE).str.replace_all(SEMI, "").alias(PHONE),
             )
             .collect()
         )
