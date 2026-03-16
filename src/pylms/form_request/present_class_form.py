@@ -1,7 +1,7 @@
 from ..constants import COHORT, NAME
 from ..data import DataStore
 from ..errors import Result
-from ..form_utils import return_name
+from ..form_utils import fmt_name, return_name
 from ..models import (
     ChoiceQuestion,
     Content,
@@ -35,7 +35,7 @@ def init_present_form(ds: DataStore, input_date: str, gmails: list[str]) -> Resu
     """
     # Extract student data
     pretty = ds.pretty()
-    names: list[str] = pretty[NAME].to_list()
+    fmt_names = fmt_name(ds)
     cohort_no: int = pretty[0, COHORT]
     head = return_name(cohort_no, "Attendance", input_date)
     form_title, form_name = head.title, head.name
@@ -57,7 +57,7 @@ def init_present_form(ds: DataStore, input_date: str, gmails: list[str]) -> Resu
                             question=Question(
                                 choiceQuestion=ChoiceQuestion(
                                     type="DROP_DOWN",
-                                    options=[OptionDict(value=name) for name in names],
+                                    options=[OptionDict(value=name) for name in fmt_names],
                                     shuffle=False,
                                 ),
                                 required=True,

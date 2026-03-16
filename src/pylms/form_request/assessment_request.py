@@ -1,9 +1,10 @@
+from pylms.form_request.share_emails import input_share_emails
 from ..cli import input_option, input_str
 from ..config import Config
-from ..constants import COHORT, EMAIL, NAME
+from ..constants import COHORT
 from ..data import DataStore
 from ..errors import Result, Unit
-from ..form_utils import new_assessment_content, return_name
+from ..form_utils import fmt_name, new_assessment_content, return_name
 from ..models import ContentBody
 from ..service import (
     run_create_form,
@@ -39,9 +40,7 @@ def init_assessment_form(config: Config, ds: DataStore) -> Result[Unit]:
 
     # Extract student data
     pretty = ds.pretty()
-    names: list[str] = pretty[NAME].to_list()
-    emails: list[str] = pretty[EMAIL].to_list()
-    emails.sort()
+    fmt_names = fmt_name(ds)
     cohort: int = pretty[0, COHORT]
 
     # Create form with title and name
@@ -53,7 +52,7 @@ def init_assessment_form(config: Config, ds: DataStore) -> Result[Unit]:
     form = form_result.unwrap()
 
     # Setup form content
-    content_body: ContentBody = new_assessment_content(names, emails)
+    content_body: ContentBody = new_assessment_content(fmt_names)
     form_result = run_setup_form(form, content_body)
     if form_result.is_err():
         return form_result.propagate()
@@ -66,7 +65,11 @@ def init_assessment_form(config: Config, ds: DataStore) -> Result[Unit]:
     form = form_result.unwrap()
 
     # Share form with facilitators
-    gmails: list[str] = [f.gmail for f in config.facilitators]
+    gmails = input_share_emails(config)
+    if gmails.is_err():
+        return gmails.propagate()
+    gmails = gmails.unwrap()
+    
     form_result = run_share_form_multiple(form, gmails)
     if form_result.is_err():
         return form_result.propagate()
