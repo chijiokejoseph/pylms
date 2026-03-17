@@ -36,7 +36,7 @@ def filter_names(turnout_stream: DataStream) -> Result[DataStream]:
 
     # Filter data to include only matching dates
     filtered_data = turnout_data.filter(
-        pl.col(TIME).cast(pl.Datetime).dt.strftime(DATE_FMT) == pl.col(DATE)
+        pl.col(TIME).str.strptime(pl.Datetime).dt.strftime(DATE_FMT) == pl.col(DATE)
     ).unique(pl.col(NAME))
     filtered_data = defmt_name(DataStream(filtered_data))
     return filtered_data
