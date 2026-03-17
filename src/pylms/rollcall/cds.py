@@ -21,19 +21,18 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream) -> Result[Unit]:
     cds_data = defmt_name(DataStream(cds_data))
     if cds_data.is_err():
         return cds_data.propagate()
-    
+
     cds_data = cds_data.unwrap().as_ref()
 
     cds_num_col = f"{CDS} Num"
-    cds_data = cds_data.with_columns(pl.lit(0).alias(cds_num_col)).with_columns(
-        [
+    cds_data = cds_data.with_columns(pl.lit(0).alias(cds_num_col))
+    for i, day in enumerate(WEEK_DAYS, start=1):
+        cds_data = cds_data.with_columns(
             pl.when(pl.col(CDS) == day)
             .then(pl.lit(i))
             .otherwise(pl.col(cds_num_col))
             .alias(cds_num_col)
-            for i, day in enumerate(WEEK_DAYS, start=1)
-        ]
-    )
+        )
     sub_data = cds_data.select([NAME, cds_num_col])
     pretty = (
         pretty.join(sub_data, NAME, how="left")
@@ -41,8 +40,8 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream) -> Result[Unit]:
         .sort(pl.col(NAME))
     )
     date_cols = [col for col in data_ref.columns if col.count("/") == 2]
-    pretty = pretty.with_columns(
-        [
+    for date in date_cols:
+        pretty = pretty.with_columns(
             # weekday num of date is equal to cds_day_num
             pl.when(to_day_num(date) == pl.col(cds_num_col))
             .then(
@@ -54,9 +53,8 @@ def record_cds(ds: DataStore, cds_data_stream: DataStream) -> Result[Unit]:
             )
             .otherwise(pl.col(date))
             .alias(date)
-            for date in date_cols
-        ]
-    )
+        )
+    
     data_ref = pretty.drop(cds_num_col).with_columns(
         pl.Series(NAME, data_ref.get_column(NAME)).alias(NAME)
     )
