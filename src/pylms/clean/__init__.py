@@ -35,8 +35,10 @@ from .clean_states import normalize
 from .clean_str import clean_str
 from .clean_time import clean_time
 from .clean_training import clean_training
+from .clean_attendance import clean_attendance
 
 __all__ = [
+    "clean_attendance",
     "clean_col_names",
     "clean_na",
     "clean_duplicates",

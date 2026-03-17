@@ -1,6 +1,6 @@
 from ..config import Config
-from .path_fns import get_excel_path
 from ..constants import DATA_PATH
+from .path_fns import get_excel_path
 
 
 def prepare_paths(config: Config) -> None:
