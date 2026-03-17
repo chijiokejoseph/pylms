@@ -68,7 +68,7 @@ class DataStream:
         return self.as_ref().clone()
 
     def is_empty(self) -> bool:
-        return self.as_ref().shape[0] > 0
+        return self.as_ref().is_empty()
 
     def write(self, path: Path, *, worksheet: str | None = None) -> Result[Unit]:
         """Write DataFrame to file.
