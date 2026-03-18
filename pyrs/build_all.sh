@@ -1,6 +1,9 @@
 #!/bin/bash
 # Build all Rust extension modules
 
+echo "Activate Python Environment"
+source .venv/Scripts/activate
+
 set -e
 
 echo "Sync UV environment"

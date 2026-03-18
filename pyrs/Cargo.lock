@@ -2407,6 +2407,9 @@ dependencies = [
 [[package]]
 name = "rlib"
 version = "0.1.0"
+dependencies = [
+ "pyo3",
+]
 
 [[package]]
 name = "rmp"
