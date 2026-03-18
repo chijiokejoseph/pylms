@@ -12,6 +12,7 @@ from .emails_mode import EmailInputMode
 from .emails_parse import query_emails_parse
 from .emails_string import read_emails_string
 from .emails_txt import read_emails_txt
+from .option_input import input_bool
 
 
 def query_emails() -> Result[list[str]]:
@@ -81,4 +82,18 @@ Query: """
             continue
 
         # Return successful result
+        emails = emails_result.unwrap()
+        prompt = "Selected emails are: \n" + "\n".join(emails) + "\n"
+        print_info(prompt)
+        while True:
+            choice = input_bool("Confirm selected emails")
+            if choice.is_err() and isinstance(choice.error, ForcedExitError):
+                return choice.propagate()
+            elif choice.is_err():
+                continue
+            choice = choice.unwrap()
+            if not choice:
+                return Result.err("User quit operation")
+            break
+
         return emails_result

@@ -1,6 +1,7 @@
 """General query function for date selection."""
 
-from ..cli import input_str
+from ..cli import input_bool, input_str
+from ..constants import COMMA
 from ..errors import ForcedExitError, Result
 from ..history import History
 from ..info import print_info
@@ -63,12 +64,27 @@ Query: """
         pipeline_result = apply_selector_pipeline(history, selectors)
 
         # Check pipeline result
-        if pipeline_result.is_err():
-            err = pipeline_result.unwrap_err()
-            if isinstance(err, ForcedExitError):
-                return pipeline_result.propagate()
+        if pipeline_result.is_err() and isinstance(
+            pipeline_result.error, ForcedExitError
+        ):
+            return pipeline_result.propagate()
+        elif pipeline_result.is_err():
             pipeline_result.print_if_err()
             continue
 
+        dates = pipeline_result.unwrap()
+        prompt = "Selected dates are: " + COMMA.join(dates)
+        print_info(prompt)
+
+        while True:
+            choice = input_bool("Confirm selected emails")
+            if choice.is_err() and isinstance(choice.error, ForcedExitError):
+                return choice.propagate()
+            elif choice.is_err():
+                continue
+            choice = choice.unwrap()
+            if not choice:
+                return Result.err("User quit operation")
+            break
         # Return successful result
         return pipeline_result

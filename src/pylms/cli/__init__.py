@@ -32,7 +32,7 @@ from .custom_inputs import (
 from .dates_input import input_dates
 from .dates_print import print_date_menu
 from .email_input import input_email
-from .emails_input import provide_emails
+from .provide_emails import provide_emails
 from .emails_inputs import input_emails
 from .emails_query import query_emails
 from .input_with_quit import input_fn
