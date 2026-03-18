@@ -1,6 +1,8 @@
 import polars as pl
 
-from ..constants import COMMA_DELIM, DATE, DATE_FMT, NAME, TIME
+from pylms.clean import clean_timestamp
+
+from ..constants import COMMA_DELIM, DATE, NAME, TIME
 from ..data import DataStream
 from ..errors import Result
 from ..form_utils import defmt_name
@@ -35,8 +37,11 @@ def filter_names(turnout_stream: DataStream) -> Result[DataStream]:
     turnout_data = turnout_stream.as_ref()
 
     # Filter data to include only matching dates
-    filtered_data = turnout_data.filter(
-        pl.col(TIME).str.strptime(pl.Datetime).dt.strftime(DATE_FMT) == pl.col(DATE)
-    ).unique(pl.col(NAME))
+    turnout_data = turnout_data.with_columns(
+        pl.col(TIME).map_batches(clean_timestamp).alias(TIME)
+    )
+    filtered_data = turnout_data.filter(pl.col(TIME) == pl.col(DATE)).unique(
+        pl.col(NAME)
+    )
     filtered_data = defmt_name(DataStream(filtered_data))
     return filtered_data
