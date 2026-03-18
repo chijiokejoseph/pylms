@@ -150,6 +150,8 @@ NA_COLUMNS_FILL: dict[str, object] = {
     TRAINING: "Python Beginners (Monday - Wednesday 12:00pm)",
 }
 
+QUOTE = "\""
+
 # Delimiters / Separators
 COMMA = ","
 COMMA_DELIM = ", "

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ..errors import Result
 from .emails_mode import EmailInputMode
+from ..constants import QUOTE
 
 
 def query_emails_parse(query: str) -> Result[tuple[EmailInputMode, Path | str]]:
@@ -23,6 +24,8 @@ def query_emails_parse(query: str) -> Result[tuple[EmailInputMode, Path | str]]:
         Result[tuple[EmailInputType, Path | str]]: Input type and value (path or string).
     """
     query = query.strip()
+    if QUOTE in query:
+        query = query.replace(QUOTE, "")
 
     if len(query) == 0:
         return Result.err("Empty query")
