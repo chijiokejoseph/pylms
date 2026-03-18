@@ -43,3 +43,14 @@ def clean_dates(dates: pl.Series, format: str, day_first: bool) -> pl.Series:
         Polars Series with cleaned and formatted dates.
     """
     pass
+
+def clean_timestamp(dates: pl.Series) -> pl.Series:
+    """Clean and format form timestamps to `DATE_FMT`
+
+    Args:
+        dates (pl.Series): Polars Series containing date values as strings.
+    
+    Returns:
+        Polars Series with date values formatted to the format "%d/%m/%Y"
+    """
+    pass

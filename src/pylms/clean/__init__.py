@@ -36,6 +36,7 @@ from .clean_str import clean_str
 from .clean_time import clean_time
 from .clean_training import clean_training
 from .clean_attendance import clean_attendance
+from .rclean import clean_timestamp
 
 __all__ = [
     "clean_attendance",
@@ -50,6 +51,7 @@ __all__ = [
     "clean_cohort",
     "clean_date",
     "clean_time",
+    "clean_timestamp",
     "clean_internship",
     "clean_training",
     "clean_completion_date",
