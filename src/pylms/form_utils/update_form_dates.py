@@ -38,7 +38,7 @@ def new_content_from_date(selected_date: str, index: int) -> Content:
                         required=True,
                     )
                 ),
-                title=f"Class {selected_date}",
+                title=f"{selected_date}",
                 description=f"Please specify if you were present, absent from this class or if you were excused for the class on {selected_date}",
             ),
             location=Location(index=index),
