@@ -47,6 +47,33 @@ def get_class_info(history: History, class_date: str) -> Result[ClassFormInfo]:
     return Result.ok(matched_forms[0])
 
 
+@overload
+def get_manual_classes(history: History, sample: str) -> list[str]:
+    pass
+
+
+@overload
+def get_manual_classes(history: History, sample: datetime) -> list[datetime]:
+    pass
+
+
+def get_manual_classes(
+    history: History, sample: str | datetime
+) -> list[str] | list[datetime]:
+    classes = get_marked_classes(history, datetime.now())
+    form_classes = [form.date for form in history.class_forms]
+    matched_classes = [
+        each_class
+        for each_class in classes
+        if each_class.strftime(DATE_FMT) not in form_classes
+    ]
+
+    if isinstance(sample, datetime):
+        return matched_classes
+
+    return [each_class.strftime(DATE_FMT) for each_class in matched_classes]
+
+
 def get_available_class_forms(history: History) -> list[ClassFormInfo]:
     """Get list of class forms that have not been recorded yet.
 
@@ -124,9 +151,7 @@ def get_classes(
         if present:
             return [date.strftime(DATE_FMT) for date in dates]
         else:
-            return [
-                date.strftime(DATE_FMT) for date in src if date not in dates
-            ]
+            return [date.strftime(DATE_FMT) for date in src if date not in dates]
 
 
 @overload
