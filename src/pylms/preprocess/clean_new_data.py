@@ -1,9 +1,7 @@
 import polars as pl
 
 from ..clean import (
-    clean_cohort,
     clean_completion_date,
-    clean_date,
     clean_duplicates,
     clean_email,
     clean_internship,
@@ -16,30 +14,34 @@ from ..clean import (
     clean_time,
     clean_training,
 )
-from ..constants import DATA_COLUMNS, NAME, PHONE
+from ..constants import COHORT, DATA_COLUMNS, DATE, NAME, PHONE
 from ..data import DataStore, DataStream
 from ..errors import Result
 
 
-def _clean_new(data_stream: DataStream) -> Result[DataStore]:
+def _clean_new(data_stream: DataStream, ref: DataStore) -> Result[DataStore]:
     """Clean new student data for addition to existing registration data.
-    
+
     Applies comprehensive data cleaning operations including NA removal,
     string formatting, email/name/phone cleaning, and column reordering.
-    
+
     Args:
         data_stream (DataStream): Stream containing new student data to clean.
-        
+
     Returns:
         Result[DataStore]: Success with cleaned DataStore or error.
     """
+
     def validate_na_removal(test_data: pl.DataFrame) -> tuple[bool, str]:
         contains_na = test_data.null_count().sum_horizontal().item() > 0
         if contains_na:
             return False, "The data has null values"
-        
+
         return True, ""
-        
+
+    ds_data = ref.as_ref()
+    cohort: int = ds_data.item(0, COHORT)
+    orientation: str = ds_data.item(0, DATE)
 
     data = data_stream.as_ref()
 
@@ -59,15 +61,10 @@ def _clean_new(data_stream: DataStream) -> Result[DataStore]:
 
     data = result.unwrap()
 
-    result = clean_cohort(data)
-    if result.is_err():
-        return result.propagate()
+    data = data.with_columns(
+        [pl.lit(cohort).alias(COHORT), pl.lit(orientation).alias(DATE)]
+    )
 
-    result = clean_date(data)
-    if result.is_err():
-        return result.propagate()
-
-    data = result.unwrap()
     data = clean_time(data)
     data = clean_internship(data)
     data = clean_training(data)
@@ -112,16 +109,17 @@ def _clean_new(data_stream: DataStream) -> Result[DataStore]:
     return Result.ok(ds)
 
 
-def clean_new_data(new_data_stream: DataStream) -> Result[DataStore]:
+def clean_new_data(new_data_stream: DataStream, ref: DataStore) -> Result[DataStore]:
     """Clean new student data for integration with existing registration data.
-    
+
     Processes new student data through comprehensive cleaning pipeline to ensure
     compatibility with existing DataStore format and data quality standards.
-    
+
     Args:
         new_data_stream (DataStream): Stream containing new student registration data.
-        
+        cohort (int): The cohort number from prexisting data
+
     Returns:
         Result[DataStore]: Success with cleaned DataStore ready for integration or error.
     """
-    return _clean_new(new_data_stream)
+    return _clean_new(new_data_stream, ref)
