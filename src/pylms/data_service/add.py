@@ -8,27 +8,23 @@ from .append_utils import clean_after_ops
 
 def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
     """Add subset DataStore to superset DataStore with column validation.
-    
+
     Args:
         superset (DataStore): Target DataStore to add data to.
         subset (DataStore): Source DataStore to add from.
-        
+
     Returns:
         Result[DataStore]: Success with new combined DataStore or error message.
     """
     superset_ref = superset.as_ref()
     subset_ref = subset.as_ref()
-    superset_cols: list[str] = superset_ref.columns
-    subset_cols: list[str] = subset_ref.columns
+    superset_cols = superset_ref.columns
+    subset_cols = subset_ref.columns
 
     def validate_subset() -> Result[Unit]:
         """Validate that subset columns exist in superset."""
-        superset_extras: list[str] = [
-            col for col in superset_cols if col not in DATA_COLUMNS
-        ]
-        subset_extras: list[str] = [
-            col for col in subset_cols if col not in DATA_COLUMNS
-        ]
+        superset_extras = [col for col in superset_cols if col not in DATA_COLUMNS]
+        subset_extras = [col for col in subset_cols if col not in DATA_COLUMNS]
         if any([extra_col not in superset_extras for extra_col in subset_extras]):
             msg = f"The following columns in the subset {[col for col in subset_extras if col not in superset_extras]} are not found in the superset DataStore. \nPlease rerun the program with the correct inputs and try again."
             eprint(msg)
@@ -41,16 +37,23 @@ def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
         return result.propagate()
 
     # Align subset columns with superset, filling missing columns with spaces
-    subset_ref = subset_ref.lazy().select(
+    missing_cols = [
+        col for col in superset_ref.columns if col not in subset_ref.columns
+    ]
+    subset_ref = subset_ref.with_columns(
         [
-            pl.when(col in superset_ref.columns)
-            .then(pl.col(col))
-            .otherwise(
-                pl.Series(col, [SPACE_DELIM for _ in range(subset_ref.shape[0])])
-            )
-            for col in subset_ref.columns
+            pl.Series(col, [SPACE_DELIM for _ in range(subset_ref.height)]).alias(col)
+            for col in missing_cols
         ]
-    ).collect()
+    ).select(superset_ref.columns)
+
+    col_types = [superset_ref.get_column(col).dtype for col in superset_ref.columns]
+    subset_ref = subset_ref.with_columns(
+        [
+            pl.col(col).cast(col_type)
+            for col_type, col in zip(col_types, superset_ref.columns)
+        ]
+    )
 
     # Combine DataFrames vertically
     new = superset_ref.vstack(subset_ref)
