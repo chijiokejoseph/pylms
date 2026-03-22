@@ -4,7 +4,7 @@ from typing import Self, final, override
 
 import polars as pl
 
-from ..constants import COMMA, COMMA_DELIM, DATA_COLUMNS, NAME, PHONE, SEMI
+from ..constants import COMMA, COMMA_DELIM, DATA_COLUMNS, NAME, PHONE, SEMI, SPACE_DELIM
 from ..errors import Result, Unit, eprint
 from .datastream import DataStream
 from .utils import validate, write
@@ -161,6 +161,11 @@ class DataStore(DataStream):
         if pretty is not None and pretty:
             data = self.pretty()
         else:
-            data = self.as_ref()
+            data = self.as_ref().with_columns(
+                pl.col(NAME)
+                .str.replace_all(COMMA_DELIM, SPACE_DELIM)
+                .str.replace_all(SPACE_DELIM, COMMA_DELIM)
+                .alias(NAME)
+            )
 
         return write(data, path, worksheet=worksheet)
