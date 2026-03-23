@@ -5,6 +5,7 @@ from typing import Literal, NamedTuple
 
 import polars as pl
 
+from ..config import Config
 from ..constants import GENDER, GROUP, NAME, SERIAL
 from ..data import DataStore, read, write
 from ..errors import Result, Unit, eprint
@@ -42,6 +43,10 @@ def get_present_count(ds: DataStore, serial: int) -> int:
     )
 
 
+def absent_expr(col: str) -> pl.Expr:
+    return (pl.col(col) == "Absent") | (pl.col(col).str.strip_chars() == "")
+
+
 def get_nominations(
     ds: DataStore, serials: list[int], gender_type: Literal["Male", "Female"]
 ) -> Nominations:
@@ -50,11 +55,12 @@ def get_nominations(
     date_columns: list[str] = [
         col for col in columns if re.match(r"\d{2}/\d{2}/\d{4}", col) is not None
     ]
+
     present = (
         data.select(pl.col(date_columns))
         .with_columns(
             [
-                pl.when(pl.col(col) == "Absent" | pl.col(col).str.strip_chars() == "")
+                pl.when(absent_expr(col))
                 .then(pl.lit(0))
                 .otherwise(pl.lit(1))
                 .alias(col)
@@ -65,9 +71,9 @@ def get_nominations(
     )
     genders = (
         data.select(pl.col(GENDER, SERIAL))
+        .with_columns(pl.Series("Count", present).alias("Count"))
         .filter(pl.col(SERIAL).is_in(serials))
         .filter(pl.col(GENDER) == gender_type)
-        .with_columns(pl.Series(present).alias("Count"))
     )
 
     # @np.vectorize
@@ -80,11 +86,7 @@ def get_nominations(
 
     max_count: int = genders.select(pl.col("Count").max()).item()
 
-    nominees: list[int] = (
-        genders.select(pl.col(SERIAL))
-        .filter(pl.col("Count") == max_count)[SERIAL]
-        .to_list()
-    )
+    nominees: list[int] = genders.filter(pl.col("Count") == max_count)[SERIAL].to_list()
     present_counts: list[int] = genders["Count"].to_list()
 
     return Nominations(present_counts=present_counts, nominees=nominees)
@@ -119,7 +121,7 @@ def choose_leader(
     return LeaderMap(leader, assistant, leaders, assistants)
 
 
-def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
+def select_leaders(config: Config, ds: DataStore, history: History) -> Result[Unit]:
     if not history.has_group:
         msg = "Students have not been grouped yet."
         eprint(msg)
@@ -135,7 +137,7 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
     leader_groups: list[int] = []
 
     for group in range(1, groups + 1):
-        group_path: Path = get_group_path(group)
+        group_path: Path = get_group_path(config, group)
         if not group_path.exists():
             msg = f"Group file for group {group} does not exist."
             eprint(msg)
@@ -150,7 +152,12 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
 
         serials: list[int] = group_df[SERIAL].to_list()
 
-        genders = data[GENDER].to_numpy()
+        genders: list[str] = (
+            group_df.join(data.select([SERIAL, GENDER]), on=SERIAL, how="inner")
+            .select(GENDER)
+            .to_series()
+            .to_list()
+        )
 
         male_nominations: Nominations = get_nominations(ds, serials, "Male")
         female_nominations: Nominations = get_nominations(ds, serials, "Female")
@@ -159,14 +166,14 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
             male_nominations, female_nominations, group
         )
         leader_name: str = (
-            group_df.select(pl.col(NAME)).filter(pl.col(SERIAL) == leader).item()
+            group_df.filter(pl.col(SERIAL) == leader).select(pl.col(NAME)).item()
         )
 
         present_counts: list[int] = [
             get_present_count(ds, serial) for serial in serials
         ]
         assistant_name: str = (
-            group_df.select(pl.col(NAME)).filter(pl.col(SERIAL) == assistant).item()
+            group_df.filter(pl.col(SERIAL) == assistant).select(pl.col(NAME)).item()
         )
 
         leader_serials.append(leader)
@@ -203,9 +210,9 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
             )
             .collect()
         )
-        criterion_path = get_criterion_path()
+        criterion_path = get_criterion_path(config)
         criterion_path.mkdir(exist_ok=True)
-        group_criterion_path = get_group_criterion_path(group)
+        group_criterion_path = get_group_criterion_path(config, group)
         result = write(group_df, group_criterion_path)
         if result.is_err():
             return result.propagate()
@@ -222,19 +229,19 @@ def select_leaders(ds: DataStore, history: History) -> Result[Unit]:
         }
     )
 
-    result = write(leaders, get_leader_path("Leader"))
+    result = write(leaders, get_leader_path(config, "Leader"))
     if result.is_err():
         return result.propagate()
 
-    result = write(leaders, get_grading_leader("Leader"))
+    result = write(leaders, get_grading_leader(config, "Leader"))
     if result.is_err():
         return result.propagate()
 
-    result = write(assistants, get_leader_path("Assistant"))
+    result = write(assistants, get_leader_path(config, "Assistant"))
     if result.is_err():
         return result.propagate()
 
-    result = write(assistants, get_grading_leader("Assistant"))
+    result = write(assistants, get_grading_leader(config, "Assistant"))
     if result.is_err():
         return result.propagate()
 
