@@ -24,7 +24,7 @@ from ..constants import (
     TIME,
 )
 from ..data import DataStore
-from ..errors import Result, Unit, eprint
+from ..errors import ForcedExitError, Result, Unit, eprint
 from ..info import print_info
 from ..query_data import run_query_data
 from ..re_phone import match_and_clean
@@ -152,10 +152,12 @@ def edit(ds: DataStore) -> Result[Unit]:
         for col in [SERIAL, TIME]:
             mutable_cols.remove(col)
         proc_value: Any | None = None
-        column: str = ""
+        column = ""
 
         name: str = data_ref[idx, NAME]
         print_info(f"You are editing the record of {name} with serial {serial}")
+
+        skip = False
 
         # Loop until a valid value is entered
         while proc_value is None:
@@ -164,11 +166,15 @@ def edit(ds: DataStore) -> Result[Unit]:
                 return result.propagate()
             _, column = result.unwrap()
 
-            old_value = data_ref[idx, column]
-
-            print_info(
-                f"Existing Record\nSerial: {serial}\nStudent {name}\n{column}: {old_value}\n"
+            edit_col = f"{column} (Editing)"
+            row = (
+                data_ref.filter(pl.col(SERIAL) == serial)
+                .with_columns(pl.col(column).alias(edit_col))
+                .select([SERIAL, NAME, EMAIL, edit_col])
             )
+
+            print_info("Existing Record")
+            print(row)
 
             result = input_str(f"Enter the new value for {column}: ", lower_case=False)
             if result.is_err():
@@ -177,17 +183,25 @@ def edit(ds: DataStore) -> Result[Unit]:
             proc_value = _preprocess(column, value)
             print()
 
-            print_info(
-                f"New Record\nSerial: {serial}\nStudent {name}\n{column}: {proc_value}\n"
-            )
+            row = row.with_columns(pl.lit(proc_value).alias(edit_col))
+            print_info("New Record")
+            print(row)
 
             choice = input_bool("Confirm this edit: ")
-            if choice.is_err():
+            if choice.is_err() and isinstance(choice.error, ForcedExitError):
+                return choice.propagate()
+            elif choice.is_err():
                 continue
+            
             choice = choice.unwrap()
 
-            if choice:
-                break
+            if not choice:
+                skip = True
+            break
+                
+        
+        if skip:
+            continue
 
         # Update DataFrame with new value
         if column in [DATE, COHORT]:
