@@ -1,7 +1,7 @@
 """Interactive query function for student selection."""
 
 from ..cli import input_str
-from ..data import DataStore
+from ..data import DataStore, print_polar
 from ..errors import ForcedExitError, Result
 from ..info import print_info
 from .interactive import search_data
@@ -55,15 +55,21 @@ Query: """
         parse_result = query_parse(ds, query)
 
         # Check parse result - if parsing fails, fall back to interactive search
-        if parse_result.is_err():
-            err = parse_result.unwrap_err()
-            # Check for forced exit
-            if isinstance(err, ForcedExitError):
-                return parse_result.propagate()
+        if parse_result.is_err() and isinstance(parse_result.error, ForcedExitError):
+            return parse_result.propagate()
+        elif parse_result.is_err():
             # Print error and fall back to interactive search
             parse_result.print_if_err()
             print_info("Falling back to interactive search...\n")
-            return search_data(ds)
+            parse_result = search_data(ds)
 
+        if parse_result.is_err() and isinstance(parse_result.error, ForcedExitError):
+            return parse_result.propagate()
+        elif parse_result.is_err():
+            parse_result.print_if_err()
+            return parse_result.propagate()
+        
+        serials = parse_result.unwrap()
+        print_polar(ds, serials)
         # Return successful result
         return parse_result

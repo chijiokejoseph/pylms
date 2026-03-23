@@ -2,10 +2,10 @@
 
 from pylms.query_data.select_path import select_path
 
-from ..cli import input_path
-from ..data import DataStore
-from ..errors import ForcedExitError, Result
-from ..info import print_info
+from ..cli import input_bool, input_path
+from ..data import DataStore, print_polar
+from ..errors import ForcedExitError, Result, eprint
+from ..info import print_info, printpass
 
 
 def search_path(ds: DataStore) -> Result[list[int]]:
@@ -41,4 +41,19 @@ def search_path(ds: DataStore) -> Result[list[int]]:
             continue
 
         selections = result.unwrap()
+        serials = [val[0] for val in selections]
+        print_polar(ds, serials)
+
+        confirm = input_bool("Confirm this selection?")
+        if confirm.is_err() and isinstance(confirm.error, ForcedExitError):
+            return confirm.propagate()
+        elif confirm.is_err():
+            confirm.print_if_err()
+            continue
+
+        if not confirm.unwrap():
+            eprint("Selection not confirmed")
+            continue
+
+        printpass(f"Selected {len(serials)} student(s)")
         return Result.ok([s for s, _ in selections])

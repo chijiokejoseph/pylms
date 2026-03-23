@@ -28,7 +28,7 @@ def select_internship(ds: DataStore, category: str) -> Result[list[tuple[int, st
             return Result.err(f"No students found in category '{category}'")
         
         # Extract serial and name tuples
-        results = [(filtered[i, SERIAL], filtered[i, NAME]) for i in range(filtered.height)]
+        results: list[tuple[int, str]] = [(filtered[i, SERIAL], filtered[i, NAME]) for i in range(filtered.height)]
         return Result.ok(results)
     except Exception as e:
         return Result.err(f"Error filtering by internship: {str(e)}")

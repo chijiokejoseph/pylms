@@ -3,6 +3,7 @@
 import re
 from pathlib import Path
 
+from pylms.info import printpass
 from pylms.query_data.select_path import select_path
 
 from ..cli_utils import parse_nums
@@ -54,7 +55,6 @@ def _process_token(ds: DataStore, token: str, serials: set[int]) -> None:
                 return
             tuples = result.unwrap()
             serials.update(s for s, _ in tuples)
-            return
 
         case _ if re.fullmatch(r"nysc|siwes", token, re.IGNORECASE):
             # Internship category pattern
@@ -133,5 +133,7 @@ def query_parse(ds: DataStore, query: str) -> Result[list[int]]:
     # Check if any students matched
     if len(all_serials) == 0:
         return Result.err("No students matched the query")
+
+    printpass(f"Selected {len(all_serials)} student(s)")
 
     return Result.ok(sorted(list(all_serials)))

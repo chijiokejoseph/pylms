@@ -45,7 +45,7 @@ def select_completion(ds: DataStore, query: str) -> Result[list[tuple[int, str]]
             return Result.err(f"No students found with completion '{query}'")
         
         # Extract serial and name tuples
-        results = [(filtered[i, SERIAL], filtered[i, NAME]) for i in range(filtered.height)]
+        results: list[tuple[int, str]] = [(filtered[i, SERIAL], filtered[i, NAME]) for i in range(filtered.height)]
         return Result.ok(results)
     except Exception as e:
         return Result.err(f"Error filtering by completion: {str(e)}")
