@@ -34,7 +34,7 @@ def run_awardees_lms(config: Config, ds: DataStore, history: History) -> None:
 
         match selection:
             case 1:
-                result = collate_fast_track(config, ds)
+                result = collate_fast_track(config, ds, history)
                 if result.is_err():
                     continue
 

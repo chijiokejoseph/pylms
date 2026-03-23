@@ -2,13 +2,14 @@ from pathlib import Path
 
 import polars as pl
 
+from ..config import Config
 from ..constants import GROUP, SERIAL
 from ..data import read, write
 from ..errors import Result, Unit, eprint
 from ..paths import get_grade_path, get_group_dir, get_group_path
 
 
-def prepare_grading(num_groups: int) -> Result[Unit]:
+def prepare_grading(config: Config, num_groups: int) -> Result[Unit]:
     """Prepare grading spreadsheets for project evaluation.
 
     Creates individual group grading sheets and summary grading workbooks
@@ -20,7 +21,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
     Returns:
         Result[Unit]: Success or error with message.
     """
-    path = get_group_path()
+    path = get_group_path(config)
     if not path.exists():
         msg = f"path: {path} does not exist."
         eprint(msg)
@@ -43,7 +44,7 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
             ]
         )
 
-        grade_path = get_grade_path(num)
+        grade_path = get_grade_path(config, num)
         result = write(grade_num, grade_path)
         if result.is_err():
             return result.propagate()
@@ -90,8 +91,8 @@ def prepare_grading(num_groups: int) -> Result[Unit]:
         }
     )
 
-    grading_path = get_grade_path()
-    group_path = get_group_dir() / grading_path.name
+    grading_path = get_grade_path(config)
+    group_path = get_group_dir(config) / grading_path.name
 
     # Write multi-sheet workbooks
     result = write_sheets(

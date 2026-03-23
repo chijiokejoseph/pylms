@@ -14,7 +14,7 @@ from ..constants import (
 )
 from ..data import DataStream, new_validator
 from ..errors import Result, Unit
-from ..history import retrieve_dates
+from ..history import History, all_dates
 from ..paths import (
     get_fast_track_path,
     get_merit_path,
@@ -33,6 +33,7 @@ Specifies whether to collate merit-based or fast-track awardees.
 
 def collate_awardees(
     config: Config,
+    history: History,
     stream: DataStream,
     cohort_num: int,
     collate_type: CollateType = "merit",
@@ -44,6 +45,7 @@ def collate_awardees(
 
     Args:
         config (Config): Configuration object containing course settings.
+        history (History): History object
         stream (DataStream): Stream containing student data.
         cohort_num (int): The cohort number to collate awardees for.
         collate_type (CollateType): Type of awardees to collate ("merit" or "fast track").
@@ -59,11 +61,7 @@ def collate_awardees(
         return result.propagate()
 
     data = stream.as_ref()
-    dates_list = retrieve_dates("")
-    if dates_list.is_err():
-        return dates_list.propagate()
-
-    dates_list = dates_list.unwrap()
+    dates_list = all_dates(history, "")
 
     end_date = dates_list[-1]
     end_date = fmt_date(end_date)
@@ -76,15 +74,15 @@ def collate_awardees(
     awardees_data = pl.DataFrame(
         {
             AWARDEES["Email"]: data[EMAIL],
-            AWARDEES["CourseTitle"]: pl.lit(course_name),
-            AWARDEES["Date"]: pl.lit(end_date),
+            AWARDEES["CourseTitle"]: course_name,
+            AWARDEES["Date"]: end_date,
             AWARDEES["Name"]: data[NAME],
             AWARDEES["Phone"]: data[PHONE].map_elements(
                 fmt_phone, return_dtype=pl.Utf8
             ),
-            AWARDEES["Batch"]: pl.lit(AWARDEES_BATCH),
-            AWARDEES["BatchID"]: pl.lit(AWARDEES_EMTPY),
-            AWARDEES["CertID"]: pl.lit(AWARDEES_EMTPY),
+            AWARDEES["Batch"]: AWARDEES_BATCH,
+            AWARDEES["BatchID"]: AWARDEES_EMTPY,
+            AWARDEES["CertID"]: AWARDEES_EMTPY,
         }
     )
 

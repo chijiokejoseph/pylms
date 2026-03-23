@@ -153,7 +153,7 @@ def collate_merit(config: Config, ds: DataStore, history: History) -> Result[Uni
     passed_stream = DataStream(passed_data)
     cohort = pretty[0, COHORT]
 
-    results = collate_awardees(config, passed_stream, cohort)
+    results = collate_awardees(config, history, passed_stream, cohort)
     if results.is_err():
         return results.propagate()
 

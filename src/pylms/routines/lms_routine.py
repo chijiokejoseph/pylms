@@ -51,13 +51,13 @@ def run_lms(config: Config, ds: DataStore, history: History) -> None:
                 if history.has_group:
                     num_groups: int = get_num_groups(history)
 
-                    result = prepare_grading(num_groups)
+                    result = prepare_grading(config, num_groups)
                     if result.is_err():
                         continue
 
                     printpass("Grading sheets generated successfully")
 
-                    result = select_leaders(ds, history)
+                    result = select_leaders(config, ds, history)
                     if result.is_err():
                         continue
 
