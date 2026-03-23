@@ -5,11 +5,12 @@ from uuid import UUID
 
 import polars as pl
 
-from ..cli import input_num
+from ..cli import input_num, print_data
 from ..config import Config
-from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME, COMMA_DELIM
+from ..constants import CACHE_CMD, CACHE_ID, CACHE_TIME, COMMA_DELIM, SERIAL
 from ..data import DataStream, read
 from ..errors import Result, Unit
+from ..info import print_info
 from ..paths import get_data_path, get_metadata_path, get_snapshot_path
 from .cache import copy_data
 
@@ -83,7 +84,7 @@ def rollback_to_cmd(config: Config, test_path: Path | None = None) -> Result[Uni
     Returns:
         Result[Unit]: Result object indicating success or a propagated error.
     """
-    cache_records = read(get_metadata_path(config))
+    cache_records = read(get_metadata_path())
     if cache_records.is_err():
         return cache_records.propagate()
 
@@ -95,30 +96,34 @@ def rollback_to_cmd(config: Config, test_path: Path | None = None) -> Result[Uni
         return cache_stream.propagate()
 
     cache_stream = cache_stream.unwrap()
-
     cache_records = cache_stream.as_ref()
+    cache_display = cache_records.with_columns(
+        pl.int_range(1, cache_records.height+1).alias(SERIAL)
+    ).select([SERIAL, CACHE_CMD, CACHE_ID])
+    print_info("Cache Records are shown below\n")
+    print_data(cache_display)
 
-    max_index_len: int = cache_records.shape[0]
-    max_index_len = max(len_str(str(max_index_len)), len_str("Index"))
+    # max_index_len: int = cache_records.shape[0]
+    # max_index_len = max(len_str(str(max_index_len)), len_str("Index"))
 
-    max_time_len: int = max(
-        [len_str(fmt_time(timestamp)) for timestamp in cache_records[CACHE_TIME]]
-    )
-    max_time_len = max(max_time_len, len_str("Timestamp"))
+    # max_time_len: int = max(
+    #     [len_str(fmt_time(timestamp)) for timestamp in cache_records[CACHE_TIME]]
+    # )
+    # max_time_len = max(max_time_len, len_str("Timestamp"))
 
-    max_cmd_len: int = max([len_str(cmd) for cmd in cache_records[CACHE_CMD]])
-    max_cmd_len = max(max_cmd_len, len_str("Command"))
+    # max_cmd_len: int = max([len_str(cmd) for cmd in cache_records[CACHE_CMD]])
+    # max_cmd_len = max(max_cmd_len, len_str("Command"))
 
-    print(
-        f"{'Index':{max_index_len}}\t{'Timestamp':<{max_time_len}}\t{'Command':<{max_cmd_len}}\n"
-    )
+    # print(
+    #     f"{'Index':{max_index_len}}\t{'Timestamp':<{max_time_len}}\t{'Command':<{max_cmd_len}}\n"
+    # )
 
-    for count, row in enumerate(cache_records.to_arrow().to_pylist(), start=1):
-        timestamp = row[CACHE_TIME]
-        cmd = row[CACHE_CMD]
-        print(
-            f"{count:<{max_index_len}}\t{fmt_time(timestamp):<{max_time_len}}\t{cmd:<{max_cmd_len}}\n"
-        )
+    # for count, row in enumerate(cache_records.to_arrow().to_pylist(), start=1):
+    #     timestamp = row[CACHE_TIME]
+    #     cmd = row[CACHE_CMD]
+    #     print(
+    #         f"{count:<{max_index_len}}\t{fmt_time(timestamp):<{max_time_len}}\t{cmd:<{max_cmd_len}}\n"
+    #     )
 
     result = input_num(
         "Enter the index of the state to roll back to: ",
@@ -128,11 +133,11 @@ def rollback_to_cmd(config: Config, test_path: Path | None = None) -> Result[Uni
         return result.propagate()
     idx = result.unwrap()
 
-    snapshot_value: str = cache_records.item(idx - 1, CACHE_CMD)
+    snapshot_value: str = cache_records.item(idx - 1, CACHE_ID)
 
     snapshot_id = UUID(snapshot_value)
 
-    snapshot_path = get_snapshot_path(config, snapshot_id)
+    snapshot_path = get_snapshot_path(snapshot_id)
 
     if test_path is None:
         test_path = get_data_path(config)
