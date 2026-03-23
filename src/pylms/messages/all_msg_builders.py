@@ -2,17 +2,17 @@ from ..cli import input_option, input_str
 from ..errors import Result
 from ..history.history import History
 from .construct import construct_msg
-from .utils import TextBody
+from .message import MessageBody
 
 
 # Define a builder function to create the list of messages to send
-def build_custom_all_msg() -> Result[TextBody]:
+def compose_custom_msg_body() -> Result[MessageBody]:
     """Build custom message content for all recipients.
-    
+
     Prompts user for email title and message body content.
-    
+
     Returns:
-        Result[TextBody]: Success with title and body or error.
+        Result[MessageBody]: Success with title and body or error.
     """
 
     # Prompt user for the email subject title
@@ -28,17 +28,17 @@ def build_custom_all_msg() -> Result[TextBody]:
         return result.propagate()
     body: str = result.unwrap()
 
-    return Result.ok(TextBody(title, body))
+    return Result.ok(MessageBody(title, body))
 
 
-def build_assessment_all_msg(history: History) -> Result[TextBody]:
+def compose_assessment_msg_body(history: History) -> Result[MessageBody]:
     """Build assessment message content for all students.
-    
+
     Args:
         history (History): History object containing cohort information.
-        
+
     Returns:
-        Result[TextBody]: Success with assessment message or error.
+        Result[MessageBody]: Success with assessment message or error.
     """
     options: list[str] = [
         "Midterm Assessment",
@@ -79,4 +79,4 @@ Your {assessment_type} with ID: {assessment_id} for the Python Beginners Class f
 FORM: {url}
     """
 
-    return Result.ok(TextBody(title, body))
+    return Result.ok(MessageBody(title, body))

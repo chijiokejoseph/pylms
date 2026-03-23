@@ -8,14 +8,13 @@ from ..email import MailError, run_email
 from ..errors import Result, Unit
 from ..history import History
 from .all_msg_builders import (
-    build_assessment_all_msg,
-    build_custom_all_msg,
+    compose_assessment_msg_body,
+    compose_custom_msg_body,
 )
-from .message_record import MessageRecord
-from .utils import MessageBuilder, TextBody
+from .message import Message, MessageBody, MessageBodyBuilder
 
 
-def _construct_html_message(
+def construct_html_message(
     *, title: str, designation: str, name: str, body: str
 ) -> str:
     """Construct HTML email message with formatting.
@@ -44,9 +43,9 @@ def _construct_html_message(
         """
 
 
-def _build_all_message(
-    config: Config, ds: DataStore, builder: MessageBuilder
-) -> Result[list[MessageRecord]]:
+def compose_message(
+    config: Config, ds: DataStore, builder: MessageBodyBuilder
+) -> Result[list[Message]]:
     """Build personalized email messages for each student in DataStore.
 
     Args:
@@ -60,12 +59,12 @@ def _build_all_message(
     # Get number of students in DataStore
     pretty = ds.pretty()
     nrows: int = pretty.height
-    messages: list[MessageRecord] = []
+    messages: list[Message] = []
 
     # Get sender email from environment
     sender: str = config.admin
 
-    result: Result[TextBody] = builder()
+    result: Result[MessageBody] = builder()
     if result.is_err():
         return result.propagate()
 
@@ -93,17 +92,17 @@ def _build_all_message(
         message["From"] = sender
 
         # Construct HTML email content
-        html_body = _construct_html_message(
+        html_body = construct_html_message(
             title=title, designation=designation, name=name, body=body
         )
         message.set_content(html_body, subtype="html")
-        messages.append(MessageRecord(name=name, email=email, message=message))
+        messages.append(Message(name=name, email=email, message=message))
 
     return Result.ok(messages)
 
 
 def _message_all_emails(
-    server: SMTP, config: Config, ds: DataStore, builder: MessageBuilder
+    server: SMTP, config: Config, ds: DataStore, builder: MessageBodyBuilder
 ) -> Result[Unit]:
     """Send personalized emails to all students using SMTP server.
 
@@ -121,11 +120,11 @@ def _message_all_emails(
     sender: str = config.admin
 
     # Build messages for all students
-    result: Result[list[MessageRecord]] = _build_all_message(config, ds, builder)
+    result: Result[list[Message]] = compose_message(config, ds, builder)
     if result.is_err():
         return result.propagate()
 
-    messages: list[MessageRecord] = result.unwrap()
+    messages: list[Message] = result.unwrap()
 
     # Send each message
     for i, message in enumerate(messages):
@@ -188,7 +187,7 @@ def custom_message_all(config: Config, ds: DataStore) -> Result[Unit]:
             service,
             config,
             ds,
-            build_custom_all_msg,
+            compose_custom_msg_body,
         ),
     )
 
@@ -207,8 +206,8 @@ def assessment_message_all(
         Result[Unit]: Success or error from email sending operation.
     """
 
-    def _builder_intermediary() -> Result[TextBody]:
-        return build_assessment_all_msg(history)
+    def _builder_intermediary() -> Result[MessageBody]:
+        return compose_assessment_msg_body(history)
 
     return run_email(
         config,

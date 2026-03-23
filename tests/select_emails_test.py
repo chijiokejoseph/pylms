@@ -9,9 +9,9 @@ from pylms.constants import CONFIG_PATH
 from pylms.email import run_email
 from pylms.errors import Result, Unit
 from pylms.history import History, load_history
+from pylms.messages.message import MessageBody
 from pylms.messages.select_emails import message_select_emails
-from pylms.messages.select_msg_builders import build_update_msg
-from pylms.messages.utils import TextBody
+from pylms.messages.select_msg_builders import compose_update_msg_body
 
 
 @final
@@ -73,7 +73,7 @@ class SelectEmailsTest(unittest.TestCase):
             results: list[Result[Unit]] = []
             history = self.history
 
-            def builder() -> Result[TextBody]:
+            def builder() -> Result[MessageBody]:
                 """
                 Build update form messages from the test history.
 
@@ -83,7 +83,7 @@ class SelectEmailsTest(unittest.TestCase):
                 This function calls the build_update_form_msg function with the test history to generate
                 the messages to be sent in the test.
                 """
-                return build_update_msg(history)
+                return compose_update_msg_body(history)
 
             for _ in range(4):
                 # Call the function under test for each input mode

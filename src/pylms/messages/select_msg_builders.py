@@ -3,16 +3,16 @@ from ..errors import Result, eprint
 from ..form_utils import select_form
 from ..history import History
 from .construct import construct_msg
-from .utils import TextBody
+from .message import MessageBody
 
 
-def build_custom_select_msg() -> Result[TextBody]:
+def compose_custom_msg_body() -> Result[MessageBody]:
     """Build custom message content for selected recipients.
-    
+
     Prompts user for message title and body, then formats as HTML.
-    
+
     Returns:
-        Result[TextBody]: Success with formatted HTML message or error.
+        Result[MessageBody]: Success with formatted HTML message or error.
     """
 
     # Prompt for the title of the message for each recipient
@@ -38,17 +38,17 @@ def build_custom_select_msg() -> Result[TextBody]:
 </footer>
         """
 
-    return Result.ok(TextBody(title, html_body))
+    return Result.ok(MessageBody(title, html_body))
 
 
-def build_update_msg(history: History) -> Result[TextBody]:
+def compose_update_msg_body(history: History) -> Result[MessageBody]:
     """Build update message content for new cohort members.
-    
+
     Args:
         history (History): History object containing cohort and form information.
-        
+
     Returns:
-        Result[TextBody]: Success with update message or error.
+        Result[MessageBody]: Success with update message or error.
     """
     # Retrieve the URL for the update form from the history object
     result = select_form(history, "update")
@@ -85,4 +85,4 @@ def build_update_msg(history: History) -> Result[TextBody]:
 </footer>
     """
 
-    return Result.ok(TextBody(title, body))
+    return Result.ok(MessageBody(title, body))

@@ -8,17 +8,16 @@ from ..email import MailError, run_email
 from ..errors import Result, Unit
 from ..history import History
 from ..info import print_info, printpass
-from .message_record import MessageRecord
+from .message import Message, MessageBody, MessageBodyBuilder
 from .select_msg_builders import (
-    build_custom_select_msg,
-    build_update_msg,
+    compose_custom_msg_body,
+    compose_update_msg_body,
 )
-from .utils import MessageBuilder, TextBody
 
 
-def _build_select_message(
-    config: Config, builder: MessageBuilder
-) -> Result[list[MessageRecord]]:
+def compose_message(
+    config: Config, builder: MessageBodyBuilder
+) -> Result[list[Message]]:
     """Build message records for selected email recipients.
 
     Args:
@@ -36,17 +35,17 @@ def _build_select_message(
     emails = emails.unwrap()
 
     # Initialize an empty list to hold the MessageRecord objects
-    messages: list[MessageRecord] = []
+    messages: list[Message] = []
 
     # Retrieve the sender's email address from environment variables
     sender: str = config.admin
 
     # Construct the HTML body of the email with styling and content
-    text_body = builder()
-    if text_body.is_err():
-        return text_body.propagate()
-    text_body = text_body.unwrap()
-    title, body = text_body
+    msg_body = builder()
+    if msg_body.is_err():
+        return msg_body.propagate()
+    msg_body = msg_body.unwrap()
+    title, body = msg_body
 
     # Create the email message object
     message: EmailMessage = EmailMessage()
@@ -60,14 +59,14 @@ def _build_select_message(
     # Iterate over each email address to send the message
     for email in emails:
         # Append the constructed MessageRecord to the messages list
-        messages.append(MessageRecord(name=None, email=email, message=message))
+        messages.append(Message(name=None, email=email, message=message))
 
     # Return the list of MessageRecord objects
     return Result.ok(messages)
 
 
 def message_select_emails(
-    server: SMTP, config: Config, builder: MessageBuilder
+    server: SMTP, config: Config, builder: MessageBodyBuilder
 ) -> Result[Unit]:
     """Send emails to selected recipients using SMTP server.
 
@@ -86,13 +85,13 @@ def message_select_emails(
     sender: str = config.admin
 
     # get the messages to be sent by calling the passed in builder
-    result = _build_select_message(config, builder)
+    result = compose_message(config, builder)
     if result.is_err():
         # handle errors that occur during the building process
         return result.propagate()
 
     # get the list of messages to be sent
-    messages: list[MessageRecord] = result.unwrap()
+    messages: list[Message] = result.unwrap()
 
     # iterate over each message and send it
     for message in messages:
@@ -166,7 +165,7 @@ def custom_message_select(config: Config) -> Result[Unit]:
     # Invoke the helper utility to send emails to user-provided email addresses
     return run_email(
         config,
-        lambda service: message_select_emails(service, config, build_custom_select_msg),
+        lambda service: message_select_emails(service, config, compose_custom_msg_body),
     )
 
 
@@ -181,8 +180,8 @@ def update_message_select(config: Config, history: History) -> Result[Unit]:
         Result[Unit]: Success or error from email sending operation.
     """
 
-    def _builder_intermediary() -> Result[TextBody]:
-        return build_update_msg(history)
+    def _builder_intermediary() -> Result[MessageBody]:
+        return compose_update_msg_body(history)
 
     return run_email(
         config,
