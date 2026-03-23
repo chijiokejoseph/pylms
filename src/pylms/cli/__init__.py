@@ -31,6 +31,7 @@ from .custom_inputs import (
 )
 from .dates_input import input_dates
 from .dates_print import print_date_menu
+from .data_print import print_data
 from .email_input import input_email
 from .provide_emails import provide_emails
 from .emails_inputs import input_emails
@@ -54,6 +55,7 @@ __all__ = [
     "input_menu",
     "input_dates",
     "print_date_menu",
+    "print_data",
     "provide_emails",
     "query_emails",
     "input_emails",

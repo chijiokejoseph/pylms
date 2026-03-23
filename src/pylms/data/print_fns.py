@@ -3,6 +3,8 @@ from typing import Any
 
 import polars as pl
 
+from ..constants import EMAIL, NAME, SERIAL
+from .datastore import DataStore
 from .datastream import DataStream
 
 
@@ -75,3 +77,11 @@ def print_stream(stream: DataStream, serials: list[int]) -> None:
         None
     """
     print_df(stream.as_ref(), serials)
+
+
+def print_polar(src: DataStore, serials: list[int]) -> None:
+    display = (
+        src.pretty().filter(pl.col(SERIAL).is_in(serials)).select([SERIAL, NAME, EMAIL])
+    )
+    print()
+    print(display)
