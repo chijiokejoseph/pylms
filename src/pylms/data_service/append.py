@@ -1,5 +1,6 @@
 from ..data import DataStore, DataStream
 from ..errors import Result, Unit
+from ..history import History
 from ..info import print_info
 from ..models import UpdateFormInfo
 from ..preprocess import clean_new_data
@@ -7,7 +8,7 @@ from .add import add
 
 
 def append_update(
-    ds: DataStore, update_stream: DataStream, info: UpdateFormInfo
+    ds: DataStore, history: History, update_stream: DataStream, info: UpdateFormInfo
 ) -> Result[Unit]:
     """Append update form data to existing DataStore.
 
@@ -27,7 +28,7 @@ def append_update(
         return new_ds.propagate()
 
     new_ds = new_ds.unwrap()
-    new_ds = add(ds, new_ds)
+    new_ds = add(ds, new_ds, history)
 
     if new_ds.is_err():
         return new_ds.propagate()

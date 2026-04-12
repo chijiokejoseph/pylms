@@ -3,10 +3,11 @@ import polars as pl
 from ..constants import DATA_COLUMNS, SPACE_DELIM
 from ..data import DataStore
 from ..errors import Result, Unit, eprint
+from ..history import History
 from .append_utils import clean_after_ops
 
 
-def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
+def add(superset: DataStore, subset: DataStore, history: History) -> Result[DataStore]:
     """Add subset DataStore to superset DataStore with column validation.
 
     Args:
@@ -63,5 +64,5 @@ def add(superset: DataStore, subset: DataStore) -> Result[DataStore]:
         return new.propagate()
 
     new = new.unwrap()
-    clean_after_ops(new)
+    clean_after_ops(new, history)
     return Result.ok(new)
