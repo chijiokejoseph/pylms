@@ -154,7 +154,7 @@ Enter the path: """
     printpass("Project Recorded Successfully\n")
     project_path = paths["Project"]
 
-    result = write(project, project_path)
+    result = write(data, project_path)
     if result.is_err():
         return result.propagate()
 
