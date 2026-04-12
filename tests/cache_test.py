@@ -1,3 +1,4 @@
+from pylms.config import init_config
 import unittest
 from pathlib import Path
 from typing import final, override
@@ -31,8 +32,9 @@ class TestCopyData(TestCase):
         :return: (None) - This method does not return a value.
         :rtype: None
         """
-        self.ds = load_ds()  # pyright: ignore[reportUninitializedInstanceVariable]
-        self.history = load_history()  # pyright: ignore[reportUninitializedInstanceVariable]
+        self.config = init_config().unwrap()
+        self.ds = load_ds(self.config).unwrap()  
+        self.history = load_history(self.config).unwrap()  
 
     def test_copy_data(self) -> None:
         """
@@ -41,18 +43,17 @@ class TestCopyData(TestCase):
         :return: (None) - This test method does not return a value.
         :rtype: None
         """
-        ds = self.ds.unwrap()
-        history = self.history.unwrap()
-        result = retrieve_cds_form(history)
+       
+        result = retrieve_cds_form(self.history)
         if result.is_err():
             result.print_if_err()
             return
         cds_form_stream, _ = result.unwrap()
-        record_cds(ds, cds_form_stream)
+        record_cds(self.ds, cds_form_stream)
         print("Marked CDS Records")
 
         # Cache the command with a description
-        result = cache_for_cmd("Mark CDS Days for a Class.")
+        result = cache_for_cmd(self.config, "Mark CDS Days for a Class.")
 
         if result.is_err():
             return
@@ -67,7 +68,7 @@ class TestCopyData(TestCase):
         cache_record = cache_record.unwrap()
 
         # Extract the snapshot ID from the cache record
-        snapshot_id = cache_record[CACHE_ID].loc[0]
+        snapshot_id: str = cache_record.item(0, CACHE_ID)
 
         # Get the snapshot path using the snapshot ID
         snapshot_path: Path = paths.get_snapshot_path(UUID(hex=snapshot_id, version=4))
@@ -77,4 +78,4 @@ class TestCopyData(TestCase):
 
 
 if __name__ == "__main__":
-    _ = unittest.main()
+    unittest.main()

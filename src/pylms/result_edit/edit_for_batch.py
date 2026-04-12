@@ -65,7 +65,7 @@ def edit_batch(
     for index in idxs:
         updates_list[index] = marks
         # Get old result and calculate new result
-        old_result: float = result_data[index, result_col]
+        old_result: float = result_data.item(index, result_col)
         new_result = old_result + marks
         # Cap result at 100
         capped_result = min(new_result, 100) if new_result <= 100 else 100.0

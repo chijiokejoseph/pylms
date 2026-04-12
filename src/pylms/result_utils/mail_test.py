@@ -3,6 +3,7 @@ from typing import final, override
 
 from dotenv import load_dotenv
 
+from ..config import init_config
 from ..data_service import load_ds
 from .mail import mail_result
 
@@ -20,7 +21,8 @@ class TestSendResult(unittest.TestCase):
     @override
     def setUp(self) -> None:
         _ = load_dotenv()
-        self.ds = load_ds()  # pyright: ignore[reportUninitializedInstanceVariable]
+        self.config = init_config().unwrap()
+        self.ds = load_ds(self.config).unwrap()
 
     def test_send_result(self) -> None:
         """
@@ -33,8 +35,7 @@ class TestSendResult(unittest.TestCase):
         :rtype: None
         :raises Exception: (Exception) - If send_result raises an unexpected exception.
         """
-        ds = self.ds.unwrap()
-        _ = mail_result(ds).unwrap()
+        _ = mail_result(self.config, self.ds).unwrap()
 
 
 if __name__ == "__main__":

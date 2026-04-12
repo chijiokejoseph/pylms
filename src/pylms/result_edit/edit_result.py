@@ -1,7 +1,9 @@
 from pathlib import Path
 
-from ..constants import RESULT_UPDATE
+import polars as pl
+
 from ..config import Config
+from ..constants import RESULT_UPDATE
 from ..data import DataStore, DataStream, read
 from ..errors import Result, Unit, eprint
 from ..paths import get_paths_excel
@@ -16,8 +18,8 @@ def edit_result(config: Config, ds: DataStore) -> Result[Unit]:
     """
     Edit student result records in the result Excel file.
 
-    This function allows the user to update student result records by adding a new result update column to the result Excel file. 
-    It supports editing all records, multiple records, or a batch of records, depending on the user's selection. 
+    This function allows the user to update student result records by adding a new result update column to the result Excel file.
+    It supports editing all records, multiple records, or a batch of records, depending on the user's selection.
 
     Args:
         config (Config): The configuration object.
@@ -59,14 +61,14 @@ def edit_result(config: Config, ds: DataStore) -> Result[Unit]:
     result_data = result_stream.as_ref()
 
     # Determine the next result update column
-    result_cols: list[str] = result_data.columns
+    result_cols = result_data.columns
     result = find_col(result_stream, "Result", "Score")
     if result.is_err():
         return result.propagate()
-    result_col: str = result.unwrap()
+    result_col = result.unwrap()
 
-    result_col_idx: int = result_cols.index(result_col)
-    last_col_idx: int = result_col_idx - 1
+    result_col_idx = result_cols.index(result_col)
+    last_col_idx = result_col_idx - 1
     last_col = result_cols[last_col_idx]
 
     update_num: int = 1
@@ -85,7 +87,7 @@ def edit_result(config: Config, ds: DataStore) -> Result[Unit]:
     if select_result.is_err():
         return select_result.propagate()
 
-    select_type: Select = select_result.unwrap()
+    select_type = select_result.unwrap()
     updates_list: list[float] = []
 
     # Perform the selected edit operation
@@ -122,8 +124,8 @@ def edit_result(config: Config, ds: DataStore) -> Result[Unit]:
     # Set the new result update column
     new_col = RESULT_UPDATE + f" {update_num}"
     # Add the new result update column and save the updated data
-    result_data[new_col] = updates_list
-    result_data = result_data[unchanged_cols + [new_col] + remaining_cols]
+    result_data = result_data.with_columns(pl.Series(new_col, updates_list))
+    result_data = result_data.select(unchanged_cols + [new_col] + remaining_cols)
     result_stream = DataStream(result_data)
 
     result = result_stream.write(paths["Result"])

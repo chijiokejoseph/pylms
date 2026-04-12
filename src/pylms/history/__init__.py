@@ -2,7 +2,6 @@
 It includes methods for adding held and marked classes and updating class dates."""
 
 from .classes import extend_weeks, replan_weeks, set_class_days, sync_classes
-from .dates import retrieve_dates
 from .dates_with_history import all_dates
 from .get_props import (
     get_available_cds_forms,
@@ -89,5 +88,4 @@ __all__ = [
     "new_interlude",
     "match_classes",
     "save_history",
-    "retrieve_dates",
 ]

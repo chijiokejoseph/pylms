@@ -1,3 +1,4 @@
+from ..history import History
 from ..constants import SERIAL
 from ..errors import Result, Unit
 from ..data import DataStore
@@ -5,7 +6,7 @@ from .append_utils import clean_after_ops
 import polars as pl
 
 
-def sub(superset: DataStore, serial: list[int]) -> Result[Unit]:
+def sub(superset: DataStore, serial: list[int], history: History) -> Result[Unit]:
     """Remove students with specified serial numbers from DataStore.
     
     Args:
@@ -23,5 +24,5 @@ def sub(superset: DataStore, serial: list[int]) -> Result[Unit]:
         return result.propagate()
 
     # Clean up after removal operation
-    clean_after_ops(superset)
+    clean_after_ops(superset, history)
     return Result.unit()

@@ -1,0 +1,4 @@
+infer-with-first-use = false
+
+[errors]
+implicit-any = "ignore"

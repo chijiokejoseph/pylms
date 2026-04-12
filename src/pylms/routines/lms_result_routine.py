@@ -62,7 +62,7 @@ def run_result_lms(config: Config, ds: DataStore, history: History) -> None:
                     continue
                 printpass("Results collated successfully")
             case 2:
-                result = view_result(ds)
+                result = view_result(config, ds)
                 if result.is_err():
                     continue
 

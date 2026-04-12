@@ -2,6 +2,7 @@ import unittest
 from typing import final, override
 
 from pylms import paths
+from pylms.config import init_config
 from pylms.data import DataStream, read
 from pylms.result_utils import find_col, find_count
 
@@ -10,7 +11,8 @@ from pylms.result_utils import find_col, find_count
 class FindTest(unittest.TestCase):
     @override
     def setUp(self) -> None:
-        data = read(paths.get_paths_excel()["Result"]).unwrap()
+        self.config = init_config().unwrap()
+        data = read(paths.get_paths_excel(self.config)["Result"]).unwrap()
         self.data = DataStream(data)  # pyright: ignore [reportUninitializedInstanceVariable]
 
         # note that these expected values are based off the actual data contained at the path `paths.get_paths_excel()["Result"]` at the time of testing.

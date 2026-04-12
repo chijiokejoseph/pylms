@@ -3,6 +3,7 @@ from typing import final, override
 
 from dotenv import load_dotenv
 
+from pylms.config import init_config
 from pylms.data_service import load_ds
 from pylms.errors import Result, Unit
 from pylms.history import load_history
@@ -31,10 +32,12 @@ class AllEmailsTest(unittest.TestCase):
         """
         # Load environment variables from .env file
         _ = load_dotenv()
+        # Load Config
+        self.config = init_config().unwrap()
         # Load the data store for use in tests
-        self.ds = load_ds()  # pyright: ignore [reportUninitializedInstanceVariable]
+        self.ds = load_ds(self.config).unwrap()
         # Load History
-        self.history = load_history()  # pyright: ignore [reportUninitializedInstanceVariable]
+        self.history = load_history(self.config).unwrap()
 
     def test_custom_message_all(self) -> None:
         """
@@ -47,8 +50,7 @@ class AllEmailsTest(unittest.TestCase):
         that the result unwraps without exceptions, indicating success.
         """
         # Call the custom_message_all_emails function with the data store
-        ds = self.ds.unwrap()
-        result: Result[Unit] = custom_message_all(ds)
+        result: Result[Unit] = custom_message_all(self.config, self.ds)
         # Print error message if Result contains error
         if result.is_err():
             print(f"{result.error = }")
@@ -56,10 +58,10 @@ class AllEmailsTest(unittest.TestCase):
         _ = result.unwrap()
 
     def test_assessment_message_all(self) -> None:
-        ds = self.ds.unwrap()
-        history = self.history.unwrap()
         # Call the custom_message_all_emails function with the data store
-        result: Result[Unit] = assessment_message_all(ds, history)
+        result: Result[Unit] = assessment_message_all(
+            self.config, self.ds, self.history
+        )
         # Print error message if Result contains error
         if result.is_err():
             print(f"{result.error = }")

@@ -1,3 +1,4 @@
+from pylms.config import init_config
 import unittest
 from typing import final, override
 from unittest import TestCase
@@ -22,7 +23,8 @@ class TestRollBack(TestCase):
         :rtype: None
         """
         # Load the dataset before each test
-        self.ds = load_ds()  # pyright: ignore [reportUninitializedInstanceVariable]
+        self.config = init_config().unwrap()
+        self.ds = load_ds(self.config).unwrap()  
 
     @override
     def tearDown(self) -> None:
@@ -43,10 +45,10 @@ class TestRollBack(TestCase):
         :rtype: None
         """
         # Create a new directory for test data if it doesn't exist
-        new_data_path = paths.get_data_path().parent / "test"
+        new_data_path = paths.get_data_path(self.config).parent / "test"
         new_data_path.mkdir(parents=True, exist_ok=True)
         # Call the rollback command with the test data path
-        result = rollback_to_cmd(new_data_path)
+        result = rollback_to_cmd(self.config, new_data_path)
         if result.is_err():
             return
 

@@ -13,6 +13,7 @@ def add(superset: DataStore, subset: DataStore, history: History) -> Result[Data
     Args:
         superset (DataStore): Target DataStore to add data to.
         subset (DataStore): Source DataStore to add from.
+        history (History): History object
 
     Returns:
         Result[DataStore]: Success with new combined DataStore or error message.

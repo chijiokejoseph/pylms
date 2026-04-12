@@ -33,9 +33,9 @@ PALETTE: Palette = {
 
 
 def build(color: str, kind: Literal["bg", "text"], bold: bool) -> str | None:
-    value: Color | None = PALETTE.get(color)
-    if value is None:
-        return value
+    value = PALETTE.get(color)
+    if value is None or not isinstance(value, Color):
+        return None
 
     if kind == "bg":
         color = str(value.bg) + "m"

@@ -59,11 +59,11 @@ def collate_result(config: Config, history: History) -> Result[Unit]:
     (pass_mark, assessment_ratio, project_ratio) = req
 
     # Retrieve column names for assessment and project scores
-    assessment_score_col: str = det_assessment_score_col()
+    assessment_score_col = det_assessment_score_col()
 
-    assessment_req_col: str = det_assessment_req_col()
-    project_score_col: str = det_project_score_col()
-    passmark_col: str = det_passmark_col()
+    assessment_req_col = det_assessment_req_col()
+    project_score_col = det_project_score_col()
+    passmark_col = det_passmark_col()
     result_col = det_result_col()
 
     # Scale assessment and project scores by their respective ratios

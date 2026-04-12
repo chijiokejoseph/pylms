@@ -9,7 +9,7 @@ from pylms.preprocess import clean_reg
 class CleanRegTest(unittest.TestCase):
     @override
     def setUp(self) -> None:
-        self.path: Path = (  # pyright: ignore [reportUninitializedInstanceVariable]
+        self.path: Path = (
             Path.home()
             / r"OneDrive\NCAIR\Cohorts\Cohort 31\Documents\Registration.xlsx"
         )
@@ -27,4 +27,4 @@ class CleanRegTest(unittest.TestCase):
 
 if __name__ == "__main__":
     print("I am hungry")
-    _ = unittest.main()
+    unittest.main()

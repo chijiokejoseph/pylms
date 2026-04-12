@@ -1,3 +1,4 @@
+from ..config import init_config
 from typing import override
 from unittest import TestCase
 
@@ -7,10 +8,11 @@ from .grade import prepare_grading
 class TestGradePy(TestCase):
     @override
     def setUp(self) -> None:
+        self.config = init_config().unwrap()
         return super().setUp()
 
     def test_prepare_grade(self) -> None:
-        result = prepare_grading(10)
+        result = prepare_grading(self.config, 10)
         assert result.is_ok(), (
             f"result failed because of the error {result.unwrap_err()}"
         )

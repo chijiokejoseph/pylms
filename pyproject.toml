@@ -40,4 +40,5 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "maturin>=1.11.5",
+    "pyrefly>=0.60.2",
 ]
