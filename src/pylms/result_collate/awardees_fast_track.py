@@ -59,4 +59,4 @@ def collate_fast_track(config: Config, ds: DataStore, history: History) -> Resul
     print_info(
         "Students fast tracked to the Advanced Class have been collected. Removing them from DataStore."
     )
-    return sub(ds, student_serials)
+    return sub(ds, student_serials, history)
