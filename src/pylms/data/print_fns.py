@@ -79,9 +79,20 @@ def print_stream(stream: DataStream, serials: list[int]) -> None:
     print_df(stream.as_ref(), serials)
 
 
-def print_polar(src: DataStore, serials: list[int]) -> None:
+def print_ds_subset(ds: DataStore, serials: list[int]) -> None:
     display = (
-        src.pretty().filter(pl.col(SERIAL).is_in(serials)).select([SERIAL, NAME, EMAIL])
+        ds.pretty().filter(pl.col(SERIAL).is_in(serials)).select([SERIAL, NAME, EMAIL])
     )
     print()
-    print(display)
+    if len(serials) < 10:
+        print(display)
+        return
+
+    with pl.Config(tbl_rows=-1, tbl_formatting="UTF8_FULL"):
+        print(display)
+
+
+def print_ds(ds: DataStore) -> None:
+    display = ds.pretty().select([SERIAL, NAME, EMAIL])
+    with pl.Config(tbl_rows=-1, tbl_formatting="UTF8_FULL"):
+        print(display)

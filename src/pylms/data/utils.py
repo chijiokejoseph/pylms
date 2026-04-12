@@ -2,6 +2,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import polars as pl
+import polars.selectors as cs
 
 from ..constants import DATA_COLUMNS
 from ..errors import Result, Unit, eprint
@@ -25,6 +26,8 @@ def write(
         msg = f"Parent path specified: '{parent} does not exist"
         eprint(msg)
         return Result.err(msg)
+
+    data = data.with_columns(cs.integer().round(0), cs.float().round(2))
 
     try:
         # Write based on file extension

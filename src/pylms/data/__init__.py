@@ -2,7 +2,7 @@ from .data_read import read
 from .datastore import DataStore
 from .datastream import DataStream
 from .datautils import datamap
-from .print_fns import print_df, print_stream, print_polar
+from .print_fns import print_df, print_ds, print_ds_subset, print_stream
 from .utils import write
 from .verify import new_validator
 
@@ -13,7 +13,8 @@ __all__ = [
     "read",
     "print_df",
     "print_stream",
-    "print_polar",
+    "print_ds",
+    "print_ds_subset",
     "write",
     "new_validator",
 ]
