@@ -1,6 +1,8 @@
+from pylms.cli import input_bool
+from pylms.constants import COMMA_DELIM
 from pylms.query_dates import search_unmarked
 from ..data import DataStore
-from ..errors import Result, Unit
+from ..errors import ForcedExitError, Result, Unit, eprint
 from ..form_retrieve import ClassType, retrieve_class_form
 from ..history import (
     History,
@@ -25,12 +27,25 @@ def run_record(ds: DataStore, history: History) -> Result[Unit]:
     Returns:
         Result[Unit]: Success or error message.
     """
-    dates = search_unmarked(history)
+    while True:
+        dates = search_unmarked(history)
 
-    if dates.is_err():
-        return dates.propagate()
+        if dates.is_err():
+            return dates.propagate()
 
-    dates = dates.unwrap()
+        dates = dates.unwrap()
+        print_info(f"Selected Dates are [{COMMA_DELIM.join(dates)}]")
+        choice = input_bool("Confirm selected dates?")
+        if choice.is_err() and isinstance(choice.error, ForcedExitError):
+            return choice.propagate()
+        elif choice.is_err():
+            continue
+        
+        if not choice.unwrap():
+            eprint("You rejected selected dates")
+            return choice.propagate()
+        
+        break
 
     # Process each selected date
     for each_date in dates:
