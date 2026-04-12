@@ -102,6 +102,7 @@ Enter the path:  """
             pl.col(score_col).round(2).alias(assessment_score_col),
             pl.lit(req).alias(assessment_req_col),
         )
+        .drop(score_col)
     )
 
     printpass("Assessment recorded successfully\n")
