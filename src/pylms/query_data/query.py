@@ -37,6 +37,7 @@ def run_query_data(ds: DataStore) -> Result[list[int]]:
   - Month: january, feb
   - File: path/to/file.txt, data.xlsx
   - Combine: John, 1-5, nysc, data.txt
+  Press (Enter) to switch to interactive query
 Query: """
 
     # Loop until valid input or forced exit
