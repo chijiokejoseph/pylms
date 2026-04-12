@@ -3,12 +3,12 @@
 import re
 from pathlib import Path
 
-from pylms.info import printpass
-from pylms.query_data.select_path import select_path
-
+from ..cli import input_bool
 from ..cli_utils import parse_nums
-from ..data import DataStore
-from ..errors import Result
+from ..data import DataStore, print_ds_subset
+from ..errors import ForcedExitError, Result, eprint
+from ..info import printpass
+from ..query_data.select_path import select_path
 from .select_completion import select_completion
 from .select_gender import select_gender
 from .select_internship import select_internship
@@ -134,6 +134,22 @@ def query_parse(ds: DataStore, query: str) -> Result[list[int]]:
     if len(all_serials) == 0:
         return Result.err("No students matched the query")
 
-    printpass(f"Selected {len(all_serials)} student(s)")
+    all_serials_list = sorted(list(all_serials))
 
-    return Result.ok(sorted(list(all_serials)))
+    while True:
+        print_ds_subset(ds, all_serials_list)
+        confirm = input_bool("Confirm this selection?")
+        if confirm.is_err() and isinstance(confirm.error, ForcedExitError):
+            return confirm.propagate()
+        elif confirm.is_err():
+            confirm.print_if_err()
+            continue
+
+        if not confirm.unwrap():
+            eprint("Selection not confirmed")
+            return confirm.propagate()
+
+        break
+
+    printpass(f"Selected {len(all_serials_list)} student(s)")
+    return Result.ok(all_serials_list)

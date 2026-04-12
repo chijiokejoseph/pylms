@@ -2,7 +2,7 @@
 
 from ..cli import input_bool, input_str
 from ..cli_utils import parse_nums
-from ..data import DataStore, print_polar
+from ..data import DataStore, print_ds, print_ds_subset
 from ..errors import ForcedExitError, Result, eprint
 from ..info import print_info, printpass
 from .select_serials import select_serials
@@ -20,6 +20,8 @@ def search_serials(ds: DataStore) -> Result[list[int]]:
         Result[list[int]]: Success with selected serial numbers or ForcedExitError.
     """
     while True:
+        print_info("Student Records are shown below")
+        print_ds(ds)
         print_info("Enter serial numbers (comma-separated, e.g., 1,5,10-15,20)")
         result = input_str("Serial numbers: ", lower_case=False)
         if result.is_err() and isinstance(result.error, ForcedExitError):
@@ -47,7 +49,7 @@ def search_serials(ds: DataStore) -> Result[list[int]]:
 
         selections = selection_result.unwrap()
         serials = [val[0] for val in selections]
-        print_polar(ds, serials)
+        print_ds_subset(ds, serials)
         # print_selection(selection)
 
         confirm = input_bool("Confirm this selection?")

@@ -2,7 +2,7 @@
 
 from ..cli import input_bool, input_option
 from ..constants import PROGRAMS
-from ..data import DataStore, print_polar
+from ..data import DataStore, print_ds_subset
 from ..errors import ForcedExitError, Result, eprint
 from ..info import print_info, printpass
 from .select_internship import select_internship
@@ -37,7 +37,7 @@ def search_internship(ds: DataStore) -> Result[list[int]]:
         selections = filter_result.unwrap()
         print_info(f"Found {len(selections)} student(s) in category '{category}'")
         serials = [val[0] for val in selections]
-        print_polar(ds, serials)
+        print_ds_subset(ds, serials)
 
         confirm = input_bool("Confirm this selection?")
         if confirm.is_err() and isinstance(confirm.error, ForcedExitError):

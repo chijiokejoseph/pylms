@@ -1,7 +1,7 @@
 """Interactive query function for student selection."""
 
 from ..cli import input_str
-from ..data import DataStore, print_polar
+from ..data import DataStore
 from ..errors import ForcedExitError, Result
 from ..info import print_info
 from .interactive import search_data
@@ -43,11 +43,9 @@ Query: """
     while True:
         # Get user input
         result = input_str(prompt)
-        if result.is_err():
-            err = result.unwrap_err()
-            # Check for forced exit
-            if isinstance(err, ForcedExitError):
-                return result.propagate()
+        if result.is_err() and isinstance(result.error, ForcedExitError):
+            return result.propagate()
+        elif result.is_err():
             continue
 
         # Parse query string
@@ -68,8 +66,6 @@ Query: """
         elif parse_result.is_err():
             parse_result.print_if_err()
             return parse_result.propagate()
-        
-        serials = parse_result.unwrap()
-        print_polar(ds, serials)
+
         # Return successful result
         return parse_result

@@ -2,7 +2,7 @@
 
 from ..cli import input_bool, input_str
 from ..cli_utils import parse_nums
-from ..data import DataStore, print_polar
+from ..data import DataStore, print_ds_subset
 from ..errors import ForcedExitError, Result, eprint
 from ..info import print_info, printpass
 from .select_name import select_name
@@ -38,7 +38,7 @@ def search_name(ds: DataStore) -> Result[list[int]]:
         matches = matches_result.unwrap()
         print_info(f"Found {len(matches)} matching student(s)")
         serials = [val[0] for val in matches]
-        print_polar(ds, serials)
+        print_ds_subset(ds, serials)
         # print_selection(matches)
 
         result = input_str("Enter serial numbers (comma-separated): ", lower_case=False)
@@ -76,11 +76,11 @@ def search_name(ds: DataStore) -> Result[list[int]]:
 
         selections = selection_result.unwrap()
         serials = [val[0] for val in selections]
-        print_polar(ds, serials)
+        print_ds_subset(ds, serials)
 
         confirm = input_bool("Confirm this selection?")
         if confirm.is_err() and isinstance(confirm.error, ForcedExitError):
-                return confirm.propagate()
+            return confirm.propagate()
         elif confirm.is_err():
             confirm.print_if_err()
             continue

@@ -3,7 +3,7 @@
 from pylms.query_data.select_path import select_path
 
 from ..cli import input_bool, input_path
-from ..data import DataStore, print_polar
+from ..data import DataStore, print_ds_subset
 from ..errors import ForcedExitError, Result, eprint
 from ..info import print_info, printpass
 
@@ -42,7 +42,7 @@ def search_path(ds: DataStore) -> Result[list[int]]:
 
         selections = result.unwrap()
         serials = [val[0] for val in selections]
-        print_polar(ds, serials)
+        print_ds_subset(ds, serials)
 
         confirm = input_bool("Confirm this selection?")
         if confirm.is_err() and isinstance(confirm.error, ForcedExitError):
