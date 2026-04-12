@@ -82,13 +82,13 @@ def collate_merit(config: Config, ds: DataStore, history: History) -> Result[Uni
     passmark_col = det_passmark_col()
 
     # Get requirement values
-    attendance_req = results[0, attendance_req_col]
-    assessment_req = results[0, assessment_req_col]
-    passmark = results[0, passmark_col]
+    attendance_req: float = results[0, attendance_req_col]
+    assessment_req: float = results[0, assessment_req_col]
+    passmark: float = results[0, passmark_col]
 
     # Calculate pass criteria using Polars expressions
     attendance_cond = pl.col(attendance_score_col) >= attendance_req
-    assessment_cond = pl.col(attendance_count_col) >= assessment_req
+    assessment_cond = pl.col(assessment_score_col) >= assessment_req
     score_cond = pl.col(result_col) >= passmark
     near_score = (pl.col(result_col) >= passmark - 5) & (pl.col(result_col) < passmark)
     excellent_attendance = pl.col(attendance_score_col) >= np.round(
