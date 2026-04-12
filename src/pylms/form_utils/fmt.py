@@ -35,6 +35,6 @@ def defmt_name(stream: DataStream) -> Result[DataStream]:
         return Result.err(msg)
 
     data = data.with_columns(
-        pl.col(NAME).str.extract(r"([A-Z|a-z][A-Z|a-z|\s]+)").alias(NAME)
+        pl.col(NAME).str.replace_all(r"\d{3}.\s*", "").str.strip_chars().alias(NAME)
     )
     return Result.ok(DataStream(data))
