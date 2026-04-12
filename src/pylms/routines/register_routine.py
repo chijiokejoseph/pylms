@@ -16,7 +16,7 @@ from ..rollcall import (
 
 
 def register(config: Config, ds: DataStore, history: History) -> None:
-    menu: list[str] = [
+    menu = [
         "Register New Cohort Data",
         "Request Update Form",
         "Retrieve Update Form and Update Cohort Data",
@@ -64,7 +64,7 @@ def register(config: Config, ds: DataStore, history: History) -> None:
                 data_stream, info = result.unwrap()
                 data_stream, cds_data_stream = extract_cds(data_stream)
 
-                result = append_update(ds, data_stream, info)
+                result = append_update(ds, history, data_stream, info)
                 if result.is_err():
                     continue
 
